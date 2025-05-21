@@ -5,6 +5,7 @@ import com.example.pension.dto.LoginResponse;
 import com.example.pension.dto.UserDTO;
 import com.example.pension.model.User;
 import com.example.pension.repository.UserRepository;
+import com.example.pension.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +20,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider tokenProvider;
 
     @Transactional
     public LoginResponse login(LoginRequest loginRequest) {
@@ -33,8 +35,8 @@ public class UserService {
         user.setLastLoginTime(LocalDateTime.now());
         userRepository.save(user);
 
-        // 创建JWT token (临时使用空字符串，后续实现)
-        String token = "";
+        // 生成JWT token
+        String token = tokenProvider.generateToken(user.getUsername());
 
         return new LoginResponse(token, convertToDTO(user));
     }

@@ -13,8 +13,6 @@ import org.mapstruct.factory.Mappers;
 @Mapper(componentModel = "spring")
 public interface OrganizationMapper {
 
-    OrganizationMapper INSTANCE = Mappers.getMapper(OrganizationMapper.class);
-
     OrganizationDTO toDto(Organization organization);
 
     Organization toEntity(CreateOrganizationDTO createOrganizationDTO);

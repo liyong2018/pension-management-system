@@ -15,7 +15,7 @@ export default defineConfig({
     proxy: {
       // 配置代理，解决跨域问题
       '/api': { // 将匹配到 /api 的请求代理到后端服务器
-        target: 'http://localhost:8080', // 后端服务实际地址
+        target: 'http://localhost:8081', // 后端服务实际地址
         changeOrigin: true, // 是否改变源地址
         // rewrite: (path) => path.replace(/^\/api/, '') // 如果后端API不带/api前缀，则需要重写路径
       },
