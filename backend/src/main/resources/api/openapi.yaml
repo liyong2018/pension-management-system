@@ -1,0 +1,2911 @@
+openapi: 3.0.0
+info:
+  title: 养老信息管理系统 API
+  version: v1.0.0
+  description: 养老信息管理系统 API 文档，包含所有模块的接口定义。
+
+servers:
+  - url: http://localhost:8080/api/v1 # 开发环境示例
+    description: 开发服务器
+
+tags:
+  - name: Homepage
+    description: 首页相关接口
+  - name: Organization
+    description: 机构管理相关接口
+  - name: ElderlyProfile
+    description: 人员档案（老人信息）相关接口
+  - name: HealthMonitoring
+    description: 健康监测相关接口
+  - name: ServiceRecord
+    description: 服务记录相关接口
+  - name: SmartDevice
+    description: 智能设备相关接口
+  - name: Volunteer
+    description: 志愿者管理相关接口
+  - name: SystemManagement
+    description: 系统管理（用户、角色、权限）相关接口
+
+components:
+  schemas:
+    # 通用响应模型
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: 状态码 (例如 200, 400, 500)
+        message:
+          type: string
+          description: 响应消息
+        data:
+          type: object
+          nullable: true
+          description: 响应数据
+
+    # --- 机构管理 Schemas ---
+    OrganizationBasicInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        name:
+          type: string
+          description: 机构名称
+        shortName:
+          type: string
+          description: 机构简称
+        type:
+          type: string
+          description: 机构类型 (居家养老单位, 社区养老单位（日照）, 机构养老单位（养老院）)
+        addressProvince:
+          type: string
+        addressCity:
+          type: string
+        addressDistrict:
+          type: string
+        addressStreet:
+          type: string
+        addressDetail:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        website:
+          type: string
+          format: url
+
+    OrganizationOperationalInfo:
+      type: object
+      properties:
+        establishmentDate:
+          type: string
+          format: date
+        licenseNumber:
+          type: string
+        businessScope:
+          type: string
+        bedCount:
+          type: integer
+        actualServiceCount:
+          type: integer
+        chargingStandard:
+          type: string
+        area:
+          type: string
+
+    OrganizationPersonnelInfo:
+      type: object
+      properties:
+        directorName:
+          type: string
+        directorContact:
+          type: string
+        employeeCount:
+          type: integer
+        professionalNurseCount:
+          type: integer
+
+    OrganizationQualificationInfo:
+      type: object
+      properties:
+        fireLicense:
+          type: string
+        sanitaryLicense:
+          type: string
+        medicalLicense:
+          type: string
+        otherQualifications:
+          type: string
+
+    Organization:
+      allOf:
+        - $ref: '#/components/schemas/OrganizationBasicInfo'
+        - $ref: '#/components/schemas/OrganizationOperationalInfo'
+        - $ref: '#/components/schemas/OrganizationPersonnelInfo'
+        - $ref: '#/components/schemas/OrganizationQualificationInfo'
+        - type: object
+          properties:
+            createTime:
+              type: string
+              format: date-time
+              readOnly: true
+            updateTime:
+              type: string
+              format: date-time
+              readOnly: true
+
+    # --- 人员档案 Schemas ---
+    ElderlyBasicInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        name:
+          type: string
+        gender:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        idCardNumber:
+          type: string
+        phone:
+          type: string
+        photoUrl:
+          type: string
+          format: url
+        addressDetail:
+          type: string
+        community:
+          type: string
+        pensionType:
+          type: string
+          description: 居家养老、社区养老（日照）、机构养老（养老院）
+
+    ElderlyHealthInfo:
+      type: object
+      properties:
+        medicalHistory:
+          type: string
+        allergyHistory:
+          type: string
+        physicalExamReport:
+          type: string
+        currentHealthStatus:
+          type: string
+        careLevel:
+          type: string
+        abilityAssessment:
+          type: string
+          description: 能力完好、轻度失能、中度失能、重度失能
+
+    ElderlyLivingInfo:
+      type: object
+      properties:
+        livingHabits:
+          type: string
+        hobbies:
+          type: string
+        religiousBelief:
+          type: string
+
+    ElderlyFamilyMember:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        elderlyId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        relationship:
+          type: string
+        phone:
+          type: string
+        createTime:
+          type: string
+          format: date-time
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          readOnly: true
+
+    ElderlyServiceInfo: # 主要通过 ServiceRecord 模块体现，此处为简要
+      type: object
+      properties:
+        # serviceRecords:
+        #   type: array
+        #   items:
+        #     $ref: '#/components/schemas/ServiceRecord' # 指向服务记录
+        # feeInformation:
+        #   type: string # 费用信息，可能需要更复杂结构
+        # Placeholder for now
+        lastServiceDate:
+            type: string
+            format: date
+        nextServicePlan:
+            type: string
+
+    ElderlyProfile:
+      allOf:
+        - $ref: '#/components/schemas/ElderlyBasicInfo'
+        - $ref: '#/components/schemas/ElderlyHealthInfo'
+        - $ref: '#/components/schemas/ElderlyLivingInfo'
+        - type: object
+          properties:
+            organizationId: # 所属机构
+              type: integer
+              format: int64
+              nullable: true
+            familyMembers:
+              type: array
+              items:
+                $ref: '#/components/schemas/ElderlyFamilyMember'
+            remarks:
+              type: string
+            createTime:
+              type: string
+              format: date-time
+              readOnly: true
+            updateTime:
+              type: string
+              format: date-time
+              readOnly: true
+
+    # --- 健康监测 Schemas ---
+    HealthMonitoringData:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        elderlyId:
+          type: integer
+          format: int64
+        deviceId:
+          type: integer
+          format: int64
+          nullable: true
+        monitoringTime:
+          type: string
+          format: date-time
+        dataType:
+          type: string
+          description: 心率, 血压, 血糖, 体温, 睡眠
+        value:
+          type: string
+        unit:
+          type: string
+        isAbnormal:
+          type: boolean
+        alarmLevel:
+          type: string
+          nullable: true
+        remarks:
+          type: string
+          nullable: true
+        createTime:
+          type: string
+          format: date-time
+          readOnly: true
+
+    # --- 服务记录 Schemas ---
+    ServiceRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        elderlyId:
+          type: integer
+          format: int64
+        elderlyName: # 冗余字段，方便列表展示
+          type: string
+        serviceContent:
+          type: string
+        serviceTime:
+          type: string
+          format: date-time
+        serviceAddress:
+          type: string
+        serviceProviderType:
+          type: string
+          description: 机构员工, 志愿者
+        serviceProviderId:
+          type: integer
+          format: int64
+          nullable: true
+        serviceProviderName:
+          type: string
+          nullable: true
+        workOrderPrice:
+          type: number
+          format: double
+          nullable: true
+        status:
+          type: string
+          description: 待处理, 进行中, 已完成, 已评价
+        evaluationScore:
+          type: integer
+          nullable: true
+        evaluationComment:
+          type: string
+          nullable: true
+        createTime:
+          type: string
+          format: date-time
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          readOnly: true
+
+    # --- 智能设备 Schemas ---
+    SmartDevice:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        deviceName:
+          type: string
+        deviceType:
+          type: string
+          description: SOS报警, 烟感, 水浸, 跌倒, 燃气泄露, 健康监测手环等
+        deviceModel:
+          type: string
+        deviceIdentifier:
+          type: string
+        status:
+          type: string
+          description: 在线, 离线, 故障, 低电量等
+        installationLocation:
+          type: string
+          nullable: true
+        purchaseDate:
+          type: string
+          format: date
+          nullable: true
+        warrantyPeriod:
+          type: integer
+          nullable: true
+        lastMaintenanceDate:
+          type: string
+          format: date
+          nullable: true
+        elderlyId: # 绑定的老人
+          type: integer
+          format: int64
+          nullable: true
+        organizationId: # 所属机构
+          type: integer
+          format: int64
+          nullable: true
+        remarks:
+          type: string
+          nullable: true
+        createTime:
+          type: string
+          format: date-time
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          readOnly: true
+
+    DeviceAlarmRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        deviceId:
+          type: integer
+          format: int64
+        deviceName: # 冗余，方便显示
+          type: string
+        elderlyId:
+          type: integer
+          format: int64
+          nullable: true
+        elderlyName: # 冗余，方便显示
+          type: string
+          nullable: true
+        alarmTime:
+          type: string
+          format: date-time
+        alarmType:
+          type: string
+        alarmLevel:
+          type: string
+        alarmContent:
+          type: string
+          nullable: true
+        status:
+          type: string
+          description: UNPROCESSED, PROCESSING, PROCESSED, IGNORED
+        processingResult:
+          type: string
+          nullable: true
+        processorId:
+          type: integer
+          format: int64
+          nullable: true
+        processorName: # 冗余
+          type: string
+          nullable: true
+        processingTime:
+          type: string
+          format: date-time
+          nullable: true
+        createTime:
+          type: string
+          format: date-time
+          readOnly: true
+
+    # --- 志愿者管理 Schemas ---
+    Volunteer:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        name:
+          type: string
+        gender:
+          type: string
+          nullable: true
+        age:
+          type: integer
+          nullable: true
+        idCardNumber:
+          type: string
+          nullable: true
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+          nullable: true
+        addressDetail:
+          type: string
+          nullable: true
+        householdAddress:
+          type: string
+          nullable: true
+        education:
+          type: string
+          nullable: true
+        graduationSchool:
+          type: string
+          nullable: true
+        occupation:
+          type: string
+          nullable: true
+        workUnit:
+          type: string
+          nullable: true
+        professionalSkills:
+          type: string
+          nullable: true
+        hobbies:
+          type: string
+          nullable: true
+        languageAbility:
+          type: string
+          nullable: true
+        serviceIntention:
+          type: string
+          nullable: true
+        availableTime:
+          type: string
+          nullable: true
+        serviceExperience:
+          type: string
+          nullable: true
+        emergencyContactName:
+          type: string
+          nullable: true
+        emergencyContactRelationship:
+          type: string
+          nullable: true
+        emergencyContactPhone:
+          type: string
+          nullable: true
+        registrationDate:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          description: ACTIVE, INACTIVE, PENDING_APPROVAL
+        totalServiceHours:
+          type: number
+          format: double
+        points:
+          type: integer
+        createTime:
+          type: string
+          format: date-time
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          readOnly: true
+
+    VolunteerServiceProject:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        projectName:
+          type: string
+        description:
+          type: string
+          nullable: true
+        serviceCategory:
+          type: string
+          nullable: true
+        startTime:
+          type: string
+          format: date-time
+          nullable: true
+        endTime:
+          type: string
+          format: date-time
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        recruitmentCount:
+          type: integer
+          nullable: true
+        currentEnrolledCount:
+          type: integer
+        requirements:
+          type: string
+          nullable: true
+        status:
+          type: string
+          description: OPEN, CLOSED, IN_PROGRESS, COMPLETED
+        organizationId:
+          type: integer
+          format: int64
+          nullable: true
+        createTime:
+          type: string
+          format: date-time
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          readOnly: true
+
+    VolunteerServiceAssignment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        volunteerId:
+          type: integer
+          format: int64
+        volunteerName: # 冗余
+          type: string
+        projectId:
+          type: integer
+          format: int64
+          nullable: true
+        projectName: # 冗余
+          type: string
+          nullable: true
+        elderlyId:
+          type: integer
+          format: int64
+          nullable: true
+        elderlyName: # 冗余
+          type: string
+          nullable: true
+        serviceDate:
+          type: string
+          format: date
+        serviceStartTime:
+          type: string
+          format: time # HH:mm:ss
+          nullable: true
+        serviceEndTime:
+          type: string
+          format: time # HH:mm:ss
+          nullable: true
+        serviceDurationHours:
+          type: number
+          format: double
+          nullable: true
+        serviceContent:
+          type: string
+          nullable: true
+        feedbackFromElderly:
+          type: string
+          nullable: true
+        status:
+          type: string
+          description: PENDING, CONFIRMED, COMPLETED, CANCELED
+        pointsAwarded:
+          type: integer
+        createTime:
+          type: string
+          format: date-time
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          readOnly: true
+
+    # --- 系统管理 Schemas ---
+    SystemUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        username:
+          type: string
+        fullName:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        organizationId:
+          type: integer
+          format: int64
+          nullable: true
+        organizationName: # 冗余
+          type: string
+          nullable: true
+        isAdmin:
+          type: boolean
+        isActive:
+          type: boolean
+        lastLoginTime:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        createTime:
+          type: string
+          format: date-time
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          readOnly: true
+        # roles: # 通常在获取用户详情时附带角色信息
+        #   type: array
+        #   items:
+        #     $ref: '#/components/schemas/Role'
+
+
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        roleName:
+          type: string
+        roleKey:
+          type: string
+        description:
+          type: string
+          nullable: true
+        # permissions: # 通常在获取角色详情时附带权限信息
+        #   type: array
+        #   items:
+        #     $ref: '#/components/schemas/MenuPermission'
+        createTime:
+          type: string
+          format: date-time
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          readOnly: true
+
+    MenuPermission:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+        name:
+          type: string
+        type:
+          type: string
+          description: MENU, BUTTON, API
+        permissionKey:
+          type: string
+          nullable: true
+        routePath:
+          type: string
+          nullable: true
+        componentPath:
+          type: string
+          nullable: true
+        icon:
+          type: string
+          nullable: true
+        sortOrder:
+          type: integer
+        isVisible:
+          type: boolean
+        status:
+          type: boolean
+        createTime:
+          type: string
+          format: date-time
+          readOnly: true
+        updateTime:
+          type: string
+          format: date-time
+          readOnly: true
+        children: # 用于树形结构
+          type: array
+          items:
+            $ref: '#/components/schemas/MenuPermission' # Self-reference
+          nullable: true
+
+    # --- 首页 Schemas ---
+    HomepageStats:
+      type: object
+      properties:
+        elderlyPopulationCount:
+          type: integer
+        organizationFacilityCount:
+          type: integer
+        practitionerCount:
+          type: integer
+        subsidyAmountTotal: # 注意：金额类型可能需要更高精度
+          type: number
+          format: double
+    ElderlyTypeStats:
+      type: object
+      properties:
+        normalCount:
+          type: integer
+        emptyNesterCount:
+          type: integer
+        livingAloneCount:
+          type: integer
+        disabledCount:
+          type: integer
+        advancedAgeCount:
+          type: integer
+    AbilityAssessmentStats:
+      type: object
+      properties:
+        intactCount:
+          type: integer
+        mildDisabilityCount:
+          type: integer
+        moderateDisabilityCount:
+          type: integer
+        severeDisabilityCount:
+          type: integer
+        unassessedCount:
+          type: integer
+    AgeDistributionStats: # 可以根据需要扩展更多年龄段
+      type: object
+      properties:
+        age_60_69:
+          type: integer
+        age_70_79:
+          type: integer
+        age_80_89:
+          type: integer
+        age_90_plus:
+          type: integer
+    DeviceStats:
+      type: object
+      properties:
+        connectedDevicesCount:
+          type: integer
+        onlineCount:
+          type: integer
+        offlineCount:
+          type: integer
+        faultCount:
+          type: integer
+    HomepageData:
+      type: object
+      properties:
+        overallStats:
+          $ref: '#/components/schemas/HomepageStats'
+        # mapInfo: # 地图信息可能比较复杂，需要单独定义
+        #   type: object
+        #   properties:
+        #     communityOrgDistribution:
+        #       type: array
+        #       items: {} # 定义机构分布数据点
+        #     communityElderlyDistribution:
+        #       type: array
+        #       items: {} # 定义老人分布数据点
+        elderlyTypeStats:
+          $ref: '#/components/schemas/ElderlyTypeStats'
+        abilityAssessmentStats:
+          $ref: '#/components/schemas/AbilityAssessmentStats'
+        ageDistributionStats:
+          $ref: '#/components/schemas/AgeDistributionStats'
+        deviceStats:
+          $ref: '#/components/schemas/DeviceStats'
+        recentAlarms: # 最近告警列表
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceAlarmRecord' # 直接复用设备告警记录
+
+  # 通用参数
+  parameters:
+    page:
+      name: page
+      in: query
+      description: 页码 (从1开始)
+      required: false
+      schema:
+        type: integer
+        default: 1
+    size:
+      name: size
+      in: query
+      description: 每页数量
+      required: false
+      schema:
+        type: integer
+        default: 10
+    sort:
+      name: sort
+      in: query
+      description: 排序字段 (例如: "createTime,desc" 或 "name,asc")
+      required: false
+      schema:
+        type: string
+
+paths:
+  # --- 首页模块 ---
+  /homepage/data:
+    get:
+      tags:
+        - Homepage
+      summary: 获取首页所有聚合数据
+      operationId: getHomepageData
+      responses:
+        '200':
+          description: 成功获取首页数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/HomepageData'
+        default:
+          description: 意外错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  # --- 机构管理模块 ---
+  /organizations:
+    get:
+      tags:
+        - Organization
+      summary: 获取机构列表 (分页)
+      operationId: listOrganizations
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+        - name: name
+          in: query
+          description: 按机构名称模糊查询
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: 按机构类型查询
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功获取机构列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data: # 分页响应通常包含列表和总数
+                    type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Organization'
+                      totalElements:
+                        type: integer
+                        format: int64
+        default:
+          description: 意外错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags:
+        - Organization
+      summary: 创建新机构
+      operationId: createOrganization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization' # 创建时不需要ID和时间戳
+      responses:
+        '201':
+          description: 机构创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Organization'
+        default:
+          description: 意外错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /organizations/{id}:
+    get:
+      tags:
+        - Organization
+      summary: 根据ID获取机构详情
+      operationId: getOrganizationById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 机构ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功获取机构详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Organization'
+        '404':
+          description: 机构未找到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          description: 意外错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    put:
+      tags:
+        - Organization
+      summary: 根据ID更新机构信息
+      operationId: updateOrganization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 机构ID
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization' # 更新时ID来自路径，时间戳后端处理
+      responses:
+        '200':
+          description: 机构更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Organization'
+        default:
+          description: 意外错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    delete:
+      tags:
+        - Organization
+      summary: 根据ID删除机构
+      operationId: deleteOrganization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 机构ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204': # No Content
+          description: 机构删除成功
+        default:
+          description: 意外错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  # --- 人员档案（老人信息）模块 ---
+  /elderly-profiles:
+    get:
+      tags:
+        - ElderlyProfile
+      summary: 获取老人档案列表 (分页)
+      operationId: listElderlyProfiles
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+        - name: name
+          in: query
+          description: 按姓名模糊查询
+          schema:
+            type: string
+        - name: community
+          in: query
+          description: 按所属社区查询
+          schema:
+            type: string
+        - name: pensionType
+          in: query
+          description: 按养老类型查询
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功获取老人档案列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        type: array
+                        items: # 列表通常显示简要信息
+                          $ref: '#/components/schemas/ElderlyBasicInfo' # 或者一个专门的ListItem DTO
+                      totalElements:
+                        type: integer
+                        format: int64
+        default:
+          $ref: '#/components/responses/DefaultError'
+    post:
+      tags:
+        - ElderlyProfile
+      summary: 创建新老人档案
+      operationId: createElderlyProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ElderlyProfile'
+      responses:
+        '201':
+          description: 老人档案创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ElderlyProfile'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /elderly-profiles/{id}:
+    get:
+      tags:
+        - ElderlyProfile
+      summary: 根据ID获取老人档案详情
+      operationId: getElderlyProfileById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 老人ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功获取老人档案详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ElderlyProfile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    put:
+      tags:
+        - ElderlyProfile
+      summary: 根据ID更新老人档案信息
+      operationId: updateElderlyProfile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 老人ID
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ElderlyProfile'
+      responses:
+        '200':
+          description: 老人档案更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ElderlyProfile'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    delete:
+      tags:
+        - ElderlyProfile
+      summary: 根据ID删除老人档案
+      operationId: deleteElderlyProfile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 老人ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 老人档案删除成功
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  # --- 老人家属信息 (作为 ElderlyProfile 的子资源) ---
+  /elderly-profiles/{elderlyId}/family-members:
+    get:
+      tags:
+        - ElderlyProfile
+      summary: 获取指定老人的家属列表
+      operationId: listFamilyMembers
+      parameters:
+        - name: elderlyId
+          in: path
+          required: true
+          description: 老人ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功获取家属列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ElderlyFamilyMember'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    post:
+      tags:
+        - ElderlyProfile
+      summary: 为指定老人添加家属信息
+      operationId: addFamilyMember
+      parameters:
+        - name: elderlyId
+          in: path
+          required: true
+          description: 老人ID
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: # 添加时不需要 elderlyId, 它从路径获取
+              type: object
+              properties:
+                name:
+                  type: string
+                relationship:
+                  type: string
+                phone:
+                  type: string
+      responses:
+        '201':
+          description: 家属信息添加成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ElderlyFamilyMember'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /elderly-profiles/{elderlyId}/family-members/{familyMemberId}:
+    put:
+      tags:
+        - ElderlyProfile
+      summary: 更新指定老人的特定家属信息
+      operationId: updateFamilyMember
+      parameters:
+        - name: elderlyId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: familyMemberId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: # 更新时ID从路径获取
+              type: object
+              properties:
+                name:
+                  type: string
+                relationship:
+                  type: string
+                phone:
+                  type: string
+      responses:
+        '200':
+          description: 家属信息更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ElderlyFamilyMember'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    delete:
+      tags:
+        - ElderlyProfile
+      summary: 删除指定老人的特定家属信息
+      operationId: deleteFamilyMember
+      parameters:
+        - name: elderlyId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: familyMemberId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 家属信息删除成功
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+
+  # --- 健康监测模块 ---
+  /health-monitoring/data:
+    get:
+      tags:
+        - HealthMonitoring
+      summary: 获取健康监测数据列表 (分页)
+      operationId: listHealthMonitoringData
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+        - name: elderlyId
+          in: query
+          description: 按老人ID查询
+          schema:
+            type: integer
+            format: int64
+        - name: dataType
+          in: query
+          description: 按数据类型查询
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          description: 监测时间范围开始 (YYYY-MM-DDTHH:mm:ss)
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: 监测时间范围结束 (YYYY-MM-DDTHH:mm:ss)
+          schema:
+            type: string
+            format: date-time
+        - name: isAbnormal
+          in: query
+          description: 是否只看异常数据
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: 成功获取健康监测数据列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/HealthMonitoringData'
+                      totalElements:
+                        type: integer
+                        format: int64
+        default:
+          $ref: '#/components/responses/DefaultError'
+    post:
+      tags:
+        - HealthMonitoring
+      summary: 新增健康监测数据 (通常由设备或后台任务调用)
+      operationId: addHealthMonitoringData
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HealthMonitoringData'
+      responses:
+        '201':
+          description: 健康数据添加成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/HealthMonitoringData'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /health-monitoring/data/latest:
+      get:
+        tags:
+          - HealthMonitoring
+        summary: 获取指定老人最新的各类健康数据
+        operationId: getLatestHealthDataForElderly
+        parameters:
+          - name: elderlyId
+            in: query
+            required: true
+            description: 老人ID
+            schema:
+              type: integer
+              format: int64
+        responses:
+          '200':
+            description: 成功获取最新健康数据
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ApiResponse'
+                  properties:
+                    data: # 返回一个对象，key是dataType, value是HealthMonitoringData
+                      type: object
+                      additionalProperties:
+                        $ref: '#/components/schemas/HealthMonitoringData'
+          default:
+            $ref: '#/components/responses/DefaultError'
+
+
+  # --- 服务记录模块 ---
+  /service-records:
+    get:
+      tags:
+        - ServiceRecord
+      summary: 获取服务记录列表 (分页)
+      operationId: listServiceRecords
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+        - name: elderlyId
+          in: query
+          description: 按老人ID查询
+          schema:
+            type: integer
+            format: int64
+        - name: elderlyName # 方便前端直接按姓名搜索
+          in: query
+          description: 按老人姓名模糊查询
+          schema:
+            type: string
+        - name: serviceProviderName
+          in: query
+          description: 按服务人员姓名模糊查询
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: 按服务状态查询
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功获取服务记录列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ServiceRecord'
+                      totalElements:
+                        type: integer
+                        format: int64
+        default:
+          $ref: '#/components/responses/DefaultError'
+    post:
+      tags:
+        - ServiceRecord
+      summary: 创建新服务记录
+      operationId: createServiceRecord
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceRecord'
+      responses:
+        '201':
+          description: 服务记录创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ServiceRecord'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /service-records/{id}:
+    get:
+      tags:
+        - ServiceRecord
+      summary: 根据ID获取服务记录详情
+      operationId: getServiceRecordById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 服务记录ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功获取服务记录详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ServiceRecord'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    put:
+      tags:
+        - ServiceRecord
+      summary: 根据ID更新服务记录信息
+      operationId: updateServiceRecord
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceRecord'
+      responses:
+        '200':
+          description: 服务记录更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ServiceRecord'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    delete:
+      tags:
+        - ServiceRecord
+      summary: 根据ID删除服务记录
+      operationId: deleteServiceRecord
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 服务记录删除成功
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  # --- 智能设备模块 ---
+  /smart-devices:
+    get:
+      tags:
+        - SmartDevice
+      summary: 获取智能设备列表 (分页)
+      operationId: listSmartDevices
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+        - name: deviceName
+          in: query
+          description: 按设备名称查询
+          schema:
+            type: string
+        - name: deviceType
+          in: query
+          description: 按设备类型查询
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: 按设备状态查询
+          schema:
+            type: string
+        - name: elderlyId
+          in: query
+          description: 按绑定老人ID查询
+          schema:
+            type: integer
+            format: int64
+        - name: organizationId
+          in: query
+          description: 按所属机构ID查询
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功获取智能设备列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SmartDevice'
+                      totalElements:
+                        type: integer
+                        format: int64
+        default:
+          $ref: '#/components/responses/DefaultError'
+    post:
+      tags:
+        - SmartDevice
+      summary: 添加新智能设备
+      operationId: createSmartDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmartDevice'
+      responses:
+        '201':
+          description: 智能设备添加成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SmartDevice'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /smart-devices/{id}:
+    get:
+      tags:
+        - SmartDevice
+      summary: 根据ID获取智能设备详情
+      operationId: getSmartDeviceById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功获取设备详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SmartDevice'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    put:
+      tags:
+        - SmartDevice
+      summary: 根据ID更新智能设备信息
+      operationId: updateSmartDevice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmartDevice'
+      responses:
+        '200':
+          description: 设备信息更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SmartDevice'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    delete:
+      tags:
+        - SmartDevice
+      summary: 根据ID删除智能设备
+      operationId: deleteSmartDevice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 设备删除成功
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /smart-devices/alarms:
+    get:
+      tags:
+        - SmartDevice
+      summary: 获取设备告警记录列表 (分页)
+      operationId: listDeviceAlarms
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+        - name: deviceId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: elderlyId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: alarmType
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: 告警处理状态
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: 成功获取告警列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DeviceAlarmRecord'
+                      totalElements:
+                        type: integer
+                        format: int64
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /smart-devices/alarms/{alarmId}:
+    get:
+      tags:
+        - SmartDevice
+      summary: 获取特定告警记录详情
+      operationId: getDeviceAlarmById
+      parameters:
+        - name: alarmId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DeviceAlarmRecord'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    put: # 通常是处理告警
+      tags:
+        - SmartDevice
+      summary: 处理设备告警
+      operationId: processDeviceAlarm
+      parameters:
+        - name: alarmId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: # 更新处理状态
+                  type: string
+                  enum: [PROCESSING, PROCESSED, IGNORED]
+                processingResult:
+                  type: string
+                # processorId will be set by backend based on logged-in user
+      responses:
+        '200':
+          description: 告警处理成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DeviceAlarmRecord'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  # --- 志愿者管理模块 ---
+  /volunteers:
+    get:
+      tags:
+        - Volunteer
+      summary: 获取志愿者列表 (分页)
+      operationId: listVolunteers
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: phone
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功获取志愿者列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Volunteer'
+                      totalElements:
+                        type: integer
+                        format: int64
+        default:
+          $ref: '#/components/responses/DefaultError'
+    post:
+      tags:
+        - Volunteer
+      summary: 注册新志愿者
+      operationId: registerVolunteer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Volunteer'
+      responses:
+        '201':
+          description: 志愿者注册成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Volunteer'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /volunteers/{id}:
+    get:
+      tags:
+        - Volunteer
+      summary: 根据ID获取志愿者详情
+      operationId: getVolunteerById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Volunteer'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    put:
+      tags:
+        - Volunteer
+      summary: 根据ID更新志愿者信息
+      operationId: updateVolunteer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Volunteer'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Volunteer'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    delete:
+      tags:
+        - Volunteer
+      summary: 根据ID删除志愿者
+      operationId: deleteVolunteer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 删除成功
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /volunteer-service-projects:
+    get:
+      tags:
+        - Volunteer
+      summary: 获取志愿者服务项目列表 (分页)
+      operationId: listVolunteerServiceProjects
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+        - name: projectName
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功获取项目列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/VolunteerServiceProject'
+                      totalElements:
+                        type: integer
+                        format: int64
+        default:
+          $ref: '#/components/responses/DefaultError'
+    post:
+      tags:
+        - Volunteer
+      summary: 创建新志愿者服务项目
+      operationId: createVolunteerServiceProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VolunteerServiceProject'
+      responses:
+        '201':
+          description: 项目创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/VolunteerServiceProject'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /volunteer-service-projects/{id}:
+    get:
+      tags:
+        - Volunteer
+      summary: 根据ID获取志愿者服务项目详情
+      operationId: getVolunteerServiceProjectById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/VolunteerServiceProject'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    put:
+      tags:
+        - Volunteer
+      summary: 根据ID更新志愿者服务项目
+      operationId: updateVolunteerServiceProject
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VolunteerServiceProject'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/VolunteerServiceProject'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    delete:
+      tags:
+        - Volunteer
+      summary: 根据ID删除志愿者服务项目
+      operationId: deleteVolunteerServiceProject
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 删除成功
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /volunteer-service-assignments:
+    get:
+      tags:
+        - Volunteer
+      summary: 获取志愿者服务分配/记录列表 (分页)
+      operationId: listVolunteerServiceAssignments
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+        - name: volunteerId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: projectId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: elderlyId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功获取列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/VolunteerServiceAssignment'
+                      totalElements:
+                        type: integer
+                        format: int64
+        default:
+          $ref: '#/components/responses/DefaultError'
+    post: # 分配任务或记录服务
+      tags:
+        - Volunteer
+      summary: 创建新志愿者服务分配/记录
+      operationId: createVolunteerServiceAssignment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VolunteerServiceAssignment'
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/VolunteerServiceAssignment'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /volunteer-service-assignments/{id}:
+    get:
+      tags:
+        - Volunteer
+      summary: 根据ID获取志愿者服务分配/记录详情
+      operationId: getVolunteerServiceAssignmentById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/VolunteerServiceAssignment'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    put:
+      tags:
+        - Volunteer
+      summary: 根据ID更新志愿者服务分配/记录 (例如：完成服务，填写反馈)
+      operationId: updateVolunteerServiceAssignment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VolunteerServiceAssignment'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/VolunteerServiceAssignment'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    delete: # 通常不直接删除，而是标记为取消
+      tags:
+        - Volunteer
+      summary: 根据ID取消/删除志愿者服务分配/记录
+      operationId: deleteVolunteerServiceAssignment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 删除/取消成功
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  # --- 系统管理模块 (用户, 角色, 权限) ---
+  # 用户管理
+  /system/users:
+    get:
+      tags:
+        - SystemManagement
+      summary: 获取用户列表 (分页)
+      operationId: listUsers
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+        - name: username
+          in: query
+          schema:
+            type: string
+        - name: organizationId
+          in: query
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SystemUser'
+                      totalElements:
+                        type: integer
+                        format: int64
+        default:
+          $ref: '#/components/responses/DefaultError'
+    post:
+      tags:
+        - SystemManagement
+      summary: 创建新用户
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: # 创建用户时需要密码，角色等
+              allOf:
+                - $ref: '#/components/schemas/SystemUser'
+                - type: object
+                  properties:
+                    password: # 明文密码，后端处理哈希
+                      type: string
+                      format: password
+                    roleIds:
+                      type: array
+                      items:
+                        type: integer
+                        format: int64
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SystemUser' # 不返回密码
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /system/users/{id}:
+    get:
+      tags:
+        - SystemManagement
+      summary: 根据ID获取用户详情
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data: # 通常会附带用户的角色信息
+                    allOf:
+                      - $ref: '#/components/schemas/SystemUser'
+                      - type: object
+                        properties:
+                          roles:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Role'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    put:
+      tags:
+        - SystemManagement
+      summary: 根据ID更新用户信息
+      operationId: updateUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: # 更新时密码可选，角色可选
+              allOf:
+                - $ref: '#/components/schemas/SystemUser'
+                - type: object
+                  properties:
+                    password: # 新密码，如果需要修改
+                      type: string
+                      format: password
+                      nullable: true
+                    roleIds:
+                      type: array
+                      items:
+                        type: integer
+                        format: int64
+                      nullable: true
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SystemUser'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    delete:
+      tags:
+        - SystemManagement
+      summary: 根据ID删除用户
+      operationId: deleteUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 删除成功
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  # 角色管理
+  /system/roles:
+    get:
+      tags:
+        - SystemManagement
+      summary: 获取角色列表 (分页或全量)
+      operationId: listRoles
+      parameters:
+        - $ref: '#/components/parameters/page' # 可以不分页，返回所有角色
+        - $ref: '#/components/parameters/size'
+        - name: roleName
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data: # 如果分页，结构类似其他分页接口
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Role'
+                      # totalElements: (if paginated)
+        default:
+          $ref: '#/components/responses/DefaultError'
+    post:
+      tags:
+        - SystemManagement
+      summary: 创建新角色
+      operationId: createRole
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Role'
+                - type: object
+                  properties:
+                    permissionIds: # 创建角色时关联权限
+                      type: array
+                      items:
+                        type: integer
+                        format: int64
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Role'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /system/roles/{id}:
+    get:
+      tags:
+        - SystemManagement
+      summary: 根据ID获取角色详情 (通常附带权限ID列表或权限树)
+      operationId: getRoleById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/Role'
+                      - type: object
+                        properties:
+                          permissionIds:
+                            type: array
+                            items:
+                              type: integer
+                              format: int64
+                          # permissions: # 或者直接返回权限对象列表/树
+                          #   type: array
+                          #   items:
+                          #     $ref: '#/components/schemas/MenuPermission'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    put:
+      tags:
+        - SystemManagement
+      summary: 根据ID更新角色信息 (包括权限)
+      operationId: updateRole
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Role'
+                - type: object
+                  properties:
+                    permissionIds:
+                      type: array
+                      items:
+                        type: integer
+                        format: int64
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Role'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    delete:
+      tags:
+        - SystemManagement
+      summary: 根据ID删除角色
+      operationId: deleteRole
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 删除成功
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  # 菜单/权限管理
+  /system/menu-permissions:
+    get: # 通常是获取树形结构的菜单/权限
+      tags:
+        - SystemManagement
+      summary: 获取菜单/权限树
+      operationId: getMenuPermissionTree
+      parameters:
+        - name: name # 按名称筛选 (可选)
+          in: query
+          schema:
+            type: string
+        - name: type # 按类型筛选 (可选)
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MenuPermission' # 顶级节点列表，每个节点可能包含 children
+        default:
+          $ref: '#/components/responses/DefaultError'
+    post:
+      tags:
+        - SystemManagement
+      summary: 创建新菜单/权限
+      operationId: createMenuPermission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuPermission'
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/MenuPermission'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /system/menu-permissions/{id}:
+    get:
+      tags:
+        - SystemManagement
+      summary: 根据ID获取菜单/权限详情
+      operationId: getMenuPermissionById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/MenuPermission'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    put:
+      tags:
+        - SystemManagement
+      summary: 根据ID更新菜单/权限信息
+      operationId: updateMenuPermission
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuPermission'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/MenuPermission'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    delete:
+      tags:
+        - SystemManagement
+      summary: 根据ID删除菜单/权限 (注意：如果包含子节点，可能需要特殊处理)
+      operationId: deleteMenuPermission
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 删除成功
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  # --- Auth (not explicitly requested but essential) ---
+  /auth/login:
+    post:
+      tags:
+        - SystemManagement # Or a dedicated Auth tag
+      summary: 用户登录
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data: # 通常返回 token 和用户信息
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      user:
+                        $ref: '#/components/schemas/SystemUser' # 不含密码
+        '401':
+          description: 认证失败 (用户名或密码错误)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /auth/me:
+    get:
+      tags:
+        - SystemManagement
+      summary: 获取当前登录用户信息
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: [] # 表示此接口需要认证
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SystemUser' # 附带角色和权限信息更好
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+
+# --- Reusable Responses ---
+components:
+  responses:
+    NotFound:
+      description: 资源未找到
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+            example:
+              code: 404
+              message: "Resource not found"
+    DefaultError:
+      description: 意外错误或通用错误响应
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+            example:
+              code: 500
+              message: "An unexpected error occurred"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security: # 全局安全定义，可以被具体操作覆盖
+  - bearerAuth: []
+
+
+</rewritten_file> 
