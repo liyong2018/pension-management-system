@@ -20,7 +20,7 @@ export const useOrganizationStore = defineStore('organization', {
       this.error = null;
       try {
         const apiParams = {
-          page: params.page - 1, 
+          page: params.page - 1, // 前端页码从1开始，后端从0开始
           size: params.size,
           sort: params.sort || 'name,asc',
         };
@@ -28,14 +28,33 @@ export const useOrganizationStore = defineStore('organization', {
           apiParams.name = params.name.trim();
         }
         const response = await organizationService.getOrganizations(apiParams);
-        this.organizations = response.data.content;
-        this.pagination.currentPage = response.data.number + 1;
-        this.pagination.totalPages = response.data.totalPages;
-        this.pagination.totalElements = response.data.totalElements;
-        this.pagination.pageSize = response.data.size;
+        if (response && response.data && response.data.content) {
+          this.organizations = response.data.content;
+          this.pagination = {
+            currentPage: response.data.number + 1, // 后端从0开始，前端从1开始
+            totalPages: response.data.totalPages,
+            totalElements: response.data.totalElements,
+            pageSize: response.data.size
+          };
+        } else {
+          this.organizations = [];
+          this.pagination = {
+            currentPage: 1,
+            totalPages: 0,
+            totalElements: 0,
+            pageSize: params.size
+          };
+          this.error = '未获取到机构数据';
+        }
       } catch (err) {
         this.error = err.response?.data?.message || err.message || '获取机构列表失败';
-        // 考虑使用 ElMessage 等进行全局提示
+        this.organizations = [];
+        this.pagination = {
+          currentPage: 1,
+          totalPages: 0,
+          totalElements: 0,
+          pageSize: params.size
+        };
       } finally {
         this.loading = false;
       }

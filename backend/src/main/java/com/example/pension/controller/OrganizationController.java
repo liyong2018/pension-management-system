@@ -7,12 +7,12 @@ import com.example.pension.service.OrganizationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 
 @RestController
 @RequestMapping("/api/organizations")
@@ -27,9 +27,17 @@ public class OrganizationController {
 
     @GetMapping
     public ResponseEntity<Page<OrganizationDTO>> getAllOrganizations(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String name,
-            @PageableDefault(size = 10, sort = "name") Pageable pageable) {
-        Page<OrganizationDTO> organizations = organizationService.getAllOrganizations(name, pageable);
+            @RequestParam(defaultValue = "id,asc") String sort) {
+        
+        String[] sortParams = sort.split(",");
+        Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ? 
+            Sort.Direction.DESC : Sort.Direction.ASC;
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
+        Page<OrganizationDTO> organizations = organizationService.getAllOrganizations(pageable, name);
         return ResponseEntity.ok(organizations);
     }
 

@@ -1,26 +1,20 @@
-import axios from 'axios';
+import request from '@/utils/request';
 
-const API_URL = '/api/organizations'; // 根据 vite.config.js 中的代理配置
-
-// 创建通用的 axios 实例
-const apiClient = axios.create({
-  baseURL: '/', // 因为 vite 会处理代理，所以这里可以是根路径
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-export default {
+const organizationService = {
   /**
    * 获取机构列表（分页）
-   * @param {number} page - 页码 (0-indexed)
-   * @param {number} size - 每页大小
-   * @param {string} sort - 排序字段, 例如: name,asc
+   * @param {Object} params - 查询参数
+   * @param {number} params.page - 页码 (0-indexed)
+   * @param {number} params.size - 每页大小
+   * @param {string} params.sort - 排序字段, 例如: name,asc
+   * @param {string} params.name - 机构名称关键词
    * @returns {Promise<Object>}
    */
-  getOrganizations(page = 0, size = 10, sort = 'id,asc') {
-    return apiClient.get(API_URL, {
-      params: { page, size, sort },
+  getOrganizations(params) {
+    return request({
+      url: 'organizations',
+      method: 'get',
+      params
     });
   },
 
@@ -30,7 +24,10 @@ export default {
    * @returns {Promise<Object>}
    */
   getOrganizationById(id) {
-    return apiClient.get(`${API_URL}/${id}`);
+    return request({
+      url: `organizations/${id}`,
+      method: 'get'
+    });
   },
 
   /**
@@ -38,8 +35,12 @@ export default {
    * @param {Object} organizationData - 机构数据
    * @returns {Promise<Object>}
    */
-  createOrganization(organizationData) {
-    return apiClient.post(API_URL, organizationData);
+  createOrganization(data) {
+    return request({
+      url: 'organizations',
+      method: 'post',
+      data
+    });
   },
 
   /**
@@ -48,8 +49,12 @@ export default {
    * @param {Object} organizationData - 需要更新的机构数据
    * @returns {Promise<Object>}
    */
-  updateOrganization(id, organizationData) {
-    return apiClient.put(`${API_URL}/${id}`, organizationData);
+  updateOrganization(id, data) {
+    return request({
+      url: `organizations/${id}`,
+      method: 'put',
+      data
+    });
   },
 
   /**
@@ -58,7 +63,24 @@ export default {
    * @returns {Promise<Object>}
    */
   deleteOrganization(id) {
-    return apiClient.delete(`${API_URL}/${id}`);
+    return request({
+      url: `organizations/${id}`,
+      method: 'delete'
+    });
+  },
+
+  /**
+   * 批量删除机构
+   * @param {number[]} ids - 机构ID数组
+   * @returns {Promise<void>}
+   */
+  async batchDeleteOrganizations(ids) {
+    try {
+      await Promise.all(ids.map(id => this.deleteOrganization(id)));
+    } catch (error) {
+      console.error('批量删除失败:', error);
+      throw new Error('批量删除失败，请重试');
+    }
   },
 
   /**
@@ -70,4 +92,6 @@ export default {
   // findOrganizationsByName(name) {
   //   return apiClient.get(API_URL, { params: { name } });
   // }
-}; 
+};
+
+export default organizationService; 

@@ -1,10 +1,10 @@
 package com.example.pension.service;
 
+import com.example.pension.dao.UserDao;
 import com.example.pension.dto.LoginRequest;
 import com.example.pension.dto.LoginResponse;
 import com.example.pension.dto.UserDTO;
 import com.example.pension.model.User;
-import com.example.pension.repository.UserRepository;
 import com.example.pension.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -18,13 +18,13 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository userRepository;
+    private final UserDao userDao;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
 
     @Transactional
     public LoginResponse login(LoginRequest loginRequest) {
-        User user = userRepository.findByUsername(loginRequest.getUsername())
+        User user = userDao.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> new BadCredentialsException("用户名或密码错误"));
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
@@ -33,15 +33,18 @@ public class UserService {
 
         // 更新最后登录时间
         user.setLastLoginTime(LocalDateTime.now());
-        userRepository.save(user);
+        userDao.update(user);
 
         // 生成JWT token
         String token = tokenProvider.generateToken(user.getUsername());
 
-        return new LoginResponse(token, convertToDTO(user));
+        // 重新获取用户信息，以确保 DTO 中是最新的，特别是 updateTime
+        User updatedUser = userDao.findById(user.getId());
+        return new LoginResponse(token, convertToDTO(updatedUser != null ? updatedUser : user));
     }
 
     private UserDTO convertToDTO(User user) {
+        if (user == null) return null;
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
@@ -50,7 +53,9 @@ public class UserService {
         dto.setPhone(user.getPhone());
         if (user.getOrganization() != null) {
             dto.setOrganizationId(user.getOrganization().getId());
-            dto.setOrganizationName(user.getOrganization().getName());
+            if (user.getOrganization().getName() != null) {
+                dto.setOrganizationName(user.getOrganization().getName());
+            }
         }
         dto.setAdmin(user.isAdmin());
         dto.setActive(user.isActive());

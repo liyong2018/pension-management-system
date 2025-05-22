@@ -1,13 +1,26 @@
 -- ----------------------------
 -- 数据库: pension_management_system
 -- ----------------------------
-CREATE DATABASE IF NOT EXISTS pension_management_system DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE pension_management_system;
 
--- ----------------------------
--- 机构表
--- ----------------------------
+-- 首先删除所有表（按照外键依赖的相反顺序）
+DROP TABLE IF EXISTS `role_permission`;
+DROP TABLE IF EXISTS `menu_permission`;
+DROP TABLE IF EXISTS `user_role`;
+DROP TABLE IF EXISTS `role`;
+DROP TABLE IF EXISTS `homepage_statistics`;
+DROP TABLE IF EXISTS `volunteer_service_assignment`;
+DROP TABLE IF EXISTS `volunteer_service_project`;
+DROP TABLE IF EXISTS `volunteer`;
+DROP TABLE IF EXISTS `device_alarm_record`;
+DROP TABLE IF EXISTS `health_monitoring_data`;
+DROP TABLE IF EXISTS `smart_device`;
+DROP TABLE IF EXISTS `service_record`;
+DROP TABLE IF EXISTS `elderly_family_member`;
+DROP TABLE IF EXISTS `elderly_profile`;
+DROP TABLE IF EXISTS `system_user`;
 DROP TABLE IF EXISTS `organization`;
+
+-- 然后创建表（按照外键依赖的顺序）
 CREATE TABLE `organization` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '机构ID',
   `name` VARCHAR(255) NOT NULL COMMENT '机构名称',
@@ -38,10 +51,25 @@ CREATE TABLE `organization` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='机构信息表';
 
--- ----------------------------
--- 人员档案表 (老人信息)
--- ----------------------------
-DROP TABLE IF EXISTS `elderly_profile`;
+-- 系统用户表
+CREATE TABLE `system_user` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '用户ID',
+  `username` VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
+  `password_hash` VARCHAR(255) NOT NULL COMMENT '密码哈希',
+  `full_name` VARCHAR(100) COMMENT '姓名',
+  `email` VARCHAR(100) UNIQUE COMMENT '电子邮箱',
+  `phone` VARCHAR(20) COMMENT '手机号',
+  `organization_id` BIGINT COMMENT '所属机构ID (如果是机构用户)',
+  `is_admin` BOOLEAN DEFAULT FALSE COMMENT '是否为超级管理员',
+  `is_active` BOOLEAN DEFAULT TRUE COMMENT '是否激活',
+  `last_login_time` DATETIME COMMENT '最后登录时间',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统用户表';
+
+-- 老人档案表
 CREATE TABLE `elderly_profile` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '老人ID',
   `name` VARCHAR(50) NOT NULL COMMENT '姓名',
@@ -70,10 +98,7 @@ CREATE TABLE `elderly_profile` (
   FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='人员档案表（老人信息）';
 
--- ----------------------------
 -- 老人家属信息表
--- ----------------------------
-DROP TABLE IF EXISTS `elderly_family_member`;
 CREATE TABLE `elderly_family_member` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '家属ID',
   `elderly_id` BIGINT NOT NULL COMMENT '老人ID',
@@ -86,54 +111,7 @@ CREATE TABLE `elderly_family_member` (
   FOREIGN KEY (`elderly_id`) REFERENCES `elderly_profile`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='老人家属信息表';
 
--- ----------------------------
--- 健康监测数据表
--- ----------------------------
-DROP TABLE IF EXISTS `health_monitoring_data`;
-CREATE TABLE `health_monitoring_data` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '数据ID',
-  `elderly_id` BIGINT NOT NULL COMMENT '老人ID',
-  `device_id` BIGINT COMMENT '设备ID (可选, 如果数据来自特定设备)',
-  `monitoring_time` DATETIME NOT NULL COMMENT '监测时间',
-  `data_type` VARCHAR(100) COMMENT '数据类型 (如: 心率, 血压, 血糖, 体温, 睡眠)',
-  `value` VARCHAR(255) COMMENT '监测值',
-  `unit` VARCHAR(50) COMMENT '单位',
-  `is_abnormal` BOOLEAN DEFAULT FALSE COMMENT '是否异常',
-  `alarm_level` VARCHAR(50) COMMENT '告警级别 (如有)',
-  `remarks` TEXT COMMENT '备注',
-  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`elderly_id`) REFERENCES `elderly_profile`(`id`) ON DELETE CASCADE
-  -- FOREIGN KEY (`device_id`) REFERENCES `smart_device`(`id`) ON DELETE SET NULL -- 待智能设备表创建后添加
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='健康监测数据表';
-
--- ----------------------------
--- 服务记录表
--- ----------------------------
-DROP TABLE IF EXISTS `service_record`;
-CREATE TABLE `service_record` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '记录ID',
-  `elderly_id` BIGINT NOT NULL COMMENT '老人ID',
-  `service_content` TEXT NOT NULL COMMENT '服务内容',
-  `service_time` DATETIME NOT NULL COMMENT '服务时间',
-  `service_address` VARCHAR(255) COMMENT '服务地址',
-  `service_provider_type` VARCHAR(50) COMMENT '服务提供方类型 (如: 机构员工, 志愿者)',
-  `service_provider_id` BIGINT COMMENT '服务提供方ID (关联员工表或志愿者表)',
-  `service_provider_name` VARCHAR(100) COMMENT '服务提供方姓名',
-  `work_order_price` DECIMAL(10, 2) COMMENT '工单价格',
-  `status` VARCHAR(50) COMMENT '服务状态 (如: 待处理, 进行中, 已完成, 已评价)',
-  `evaluation_score` INT COMMENT '评价分数 (1-5)',
-  `evaluation_comment` TEXT COMMENT '评价内容',
-  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`elderly_id`) REFERENCES `elderly_profile`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='服务记录表';
-
--- ----------------------------
 -- 智能设备表
--- ----------------------------
-DROP TABLE IF EXISTS `smart_device`;
 CREATE TABLE `smart_device` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '设备ID',
   `device_name` VARCHAR(100) NOT NULL COMMENT '设备名称',
@@ -155,10 +133,25 @@ CREATE TABLE `smart_device` (
   FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='智能设备表';
 
--- ----------------------------
--- 智能设备告警记录表
--- ----------------------------
-DROP TABLE IF EXISTS `device_alarm_record`;
+-- 健康监测数据表
+CREATE TABLE `health_monitoring_data` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '数据ID',
+  `elderly_id` BIGINT NOT NULL COMMENT '老人ID',
+  `device_id` BIGINT COMMENT '设备ID (可选, 如果数据来自特定设备)',
+  `monitoring_time` DATETIME NOT NULL COMMENT '监测时间',
+  `data_type` VARCHAR(100) COMMENT '数据类型 (如: 心率, 血压, 血糖, 体温, 睡眠)',
+  `value` VARCHAR(255) COMMENT '监测值',
+  `unit` VARCHAR(50) COMMENT '单位',
+  `is_abnormal` BOOLEAN DEFAULT FALSE COMMENT '是否异常',
+  `alarm_level` VARCHAR(50) COMMENT '告警级别 (如有)',
+  `remarks` TEXT COMMENT '备注',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`elderly_id`) REFERENCES `elderly_profile`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`device_id`) REFERENCES `smart_device`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='健康监测数据表';
+
+-- 设备告警记录表
 CREATE TABLE `device_alarm_record` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '告警ID',
   `device_id` BIGINT NOT NULL COMMENT '设备ID',
@@ -174,14 +167,31 @@ CREATE TABLE `device_alarm_record` (
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`id`),
   FOREIGN KEY (`device_id`) REFERENCES `smart_device`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`elderly_id`) REFERENCES `elderly_profile`(`id`) ON DELETE SET NULL
-  -- FOREIGN KEY (`processor_id`) REFERENCES `user`(`id`) ON DELETE SET NULL -- 待用户表创建后添加
+  FOREIGN KEY (`elderly_id`) REFERENCES `elderly_profile`(`id`) ON DELETE SET NULL,
+  FOREIGN KEY (`processor_id`) REFERENCES `system_user`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='智能设备告警记录表';
 
--- ----------------------------
+-- 服务记录表
+CREATE TABLE `service_record` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '记录ID',
+  `elderly_id` BIGINT NOT NULL COMMENT '老人ID',
+  `service_content` TEXT NOT NULL COMMENT '服务内容',
+  `service_time` DATETIME NOT NULL COMMENT '服务时间',
+  `service_address` VARCHAR(255) COMMENT '服务地址',
+  `service_provider_type` VARCHAR(50) COMMENT '服务提供方类型 (如: 机构员工, 志愿者)',
+  `service_provider_id` BIGINT COMMENT '服务提供方ID (关联员工表或志愿者表)',
+  `service_provider_name` VARCHAR(100) COMMENT '服务提供方姓名',
+  `work_order_price` DECIMAL(10, 2) COMMENT '工单价格',
+  `status` VARCHAR(50) COMMENT '服务状态 (如: 待处理, 进行中, 已完成, 已评价)',
+  `evaluation_score` INT COMMENT '评价分数 (1-5)',
+  `evaluation_comment` TEXT COMMENT '评价内容',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`elderly_id`) REFERENCES `elderly_profile`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='服务记录表';
+
 -- 志愿者信息表
--- ----------------------------
-DROP TABLE IF EXISTS `volunteer`;
 CREATE TABLE `volunteer` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '志愿者ID',
   `name` VARCHAR(50) NOT NULL COMMENT '姓名',
@@ -214,10 +224,7 @@ CREATE TABLE `volunteer` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='志愿者信息表';
 
--- ----------------------------
--- 志愿者服务项目表 (平台发布的服务需求)
--- ----------------------------
-DROP TABLE IF EXISTS `volunteer_service_project`;
+-- 志愿者服务项目表
 CREATE TABLE `volunteer_service_project` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '项目ID',
   `project_name` VARCHAR(255) NOT NULL COMMENT '项目名称',
@@ -235,14 +242,11 @@ CREATE TABLE `volunteer_service_project` (
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON DELETE SET NULL
-  -- FOREIGN KEY (`created_by_user_id`) REFERENCES `user`(`id`) ON DELETE SET NULL -- 待用户表创建后添加
+  FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON DELETE SET NULL,
+  FOREIGN KEY (`created_by_user_id`) REFERENCES `system_user`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='志愿者服务项目表';
 
--- ----------------------------
--- 志愿者服务记录表 (志愿者参与服务的记录)
--- ----------------------------
-DROP TABLE IF EXISTS `volunteer_service_assignment`;
+-- 志愿者服务记录表
 CREATE TABLE `volunteer_service_assignment` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '分配/记录ID',
   `volunteer_id` BIGINT NOT NULL COMMENT '志愿者ID',
@@ -264,31 +268,7 @@ CREATE TABLE `volunteer_service_assignment` (
   FOREIGN KEY (`elderly_id`) REFERENCES `elderly_profile`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='志愿者服务记录与分配表';
 
--- ----------------------------
--- 系统用户表 (用于后台管理)
--- ----------------------------
-DROP TABLE IF EXISTS `system_user`;
-CREATE TABLE `system_user` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '用户ID',
-  `username` VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
-  `password_hash` VARCHAR(255) NOT NULL COMMENT '密码哈希',
-  `full_name` VARCHAR(100) COMMENT '姓名',
-  `email` VARCHAR(100) UNIQUE COMMENT '电子邮箱',
-  `phone` VARCHAR(20) COMMENT '手机号',
-  `organization_id` BIGINT COMMENT '所属机构ID (如果是机构用户)',
-  `is_admin` BOOLEAN DEFAULT FALSE COMMENT '是否为超级管理员',
-  `is_active` BOOLEAN DEFAULT TRUE COMMENT '是否激活',
-  `last_login_time` DATETIME COMMENT '最后登录时间',
-  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统用户表';
-
--- ----------------------------
 -- 角色表
--- ----------------------------
-DROP TABLE IF EXISTS `role`;
 CREATE TABLE `role` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '角色ID',
   `role_name` VARCHAR(50) NOT NULL UNIQUE COMMENT '角色名称 (如: 系统管理员, 机构管理员, 护理员, 志愿者管理员)',
@@ -299,10 +279,7 @@ CREATE TABLE `role` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色表';
 
--- ----------------------------
 -- 用户角色关联表
--- ----------------------------
-DROP TABLE IF EXISTS `user_role`;
 CREATE TABLE `user_role` (
   `user_id` BIGINT NOT NULL,
   `role_id` BIGINT NOT NULL,
@@ -311,10 +288,7 @@ CREATE TABLE `user_role` (
   FOREIGN KEY (`role_id`) REFERENCES `role`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户角色关联表';
 
--- ----------------------------
 -- 菜单/权限表
--- ----------------------------
-DROP TABLE IF EXISTS `menu_permission`;
 CREATE TABLE `menu_permission` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '权限ID',
   `parent_id` BIGINT DEFAULT NULL COMMENT '父权限ID (用于树形结构)',
@@ -333,10 +307,7 @@ CREATE TABLE `menu_permission` (
   FOREIGN KEY (`parent_id`) REFERENCES `menu_permission`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='菜单权限表';
 
--- ----------------------------
 -- 角色菜单/权限关联表
--- ----------------------------
-DROP TABLE IF EXISTS `role_permission`;
 CREATE TABLE `role_permission` (
   `role_id` BIGINT NOT NULL,
   `permission_id` BIGINT NOT NULL,
@@ -345,12 +316,7 @@ CREATE TABLE `role_permission` (
   FOREIGN KEY (`permission_id`) REFERENCES `menu_permission`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色权限关联表';
 
--- ----------------------------
--- 首页统计数据表 (考虑是否需要持久化，或者实时计算)
--- 可以创建一个表来存储每日或定期的快照，或者在需要时通过聚合查询生成。
--- 此处仅为示例，实际可能通过视图或定时任务更新。
--- ----------------------------
-DROP TABLE IF EXISTS `homepage_statistics`;
+-- 首页统计数据表
 CREATE TABLE `homepage_statistics` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `record_date` DATE NOT NULL UNIQUE COMMENT '记录日期',
@@ -368,7 +334,6 @@ CREATE TABLE `homepage_statistics` (
   `ability_assessment_moderate_disability_count` INT COMMENT '能力评估-中度失能数量',
   `ability_assessment_severe_disability_count` INT COMMENT '能力评估-重度失能数量',
   `ability_assessment_unassessed_count` INT COMMENT '能力评估-未评估数量',
-  -- 年龄分布可以更细化，例如存储JSON或多个字段
   `age_distribution_60_69_count` INT COMMENT '年龄分布-60至69岁数量',
   `age_distribution_70_79_count` INT COMMENT '年龄分布-70至79岁数量',
   `age_distribution_80_89_count` INT COMMENT '年龄分布-80至89岁数量',
@@ -382,9 +347,7 @@ CREATE TABLE `homepage_statistics` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='首页统计数据快照表';
 
--- ----------------------------
--- 初始化一些基础数据 (可选)
--- ----------------------------
+-- 初始化一些基础数据
 INSERT INTO `role` (`role_name`, `role_key`, `description`) VALUES
 ('超级管理员', 'SUPER_ADMIN', '拥有所有权限'),
 ('机构管理员', 'ORG_ADMIN', '管理本机构相关事务'),
@@ -395,80 +358,4 @@ INSERT INTO `system_user` (`username`, `password_hash`, `full_name`, `is_admin`,
 ('admin', '$2a$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', '超级管理员', TRUE, TRUE); -- 密码 'admin' 的 bcrypt 哈希 (请替换为安全的哈希值)
 
 -- 给admin用户分配超级管理员角色 (假设admin用户ID为1, 超级管理员角色ID为1)
--- INSERT INTO `user_role` (`user_id`, `role_id`) VALUES (1, 1);
-
--- 修正外键约束，在所有表创建完成后
-ALTER TABLE `health_monitoring_data`
-  ADD CONSTRAINT `fk_health_data_device` FOREIGN KEY (`device_id`) REFERENCES `smart_device`(`id`) ON DELETE SET NULL;
-
-ALTER TABLE `device_alarm_record`
-  ADD CONSTRAINT `fk_alarm_processor` FOREIGN KEY (`processor_id`) REFERENCES `system_user`(`id`) ON DELETE SET NULL;
-
-ALTER TABLE `volunteer_service_project`
-  ADD CONSTRAINT `fk_project_creator` FOREIGN KEY (`created_by_user_id`) REFERENCES `system_user`(`id`) ON DELETE SET NULL;
-
-
--- 注意：
--- 1. `password_hash` 需要使用安全的哈希算法（如 bcrypt）存储，示例中的哈希值是占位符。
--- 2. 一些统计数据，如首页的统计，可以考虑通过视图（View）或定时任务从其他表中聚合生成，而不是直接存储，以保证数据实时性。
---    如果需要历史趋势，则可以像 `homepage_statistics` 表一样做快照。
--- 3. `*_id` 字段，如果需要关联到其他模块但该模块表尚未创建，可以先注释掉外键，待所有表结构确定后再添加。
--- 4. 地址信息可以考虑更规范的省市区街道表，并通过外键关联，此处为简化直接存储字符串。
--- 5. 某些字段如 '养老类型', '能力评估' 等，可以使用枚举类型或关联字典表，此处为简化使用 VARCHAR。
-
-
--- 机构类型示例 (可以作为字典表)
--- CREATE TABLE `dict_organization_type` (
---   `id` INT AUTO_INCREMENT PRIMARY KEY,
---   `name` VARCHAR(50) NOT NULL UNIQUE,
---   `description` VARCHAR(255)
--- );
--- INSERT INTO `dict_organization_type` (name, description) VALUES
--- ('HOME_CARE', '居家养老单位'),
--- ('COMMUNITY_CARE_DAY', '社区养老单位（日照）'),
--- ('INSTITUTIONAL_CARE', '机构养老单位（养老院）');
-
--- 养老类型示例 (可以作为字典表)
--- CREATE TABLE `dict_pension_type` (
---   `id` INT AUTO_INCREMENT PRIMARY KEY,
---   `name` VARCHAR(50) NOT NULL UNIQUE,
---   `description` VARCHAR(255)
--- );
--- INSERT INTO `dict_pension_type` (name, description) VALUES
--- ('HOME', '居家养老'),
--- ('COMMUNITY_DAY', '社区养老（日照）'),
--- ('INSTITUTIONAL', '机构养老（养老院）');
-
--- 能力评估示例 (可以作为字典表)
--- CREATE TABLE `dict_ability_assessment` (
---   `id` INT AUTO_INCREMENT PRIMARY KEY,
---   `name` VARCHAR(50) NOT NULL UNIQUE,
---   `description` VARCHAR(255)
--- );
--- INSERT INTO `dict_ability_assessment` (name, description) VALUES
--- ('INTACT', '能力完好'),
--- ('MILD_DISABILITY', '轻度失能'),
--- ('MODERATE_DISABILITY', '中度失能'),
--- ('SEVERE_DISABILITY', '重度失能'),
--- ('UNASSESSED', '未评估');
-
--- 设备类型示例 (可以作为字典表)
--- CREATE TABLE `dict_device_type` (
---   `id` INT AUTO_INCREMENT PRIMARY KEY,
---   `name` VARCHAR(100) NOT NULL UNIQUE,
---   `description` VARCHAR(255)
--- );
--- INSERT INTO `dict_device_type` (name, description) VALUES
--- ('SOS_ALARM', 'SOS报警器'),
--- ('SMOKE_SENSOR', '烟雾传感器'),
--- ('WATER_LEAK_SENSOR', '水浸传感器'),
--- ('FALL_DETECTOR', '跌倒检测器'),
--- ('GAS_LEAK_SENSOR', '燃气泄露传感器'),
--- ('HEALTH_BRACELET', '健康监测手环'),
--- ('BLOOD_PRESSURE_MONITOR', '血压计');
-
-
-
-
-
-</rewritten_file> 
+INSERT INTO `user_role` (`user_id`, `role_id`) VALUES (1, 1); 

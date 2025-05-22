@@ -11,7 +11,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000, // 前端开发服务器端口
+    port: 3000, // 更新为新的端口
     proxy: {
       // 配置代理，解决跨域问题
       '/api': { // 将匹配到 /api 的请求代理到后端服务器

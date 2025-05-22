@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pension.dao.OrganizationDao">
+
+    <resultMap id="OrganizationResultMap" type="com.example.pension.model.Organization">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="shortName" column="short_name"/>
+        <result property="type" column="type"/>
+        <result property="address" column="address"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="website" column="website"/>
+        <result property="establishmentDate" column="establishment_date"/>
+        <result property="licenseNumber" column="license_number"/>
+        <result property="businessScope" column="business_scope"/>
+        <result property="bedCount" column="bed_count"/>
+        <result property="actualServiceCount" column="actual_service_count"/>
+        <result property="chargingStandard" column="charging_standard"/>
+        <result property="area" column="area"/>
+        <result property="directorName" column="director_name"/>
+        <result property="directorContact" column="director_contact"/>
+        <result property="employeeCount" column="employee_count"/>
+        <result property="professionalNurseCount" column="professional_nurse_count"/>
+        <result property="fireLicense" column="fire_license"/>
+        <result property="sanitaryLicense" column="sanitary_license"/>
+        <result property="medicalLicense" column="medical_license"/>
+        <result property="otherQualifications" column="other_qualifications"/>
+        <result property="description" column="description"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, name, short_name, type, address, phone, email, website, establishment_date, 
+        license_number, business_scope, bed_count, actual_service_count, charging_standard, 
+        area, director_name, director_contact, employee_count, professional_nurse_count, 
+        fire_license, sanitary_license, medical_license, other_qualifications, 
+        description, create_time, update_time
+    </sql>
+
+    <select id="findById" resultMap="OrganizationResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM organization
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByName" resultMap="OrganizationResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM organization
+        WHERE name = #{name}
+    </select>
+
+    <select id="findByNameContaining" resultMap="OrganizationResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM organization
+        WHERE name LIKE CONCAT('%', #{name}, '%')
+    </select>
+
+    <select id="findAll" resultMap="OrganizationResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM organization
+    </select>
+
+    <insert id="save" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO organization (
+            name, short_name, type, address, phone, email, website, establishment_date,
+            license_number, business_scope, bed_count, actual_service_count, charging_standard,
+            area, director_name, director_contact, employee_count, professional_nurse_count,
+            fire_license, sanitary_license, medical_license, other_qualifications,
+            description, create_time, update_time
+        )
+        VALUES (
+            #{name}, #{shortName}, #{type}, #{address}, #{phone}, #{email}, #{website}, #{establishmentDate},
+            #{licenseNumber}, #{businessScope}, #{bedCount}, #{actualServiceCount}, #{chargingStandard},
+            #{area}, #{directorName}, #{directorContact}, #{employeeCount}, #{professionalNurseCount},
+            #{fireLicense}, #{sanitaryLicense}, #{medicalLicense}, #{otherQualifications},
+            #{description}, NOW(), NOW()
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE organization
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="shortName != null">short_name = #{shortName},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="website != null">website = #{website},</if>
+            <if test="establishmentDate != null">establishment_date = #{establishmentDate},</if>
+            <if test="licenseNumber != null">license_number = #{licenseNumber},</if>
+            <if test="businessScope != null">business_scope = #{businessScope},</if>
+            <if test="bedCount != null">bed_count = #{bedCount},</if>
+            <if test="actualServiceCount != null">actual_service_count = #{actualServiceCount},</if>
+            <if test="chargingStandard != null">charging_standard = #{chargingStandard},</if>
+            <if test="area != null">area = #{area},</if>
+            <if test="directorName != null">director_name = #{directorName},</if>
+            <if test="directorContact != null">director_contact = #{directorContact},</if>
+            <if test="employeeCount != null">employee_count = #{employeeCount},</if>
+            <if test="professionalNurseCount != null">professional_nurse_count = #{professionalNurseCount},</if>
+            <if test="fireLicense != null">fire_license = #{fireLicense},</if>
+            <if test="sanitaryLicense != null">sanitary_license = #{sanitaryLicense},</if>
+            <if test="medicalLicense != null">medical_license = #{medicalLicense},</if>
+            <if test="otherQualifications != null">other_qualifications = #{otherQualifications},</if>
+            <if test="description != null">description = #{description},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM organization WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByIds">
+        DELETE FROM organization WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper> 

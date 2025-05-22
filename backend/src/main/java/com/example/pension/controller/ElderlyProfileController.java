@@ -1,0 +1,89 @@
+package com.example.pension.controller;
+
+import com.example.pension.dto.ElderlyProfileDTO;
+import com.example.pension.service.ElderlyProfileService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/elderly-profiles")
+@RequiredArgsConstructor
+public class ElderlyProfileController {
+    
+    private final ElderlyProfileService elderlyProfileService;
+    
+    @GetMapping
+    public ResponseEntity<Page<ElderlyProfileDTO>> getAll(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String idCardNumber,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String community,
+            @RequestParam(required = false) String pensionType,
+            Pageable pageable) {
+        
+        Page<ElderlyProfileDTO> page;
+        
+        if (keyword != null && !keyword.isEmpty()) {
+            page = elderlyProfileService.search(keyword, pageable);
+        } else if (name != null || idCardNumber != null || phone != null || community != null || pensionType != null) {
+            page = elderlyProfileService.searchByMultipleConditions(name, idCardNumber, phone, community, pensionType, pageable);
+        } else {
+            page = elderlyProfileService.getAll(pageable);
+        }
+        
+        return ResponseEntity.ok(page);
+    }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<ElderlyProfileDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(elderlyProfileService.getById(id));
+    }
+    
+    @PostMapping
+    public ResponseEntity<ElderlyProfileDTO> create(@Valid @RequestBody ElderlyProfileDTO elderlyProfileDTO) {
+        return new ResponseEntity<>(elderlyProfileService.create(elderlyProfileDTO), HttpStatus.CREATED);
+    }
+    
+    @PutMapping("/{id}")
+    public ResponseEntity<ElderlyProfileDTO> update(
+            @PathVariable Long id,
+            @Valid @RequestBody ElderlyProfileDTO elderlyProfileDTO) {
+        return ResponseEntity.ok(elderlyProfileService.update(id, elderlyProfileDTO));
+    }
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        elderlyProfileService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+    
+    @DeleteMapping("/batch")
+    public ResponseEntity<Void> batchDelete(@RequestBody List<Long> ids) {
+        elderlyProfileService.batchDelete(ids);
+        return ResponseEntity.noContent().build();
+    }
+    
+    @GetMapping("/pension-type-statistics")
+    public ResponseEntity<Map<String, Long>> getPensionTypeStatistics() {
+        return ResponseEntity.ok(elderlyProfileService.getPensionTypeStatistics());
+    }
+    
+    @GetMapping("/ability-assessment-statistics")
+    public ResponseEntity<Map<String, Long>> getAbilityAssessmentStatistics() {
+        return ResponseEntity.ok(elderlyProfileService.getAbilityAssessmentStatistics());
+    }
+    
+    @GetMapping("/by-organization/{organizationId}")
+    public ResponseEntity<List<ElderlyProfileDTO>> getByOrganizationId(@PathVariable Long organizationId) {
+        return ResponseEntity.ok(elderlyProfileService.getByOrganizationId(organizationId));
+    }
+} 

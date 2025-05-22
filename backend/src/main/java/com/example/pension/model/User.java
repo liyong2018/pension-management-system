@@ -1,24 +1,15 @@
 package com.example.pension.model;
 
-import jakarta.persistence.*;
 import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Data
-@Entity
-@Table(name = "system_user")
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
     private String username;
 
-    @Column(name = "password_hash", nullable = false)
     private String password;
 
     private String fullName;
@@ -27,8 +18,6 @@ public class User {
 
     private String phone;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id")
     private Organization organization;
 
     private boolean isAdmin;
@@ -37,9 +26,7 @@ public class User {
 
     private LocalDateTime lastLoginTime;
 
-    @CreationTimestamp
     private LocalDateTime createTime;
 
-    @UpdateTimestamp
     private LocalDateTime updateTime;
 } 
