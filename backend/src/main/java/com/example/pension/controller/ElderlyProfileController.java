@@ -2,13 +2,13 @@ package com.example.pension.controller;
 
 import com.example.pension.dto.ElderlyProfileDTO;
 import com.example.pension.service.ElderlyProfileService;
+import com.github.pagehelper.PageInfo;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.util.StringUtils; // For checking empty strings
 
 import java.util.List;
 import java.util.Map;
@@ -21,23 +21,26 @@ public class ElderlyProfileController {
     private final ElderlyProfileService elderlyProfileService;
     
     @GetMapping
-    public ResponseEntity<Page<ElderlyProfileDTO>> getAll(
-            @RequestParam(required = false) String keyword,
+    public ResponseEntity<PageInfo<ElderlyProfileDTO>> getAllOrSearch(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String idCardNumber,
             @RequestParam(required = false) String phone,
-            @RequestParam(required = false) String community,
-            @RequestParam(required = false) String pensionType,
-            Pageable pageable) {
+            @RequestParam(required = false) Long organizationId, // Matched service layer
+            @RequestParam(defaultValue = "1") int pageNum,      // PageHelper is 1-based
+            @RequestParam(defaultValue = "10") int pageSize) {
         
-        Page<ElderlyProfileDTO> page;
+        PageInfo<ElderlyProfileDTO> page;
         
-        if (keyword != null && !keyword.isEmpty()) {
-            page = elderlyProfileService.search(keyword, pageable);
-        } else if (name != null || idCardNumber != null || phone != null || community != null || pensionType != null) {
-            page = elderlyProfileService.searchByMultipleConditions(name, idCardNumber, phone, community, pensionType, pageable);
+        // Check if any search criteria is provided
+        boolean hasSearchCriteria = StringUtils.hasText(name) || 
+                                   StringUtils.hasText(idCardNumber) || 
+                                   StringUtils.hasText(phone) || 
+                                   organizationId != null;
+
+        if (hasSearchCriteria) {
+            page = elderlyProfileService.searchByMultipleConditions(name, idCardNumber, phone, organizationId, pageNum, pageSize);
         } else {
-            page = elderlyProfileService.getAll(pageable);
+            page = elderlyProfileService.getAll(pageNum, pageSize);
         }
         
         return ResponseEntity.ok(page);

@@ -114,23 +114,24 @@ const fetchOrganizations = async () => {
   loading.value = true;
   try {
     const params = {
-      page: currentPage.value - 1, // 前端页码从1开始，后端从0开始
-      size: pageSize.value,
-      sort: 'id,asc',
-      name: searchParams.name
+      pageNum: currentPage.value, // 修改: page -> pageNum, 后端PageHelper使用pageNum，通常1-indexed
+      pageSize: pageSize.value, // 修改: size -> pageSize
+      // sort: 'id,asc', // 暂时移除排序，后端默认可能已有排序或需要特定格式
+      name: searchParams.name || undefined // 确保空字符串不作为参数发送
     };
 
     const response = await organizationService.getOrganizations(params);
-    if (response.data && response.data.content) {
-      organizations.value = response.data.content;
-      totalElements.value = response.data.totalElements;
-      // 确保当前页码与后端返回的页码同步
-      currentPage.value = response.data.number + 1;
-      pageSize.value = response.data.size;
+    // 修改: 直接使用 response (因为 request.js 返回 response.data)
+    if (response && response.list) {
+      organizations.value = response.list;
+      totalElements.value = response.total;
+      currentPage.value = response.pageNum; // 修改: response.data.number -> response.pageNum
+      pageSize.value = response.pageSize;   // 修改: response.data.size -> response.pageSize
     } else {
       organizations.value = [];
       totalElements.value = 0;
-      ElMessage.warning('未获取到机构数据');
+      // 如果 response 为空或 response.list 为空，也提示
+      ElMessage.warning(response?.list ? '机构数据为空' : '未获取到机构数据或数据格式不正确');
     }
   } catch (error) {
     console.error("Failed to fetch organizations:", error);

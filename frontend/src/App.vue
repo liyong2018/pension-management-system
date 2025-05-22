@@ -12,6 +12,7 @@
       >
         <el-menu-item index="/">首页</el-menu-item>
         <el-menu-item index="/organization-management">机构管理</el-menu-item>
+        <el-menu-item index="/elderly-profiles">人员档案</el-menu-item>
         <!-- 后续其他模块的导航链接可以加在这里 -->
       </el-menu>
     </el-header>

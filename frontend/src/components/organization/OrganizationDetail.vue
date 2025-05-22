@@ -93,10 +93,11 @@ const fetchOrganizationDetail = async () => {
   loading.value = true;
   try {
     const response = await organizationService.getOrganizationById(props.organizationId);
-    organizationData.value = response.data;
+    organizationData.value = response;
   } catch (error) {
     console.error('获取机构详情失败:', error);
     ElMessage.error('获取机构详情失败');
+    organizationData.value = {};
   } finally {
     loading.value = false;
   }

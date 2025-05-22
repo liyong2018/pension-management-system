@@ -230,11 +230,15 @@ const loadOrganizationData = async () => {
   try {
     loading.value = true;
     const response = await organizationService.getOrganizationById(props.organizationId);
-    // 后端返回的 address 字段直接赋值给 form.address
-    Object.assign(form, response.data);
+    // 修改: response.data -> response
+    Object.assign(form, response);
+    // 如果 establishmentDate 是字符串，尝试转换为 Date 对象以兼容 el-date-picker
+    if (form.establishmentDate && typeof form.establishmentDate === 'string') {
+      form.establishmentDate = new Date(form.establishmentDate);
+    }
   } catch (error) {
     console.error('Failed to load organization:', error);
-    ElMessage.error('加载机构信息失败: ' + (error.response?.data?.message || error.message));
+    ElMessage.error('加载机构信息失败: ' + (error.message || '未知错误'));
   } finally {
     loading.value = false;
   }
