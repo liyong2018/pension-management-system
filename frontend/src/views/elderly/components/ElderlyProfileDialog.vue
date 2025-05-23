@@ -58,8 +58,13 @@
                 <el-upload
                   class="avatar-uploader"
                   action="/api/upload"
+                  name="file"
                   :show-file-list="false"
                   :on-success="handlePhotoSuccess"
+                  :on-error="handlePhotoError"
+                  :before-upload="beforePhotoUpload"
+                  :headers="uploadHeaders"
+                  accept="image/*"
                 >
                   <img 
                     v-if="form.photoUrl" 
@@ -438,8 +443,41 @@ const fetchElderlyProfile = async () => {
 
 // 处理照片上传成功
 const handlePhotoSuccess = (response) => {
-  form.value.photoUrl = response.url
+  if (response.success) {
+    form.value.photoUrl = response.url
+    ElMessage.success('照片上传成功')
+  } else {
+    ElMessage.error(response.message || '照片上传失败')
+  }
 }
+
+// 处理照片上传错误
+const handlePhotoError = (error) => {
+  ElMessage.error('照片上传失败，请检查网络连接')
+  console.error('照片上传错误:', error)
+}
+
+// 上传前验证
+const beforePhotoUpload = (file) => {
+  const isImage = file.type.startsWith('image/')
+  const isLt2M = file.size / 1024 / 1024 < 2
+
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件')
+    return false
+  }
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB')
+    return false
+  }
+  return true
+}
+
+// 上传头部信息（包含token）
+const uploadHeaders = computed(() => {
+  const token = localStorage.getItem('token')
+  return token ? { 'Authorization': `Bearer ${token}` } : {}
+})
 
 // 处理图片加载错误
 const handleImageError = () => {
