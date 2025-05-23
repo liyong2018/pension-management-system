@@ -61,7 +61,12 @@
                   :show-file-list="false"
                   :on-success="handlePhotoSuccess"
                 >
-                  <img v-if="form.photoUrl" :src="form.photoUrl" class="avatar">
+                  <img 
+                    v-if="form.photoUrl" 
+                    :src="form.photoUrl" 
+                    class="avatar"
+                    @error="handleImageError"
+                  >
                   <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
                 </el-upload>
               </el-form-item>
@@ -436,6 +441,11 @@ const handlePhotoSuccess = (response) => {
   form.value.photoUrl = response.url
 }
 
+// 处理图片加载错误
+const handleImageError = () => {
+  ElMessage.error('图片加载失败，请检查网络连接')
+}
+
 // 处理添加家属
 const handleAddFamilyMember = () => {
   form.value.familyMembers.push({
@@ -523,7 +533,10 @@ watch([() => props.modelValue, () => props.elderlyId], async ([newVisible, newEl
 .avatar-uploader .avatar {
   width: 100px;
   height: 100px;
+  border-radius: 6px;
+  object-fit: cover;
   display: block;
+  border: 1px solid var(--el-border-color);
 }
 
 .avatar-uploader .el-upload {
@@ -533,6 +546,11 @@ watch([() => props.modelValue, () => props.elderlyId], async ([newVisible, newEl
   position: relative;
   overflow: hidden;
   transition: var(--el-transition-duration-fast);
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .avatar-uploader .el-upload:hover {
@@ -542,9 +560,11 @@ watch([() => props.modelValue, () => props.elderlyId], async ([newVisible, newEl
 .avatar-uploader-icon {
   font-size: 28px;
   color: #8c939d;
-  width: 100px;
-  height: 100px;
-  text-align: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .family-members-header {
