@@ -20,6 +20,7 @@
         <springdoc-openapi.version>2.2.0</springdoc-openapi.version>
         <lombok.version>1.18.30</lombok.version>
         <mybatis.version>3.0.3</mybatis.version>
+        <pagehelper.version>1.4.7</pagehelper.version>
     </properties>
 
     <dependencies>
@@ -27,6 +28,11 @@
             <groupId>org.mybatis.spring.boot</groupId>
             <artifactId>mybatis-spring-boot-starter</artifactId>
             <version>${mybatis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.pagehelper</groupId>
+            <artifactId>pagehelper-spring-boot-starter</artifactId>
+            <version>${pagehelper.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -40,10 +46,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+        <!-- Spring Boot Starter Data JPA (Removed) -->
+        <!--
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
+        -->
 
         <dependency>
             <groupId>com.mysql</groupId>

@@ -1106,16 +1106,31 @@ paths:
         - name: name
           in: query
           description: 按姓名模糊查询
+          required: false
+          schema:
+            type: string
+        - name: idCardNumber # 新增身份证号搜索
+          in: query
+          description: 按身份证号模糊查询
+          required: false
+          schema:
+            type: string
+        - name: phone # 新增电话号码搜索
+          in: query
+          description: 按联系电话模糊查询
+          required: false
           schema:
             type: string
         - name: community
           in: query
           description: 按所属社区查询
+          required: false
           schema:
             type: string
         - name: pensionType
           in: query
           description: 按养老类型查询
+          required: false
           schema:
             type: string
       responses:
@@ -1126,14 +1141,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
                 properties:
-                  data:
+                  data: # 分页响应
                     type: object
                     properties:
-                      content:
+                      list: # 修改 content -> list 以匹配后端实现
                         type: array
-                        items: # 列表通常显示简要信息
-                          $ref: '#/components/schemas/ElderlyBasicInfo' # 或者一个专门的ListItem DTO
-                      totalElements:
+                        items:
+                          $ref: '#/components/schemas/ElderlyProfile' # 列表项使用完整 Profile
+                      total: # 修改 totalElements -> total
                         type: integer
                         format: int64
         default:
@@ -1159,6 +1174,28 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/ElderlyProfile'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /elderly-profiles/batch: # 新增批量删除接口
+    delete:
+      tags:
+        - ElderlyProfile
+      summary: 批量删除老人档案
+      operationId: batchDeleteElderlyProfiles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+                format: int64
+              description: 要删除的老人ID列表
+      responses:
+        '204':
+          description: 批量删除成功
         default:
           $ref: '#/components/responses/DefaultError'
 
@@ -1246,7 +1283,7 @@ paths:
       tags:
         - ElderlyProfile
       summary: 获取指定老人的家属列表
-      operationId: listFamilyMembers
+      operationId: listFamilyMembersByElderlyId # 更明确的 operationId
       parameters:
         - name: elderlyId
           in: path
@@ -1273,7 +1310,7 @@ paths:
       tags:
         - ElderlyProfile
       summary: 为指定老人添加家属信息
-      operationId: addFamilyMember
+      operationId: addFamilyMemberToElderly # 更明确的 operationId
       parameters:
         - name: elderlyId
           in: path
@@ -1286,15 +1323,8 @@ paths:
         required: true
         content:
           application/json:
-            schema: # 添加时不需要 elderlyId, 它从路径获取
-              type: object
-              properties:
-                name:
-                  type: string
-                relationship:
-                  type: string
-                phone:
-                  type: string
+            schema: 
+              $ref: '#/components/schemas/ElderlyFamilyMember' # 使用完整 schema，后端会处理 elderlyId
       responses:
         '201':
           description: 家属信息添加成功
@@ -1309,21 +1339,57 @@ paths:
           $ref: '#/components/responses/DefaultError'
 
   /elderly-profiles/{elderlyId}/family-members/{familyMemberId}:
-    put:
+    get: # 新增：获取单个家属详情
       tags:
         - ElderlyProfile
-      summary: 更新指定老人的特定家属信息
-      operationId: updateFamilyMember
+      summary: 获取指定老人的特定家属详情
+      operationId: getFamilyMemberById
       parameters:
         - name: elderlyId
           in: path
           required: true
+          description: 老人ID
           schema:
             type: integer
             format: int64
         - name: familyMemberId
           in: path
           required: true
+          description: 家属ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功获取家属详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ElderlyFamilyMember'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    put:
+      tags:
+        - ElderlyProfile
+      summary: 更新指定老人的特定家属信息
+      operationId: updateFamilyMemberForElderly # 更明确的 operationId
+      parameters:
+        - name: elderlyId
+          in: path
+          required: true
+          description: 老人ID
+          schema:
+            type: integer
+            format: int64
+        - name: familyMemberId
+          in: path
+          required: true
+          description: 家属ID
           schema:
             type: integer
             format: int64
@@ -1331,15 +1397,8 @@ paths:
         required: true
         content:
           application/json:
-            schema: # 更新时ID从路径获取
-              type: object
-              properties:
-                name:
-                  type: string
-                relationship:
-                  type: string
-                phone:
-                  type: string
+            schema: 
+              $ref: '#/components/schemas/ElderlyFamilyMember' # 使用完整 schema
       responses:
         '200':
           description: 家属信息更新成功
@@ -1356,17 +1415,19 @@ paths:
       tags:
         - ElderlyProfile
       summary: 删除指定老人的特定家属信息
-      operationId: deleteFamilyMember
+      operationId: deleteFamilyMemberForElderly # 更明确的 operationId
       parameters:
         - name: elderlyId
           in: path
           required: true
+          description: 老人ID
           schema:
             type: integer
             format: int64
         - name: familyMemberId
           in: path
           required: true
+          description: 家属ID
           schema:
             type: integer
             format: int64

@@ -1,8 +1,7 @@
 package com.example.pension.service;
 
 import com.example.pension.dto.ElderlyProfileDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.github.pagehelper.PageInfo;
 
 import java.util.List;
 import java.util.Map;
@@ -13,17 +12,15 @@ public interface ElderlyProfileService {
     
     ElderlyProfileDTO getById(Long id);
     
-    Page<ElderlyProfileDTO> getAll(Pageable pageable);
+    PageInfo<ElderlyProfileDTO> getAll(int pageNum, int pageSize);
     
-    Page<ElderlyProfileDTO> search(String keyword, Pageable pageable);
-    
-    Page<ElderlyProfileDTO> searchByMultipleConditions(
+    PageInfo<ElderlyProfileDTO> searchByMultipleConditions(
             String name, 
             String idCardNumber, 
             String phone, 
-            String community, 
-            String pensionType, 
-            Pageable pageable);
+            Long organizationId,
+            int pageNum, 
+            int pageSize);
     
     ElderlyProfileDTO update(Long id, ElderlyProfileDTO elderlyProfileDTO);
     

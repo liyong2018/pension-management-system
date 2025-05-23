@@ -42,7 +42,7 @@
     </sql>
 
     <select id="findById" resultMap="OrganizationResultMap">
-        SELECT <include refid="Base_Column_List"/>
+        SELECT *
         FROM organization
         WHERE id = #{id}
     </select>
@@ -60,25 +60,41 @@
     </select>
 
     <select id="findAll" resultMap="OrganizationResultMap">
-        SELECT <include refid="Base_Column_List"/>
+        SELECT *
         FROM organization
     </select>
 
-    <insert id="save" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO organization (
-            name, short_name, type, address, phone, email, website, establishment_date,
-            license_number, business_scope, bed_count, actual_service_count, charging_standard,
-            area, director_name, director_contact, employee_count, professional_nurse_count,
-            fire_license, sanitary_license, medical_license, other_qualifications,
-            description, create_time, update_time
-        )
-        VALUES (
-            #{name}, #{shortName}, #{type}, #{address}, #{phone}, #{email}, #{website}, #{establishmentDate},
-            #{licenseNumber}, #{businessScope}, #{bedCount}, #{actualServiceCount}, #{chargingStandard},
-            #{area}, #{directorName}, #{directorContact}, #{employeeCount}, #{professionalNurseCount},
-            #{fireLicense}, #{sanitaryLicense}, #{medicalLicense}, #{otherQualifications},
-            #{description}, NOW(), NOW()
-        )
+    <select id="findWithConditions" resultMap="OrganizationResultMap">
+        SELECT *
+        FROM organization
+        <where>
+            <if test="name != null and name != ''">
+                name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+        ORDER BY id ASC
+        LIMIT #{size} OFFSET #{page}
+    </select>
+
+    <select id="countWithConditions" resultType="long">
+        SELECT count(*)
+        FROM organization
+        <where>
+            <if test="name != null and name != ''">
+                name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO organization (name, short_name, type, address, phone, email, website, establishment_date,
+                                license_number, business_scope, bed_count, actual_service_count, charging_standard,
+                                area, director_name, director_contact, employee_count, professional_nurse_count,
+                                fire_license, sanitary_license, medical_license, other_qualifications, description)
+        VALUES (#{name}, #{shortName}, #{type}, #{address}, #{phone}, #{email}, #{website}, #{establishmentDate},
+                #{licenseNumber}, #{businessScope}, #{bedCount}, #{actualServiceCount}, #{chargingStandard},
+                #{area}, #{directorName}, #{directorContact}, #{employeeCount}, #{professionalNurseCount},
+                #{fireLicense}, #{sanitaryLicense}, #{medicalLicense}, #{otherQualifications}, #{description})
     </insert>
 
     <update id="update">
@@ -107,7 +123,7 @@
             <if test="medicalLicense != null">medical_license = #{medicalLicense},</if>
             <if test="otherQualifications != null">other_qualifications = #{otherQualifications},</if>
             <if test="description != null">description = #{description},</if>
-            update_time = NOW()
+            update_time = CURRENT_TIMESTAMP
         </set>
         WHERE id = #{id}
     </update>
@@ -116,9 +132,10 @@
         DELETE FROM organization WHERE id = #{id}
     </delete>
 
-    <delete id="deleteByIds">
-        DELETE FROM organization WHERE id IN
-        <foreach collection="ids" item="id" open="(" separator="," close=")">
+    <delete id="deleteBatchByIds">
+        DELETE FROM organization
+        WHERE id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
             #{id}
         </foreach>
     </delete>

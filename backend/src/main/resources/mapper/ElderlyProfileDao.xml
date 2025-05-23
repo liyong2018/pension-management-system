@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pension.dao.ElderlyProfileDao">
+
+    <resultMap id="ElderlyProfileResultMap" type="com.example.pension.model.ElderlyProfile">
+        <id property="id" column="id" />
+        <result property="name" column="name" />
+        <result property="gender" column="gender" />
+        <result property="birthDate" column="birth_date" />
+        <result property="idCardNumber" column="id_card_number" />
+        <result property="phone" column="phone" />
+        <result property="photoUrl" column="photo_url" />
+        <result property="addressDetail" column="address_detail" />
+        <result property="community" column="community" />
+        <result property="pensionType" column="pension_type" />
+        <result property="medicalHistory" column="medical_history" />
+        <result property="allergyHistory" column="allergy_history" />
+        <result property="physicalExamReport" column="physical_exam_report" />
+        <result property="currentHealthStatus" column="current_health_status" />
+        <result property="careLevel" column="care_level" />
+        <result property="abilityAssessment" column="ability_assessment" />
+        <result property="livingHabits" column="living_habits" />
+        <result property="hobbies" column="hobbies" />
+        <result property="religiousBelief" column="religious_belief" />
+        <result property="remarks" column="remarks" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+        <association property="organization" javaType="com.example.pension.model.Organization">
+            <id property="id" column="org_id" />
+            <result property="name" column="org_name" />
+            <!-- 根据需要映射 Organization 的其他字段 -->
+        </association>
+        <!-- familyMembers 可以在需要时进行关联查询 -->
+    </resultMap>
+
+    <sql id="selectElderlyProfileColumns">
+        ep.id, ep.name, ep.gender, ep.birth_date, ep.id_card_number, ep.phone, ep.photo_url, ep.address_detail,
+        ep.community, ep.pension_type, ep.medical_history, ep.allergy_history, ep.physical_exam_report,
+        ep.current_health_status, ep.care_level, ep.ability_assessment, ep.living_habits, ep.hobbies,
+        ep.religious_belief, ep.remarks, ep.create_time, ep.update_time,
+        o.id as org_id, o.name as org_name <!-- 其他需要的 Organization 字段 -->
+    </sql>
+
+    <select id="findById" resultMap="ElderlyProfileResultMap">
+        SELECT <include refid="selectElderlyProfileColumns" />
+        FROM elderly_profile ep
+        LEFT JOIN organization o ON ep.organization_id = o.id
+        WHERE ep.id = #{id}
+    </select>
+
+    <select id="findWithConditions" resultMap="ElderlyProfileResultMap">
+        SELECT <include refid="selectElderlyProfileColumns" />
+        FROM elderly_profile ep
+        LEFT JOIN organization o ON ep.organization_id = o.id
+        <where>
+            <if test="name != null and name != ''">
+                AND ep.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="idCardNumber != null and idCardNumber != ''">
+                AND ep.id_card_number = #{idCardNumber}
+            </if>
+            <if test="phone != null and phone != ''">
+                AND ep.phone = #{phone}
+            </if>
+            <if test="organizationId != null">
+                AND ep.organization_id = #{organizationId}
+            </if>
+        </where>
+        ORDER BY ep.id ASC
+    </select>
+
+    <select id="countWithConditions" resultType="long">
+        SELECT count(ep.id)
+        FROM elderly_profile ep
+        <where>
+            <if test="name != null and name != ''">
+                AND ep.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="idCardNumber != null and idCardNumber != ''">
+                AND ep.id_card_number = #{idCardNumber}
+            </if>
+            <if test="phone != null and phone != ''">
+                AND ep.phone = #{phone}
+            </if>
+            <if test="organizationId != null">
+                AND ep.organization_id = #{organizationId}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO elderly_profile (name, gender, birth_date, id_card_number, phone, photo_url, address_detail,
+                                   community, pension_type, medical_history, allergy_history, physical_exam_report,
+                                   current_health_status, care_level, ability_assessment, living_habits, hobbies,
+                                   religious_belief, remarks, organization_id)
+        VALUES (#{name}, #{gender}, #{birthDate}, #{idCardNumber}, #{phone}, #{photoUrl}, #{addressDetail},
+                #{community}, #{pensionType}, #{medicalHistory}, #{allergyHistory}, #{physicalExamReport},
+                #{currentHealthStatus}, #{careLevel}, #{abilityAssessment}, #{livingHabits}, #{hobbies},
+                #{religiousBelief}, #{remarks}, #{organization.id})
+    </insert>
+
+    <update id="update">
+        UPDATE elderly_profile
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="birthDate != null">birth_date = #{birthDate},</if>
+            <if test="idCardNumber != null">id_card_number = #{idCardNumber},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="photoUrl != null">photo_url = #{photoUrl},</if>
+            <if test="addressDetail != null">address_detail = #{addressDetail},</if>
+            <if test="community != null">community = #{community},</if>
+            <if test="pensionType != null">pension_type = #{pensionType},</if>
+            <if test="medicalHistory != null">medical_history = #{medicalHistory},</if>
+            <if test="allergyHistory != null">allergy_history = #{allergyHistory},</if>
+            <if test="physicalExamReport != null">physical_exam_report = #{physicalExamReport},</if>
+            <if test="currentHealthStatus != null">current_health_status = #{currentHealthStatus},</if>
+            <if test="careLevel != null">care_level = #{careLevel},</if>
+            <if test="abilityAssessment != null">ability_assessment = #{abilityAssessment},</if>
+            <if test="livingHabits != null">living_habits = #{livingHabits},</if>
+            <if test="hobbies != null">hobbies = #{hobbies},</if>
+            <if test="religiousBelief != null">religious_belief = #{religiousBelief},</if>
+            <if test="remarks != null">remarks = #{remarks},</if>
+            <if test="organization != null and organization.id != null">organization_id = #{organization.id},</if>
+            <if test="organization == null">organization_id = NULL,</if> 
+            update_time = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM elderly_profile WHERE id = #{id}
+    </delete>
+
+    <select id="findAllByOrganizationId" resultMap="ElderlyProfileResultMap">
+        SELECT <include refid="selectElderlyProfileColumns" />
+        FROM elderly_profile ep
+        LEFT JOIN organization o ON ep.organization_id = o.id
+        WHERE ep.organization_id = #{organizationId}
+    </select>
+
+    <select id="countByPensionType" resultType="long">
+        SELECT count(*) FROM elderly_profile WHERE pension_type = #{pensionType}
+    </select>
+
+    <select id="countByAbilityAssessment" resultType="long">
+        SELECT count(*) FROM elderly_profile WHERE ability_assessment = #{abilityAssessment}
+    </select>
+
+    <select id="findByIdCardNumber" resultMap="ElderlyProfileResultMap">
+        SELECT <include refid="selectElderlyProfileColumns" />
+        FROM elderly_profile ep
+        LEFT JOIN organization o ON ep.organization_id = o.id
+        WHERE ep.id_card_number = #{idCardNumber}
+        LIMIT 1
+    </select>
+
+    <select id="findByIdCardNumberAndIdNot" resultMap="ElderlyProfileResultMap">
+        SELECT <include refid="selectElderlyProfileColumns" />
+        FROM elderly_profile ep
+        LEFT JOIN organization o ON ep.organization_id = o.id
+        WHERE ep.id_card_number = #{idCardNumber} AND ep.id != #{id}
+        LIMIT 1
+    </select>
+    
+    <delete id="deleteBatchByIds">
+        DELETE FROM elderly_profile
+        WHERE id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper> 

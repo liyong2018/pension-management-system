@@ -6,11 +6,12 @@ import org.mapstruct.*;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", uses = {ElderlyFamilyMemberMapper.class})
+@Mapper(componentModel = "spring")
 public interface ElderlyProfileMapper {
     
     @Mapping(target = "organizationId", source = "organization.id")
     @Mapping(target = "organizationName", source = "organization.name")
+    @Mapping(target = "familyMembers", ignore = true)
     ElderlyProfileDTO toDTO(ElderlyProfile entity);
     
     List<ElderlyProfileDTO> toDTO(List<ElderlyProfile> entities);

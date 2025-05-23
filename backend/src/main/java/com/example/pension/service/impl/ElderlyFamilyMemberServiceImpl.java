@@ -1,12 +1,12 @@
 package com.example.pension.service.impl;
 
+import com.example.pension.dao.ElderlyFamilyMemberDao;
+import com.example.pension.dao.ElderlyProfileDao;
 import com.example.pension.dto.ElderlyFamilyMemberDTO;
 import com.example.pension.exception.ResourceNotFoundException;
 import com.example.pension.mapper.ElderlyFamilyMemberMapper;
 import com.example.pension.model.ElderlyFamilyMember;
 import com.example.pension.model.ElderlyProfile;
-import com.example.pension.repository.ElderlyFamilyMemberRepository;
-import com.example.pension.repository.ElderlyProfileRepository;
 import com.example.pension.service.ElderlyFamilyMemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,14 +19,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ElderlyFamilyMemberServiceImpl implements ElderlyFamilyMemberService {
     
-    private final ElderlyFamilyMemberRepository familyMemberRepository;
-    private final ElderlyProfileRepository elderlyProfileRepository;
+    private final ElderlyFamilyMemberDao familyMemberDao;
+    private final ElderlyProfileDao elderlyProfileDao;
     private final ElderlyFamilyMemberMapper familyMemberMapper;
     
     @Override
     @Transactional(readOnly = true)
     public List<ElderlyFamilyMemberDTO> getAllByElderlyId(Long elderlyId) {
-        List<ElderlyFamilyMember> familyMembers = familyMemberRepository.findByElderlyProfileId(elderlyId);
+        List<ElderlyFamilyMember> familyMembers = familyMemberDao.findAllByElderlyId(elderlyId);
         return familyMembers.stream()
                 .map(familyMemberMapper::toDTO)
                 .collect(Collectors.toList());
@@ -35,48 +35,54 @@ public class ElderlyFamilyMemberServiceImpl implements ElderlyFamilyMemberServic
     @Override
     @Transactional(readOnly = true)
     public ElderlyFamilyMemberDTO getById(Long id) {
-        ElderlyFamilyMember familyMember = familyMemberRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("家属信息不存在"));
+        ElderlyFamilyMember familyMember = familyMemberDao.findById(id);
+        if (familyMember == null) {
+            throw new ResourceNotFoundException("家属信息不存在: " + id);
+        }
         return familyMemberMapper.toDTO(familyMember);
     }
     
     @Override
     @Transactional
     public ElderlyFamilyMemberDTO create(Long elderlyId, ElderlyFamilyMemberDTO familyMemberDTO) {
-        ElderlyProfile elderlyProfile = elderlyProfileRepository.findById(elderlyId)
-                .orElseThrow(() -> new ResourceNotFoundException("老人档案不存在"));
+        ElderlyProfile elderlyProfile = elderlyProfileDao.findById(elderlyId);
+        if (elderlyProfile == null) {
+            throw new ResourceNotFoundException("老人档案不存在: " + elderlyId);
+        }
         
         ElderlyFamilyMember familyMember = familyMemberMapper.toEntity(familyMemberDTO);
         familyMember.setElderlyProfile(elderlyProfile);
         
-        ElderlyFamilyMember savedFamilyMember = familyMemberRepository.save(familyMember);
-        return familyMemberMapper.toDTO(savedFamilyMember);
+        familyMemberDao.insert(familyMember);
+        return familyMemberMapper.toDTO(familyMember);
     }
     
     @Override
     @Transactional
     public ElderlyFamilyMemberDTO update(Long id, ElderlyFamilyMemberDTO familyMemberDTO) {
-        ElderlyFamilyMember familyMember = familyMemberRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("家属信息不存在"));
+        ElderlyFamilyMember familyMember = familyMemberDao.findById(id);
+        if (familyMember == null) {
+            throw new ResourceNotFoundException("家属信息不存在: " + id);
+        }
         
         familyMemberMapper.updateEntityFromDTO(familyMemberDTO, familyMember);
-        ElderlyFamilyMember updatedFamilyMember = familyMemberRepository.save(familyMember);
+        familyMemberDao.update(familyMember);
         
-        return familyMemberMapper.toDTO(updatedFamilyMember);
+        return familyMemberMapper.toDTO(familyMember);
     }
     
     @Override
     @Transactional
     public void delete(Long id) {
-        if (!familyMemberRepository.existsById(id)) {
-            throw new ResourceNotFoundException("家属信息不存在");
+        if (familyMemberDao.findById(id) == null) {
+            throw new ResourceNotFoundException("家属信息不存在，无法删除: " + id);
         }
-        familyMemberRepository.deleteById(id);
+        familyMemberDao.deleteById(id);
     }
     
     @Override
     @Transactional
     public void deleteAllByElderlyId(Long elderlyId) {
-        familyMemberRepository.deleteByElderlyProfileId(elderlyId);
+        familyMemberDao.deleteByElderlyId(elderlyId);
     }
 } 

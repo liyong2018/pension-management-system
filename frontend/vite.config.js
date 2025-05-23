@@ -11,13 +11,27 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000, // 更新为新的端口
+    port: 3001, // 更新为当前使用的端口
     proxy: {
       // 配置代理，解决跨域问题
       '/api': { // 将匹配到 /api 的请求代理到后端服务器
         target: 'http://localhost:8081', // 后端服务实际地址
         changeOrigin: true, // 是否改变源地址
-        // rewrite: (path) => path.replace(/^\/api/, '') // 如果后端API不带/api前缀，则需要重写路径
+        secure: false, // 禁用 SSL 证书验证
+        ws: true, // 支持 websocket
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('代理错误:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('发送请求:', req.method, req.url);
+            console.log('请求头:', proxyReq.getHeaders());
+          });
+          proxy.on('proxyRes', (proxyRes, req, _res) => {
+            console.log('收到响应:', req.url, proxyRes.statusCode);
+            console.log('响应头:', proxyRes.headers);
+          });
+        }
       },
     },
   },

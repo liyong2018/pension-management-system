@@ -4,13 +4,12 @@ const organizationService = {
   /**
    * 获取机构列表（分页）
    * @param {Object} params - 查询参数
-   * @param {number} params.page - 页码 (0-indexed)
-   * @param {number} params.size - 每页大小
-   * @param {string} params.sort - 排序字段, 例如: name,asc
+   * @param {number} params.pageNum - 页码 (1-indexed)
+   * @param {number} params.pageSize - 每页大小
    * @param {string} params.name - 机构名称关键词
    * @returns {Promise<Object>}
    */
-  getOrganizations(params) {
+  async getOrganizations(params) {
     return request({
       url: 'organizations',
       method: 'get',

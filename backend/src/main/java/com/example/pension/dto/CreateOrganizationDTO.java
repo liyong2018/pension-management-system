@@ -21,20 +21,8 @@ public class CreateOrganizationDTO {
     @Size(max = 50, message = "机构类型长度不能超过50个字符")
     private String type;
 
-    @Size(max = 100, message = "省份长度不能超过100个字符")
-    private String addressProvince;
-
-    @Size(max = 100, message = "城市长度不能超过100个字符")
-    private String addressCity;
-
-    @Size(max = 100, message = "区域长度不能超过100个字符")
-    private String addressDistrict;
-
-    @Size(max = 255, message = "街道长度不能超过255个字符")
-    private String addressStreet;
-
-    @Size(max = 255, message = "详细地址长度不能超过255个字符")
-    private String addressDetail;
+    @Size(max = 255, message = "地址长度不能超过255个字符")
+    private String address;
 
     @NotBlank(message = "联系电话不能为空")
     @Size(max = 20, message = "联系电话长度不能超过20个字符")

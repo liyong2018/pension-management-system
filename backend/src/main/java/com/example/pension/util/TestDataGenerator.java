@@ -1,16 +1,17 @@
 package com.example.pension.util;
 
+import com.example.pension.dao.ElderlyFamilyMemberDao;
+import com.example.pension.dao.ElderlyProfileDao;
+import com.example.pension.dao.OrganizationDao;
 import com.example.pension.model.ElderlyFamilyMember;
 import com.example.pension.model.ElderlyProfile;
 import com.example.pension.model.Organization;
-import com.example.pension.repository.ElderlyFamilyMemberRepository;
-import com.example.pension.repository.ElderlyProfileRepository;
-import com.example.pension.repository.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -40,36 +41,46 @@ public class TestDataGenerator {
      */
     @Bean
     @Profile("dev")
+    @Transactional
     public CommandLineRunner generateTestData(
-            OrganizationRepository organizationRepository,
-            ElderlyProfileRepository elderlyProfileRepository,
-            ElderlyFamilyMemberRepository familyMemberRepository) {
+            OrganizationDao organizationDao,
+            ElderlyProfileDao elderlyProfileDao,
+            ElderlyFamilyMemberDao familyMemberDao) {
         
         return args -> {
-            // 清空现有数据
-            familyMemberRepository.deleteAll();
-            elderlyProfileRepository.deleteAll();
-            
-            // 如果没有机构数据，生成一些机构数据
-            List<Organization> organizations = organizationRepository.findAll();
+            List<Organization> organizations = organizationDao.findAll();
             if (organizations.isEmpty()) {
                 organizations = generateOrganizations(10);
-                organizationRepository.saveAll(organizations);
+                for (Organization org : organizations) {
+                    organizationDao.insert(org);
+                }
                 System.out.println("已生成10个机构测试数据");
+            } else {
+                 System.out.println("机构数据已存在，跳过生成。");
             }
             
-            // 生成老人档案数据
+            organizations = organizationDao.findAll();
+            
             List<ElderlyProfile> elderlyProfiles = generateElderlyProfiles(50, organizations);
-            elderlyProfileRepository.saveAll(elderlyProfiles);
+            for (ElderlyProfile profile : elderlyProfiles) {
+                elderlyProfileDao.insert(profile);
+            }
             System.out.println("已生成50个老人档案测试数据");
             
-            // 生成家属数据
+            List<ElderlyProfile> savedElderlyProfiles = elderlyProfileDao.findWithConditions(null,null,null,null,0, Integer.MAX_VALUE);
+            
             List<ElderlyFamilyMember> familyMembers = new ArrayList<>();
-            for (ElderlyProfile elderlyProfile : elderlyProfiles) {
-                familyMembers.addAll(generateFamilyMembers(elderlyProfile, random.nextInt(3) + 1));
+            if (!savedElderlyProfiles.isEmpty()) {
+                 for (ElderlyProfile elderlyProfile : savedElderlyProfiles) {
+                    familyMembers.addAll(generateFamilyMembers(elderlyProfile, random.nextInt(3) + 1));
+                }
+                for (ElderlyFamilyMember fm : familyMembers) {
+                    familyMemberDao.insert(fm);
+                }
+                System.out.println("已生成" + familyMembers.size() + "个家属测试数据");
+            } else {
+                System.out.println("没有老人档案数据，跳过生成家属数据");
             }
-            familyMemberRepository.saveAll(familyMembers);
-            System.out.println("已生成" + familyMembers.size() + "个家属测试数据");
         };
     }
     
@@ -81,7 +92,7 @@ public class TestDataGenerator {
         for (int i = 0; i < count; i++) {
             Organization organization = new Organization();
             organization.setName(getRandomOrgName());
-            organization.setShortName(organization.getName().substring(0, 2));
+            organization.setShortName(organization.getName().substring(0, Math.min(organization.getName().length(), 2)));
             organization.setType(orgTypes[random.nextInt(orgTypes.length)]);
             organization.setAddress(getRandomAddress());
             organization.setPhone("1" + (random.nextInt(9) + 1) + getRandomNumericString(9));
@@ -117,8 +128,7 @@ public class TestDataGenerator {
             profile.setCommunity(communities[random.nextInt(communities.length)]);
             profile.setPensionType(pensionTypes[random.nextInt(pensionTypes.length)]);
             
-            // 根据养老类型设置机构
-            if ("机构养老".equals(profile.getPensionType()) && !organizations.isEmpty()) {
+            if ("机构养老".equals(profile.getPensionType()) && organizations != null && !organizations.isEmpty()) {
                 profile.setOrganization(organizations.get(random.nextInt(organizations.size())));
             }
             

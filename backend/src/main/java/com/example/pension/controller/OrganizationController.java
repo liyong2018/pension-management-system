@@ -4,15 +4,14 @@ import com.example.pension.dto.CreateOrganizationDTO;
 import com.example.pension.dto.OrganizationDTO;
 import com.example.pension.dto.UpdateOrganizationDTO;
 import com.example.pension.service.OrganizationService;
+import com.github.pagehelper.PageInfo;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/organizations")
@@ -26,18 +25,11 @@ public class OrganizationController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<OrganizationDTO>> getAllOrganizations(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String name,
-            @RequestParam(defaultValue = "id,asc") String sort) {
-        
-        String[] sortParams = sort.split(",");
-        Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ? 
-            Sort.Direction.DESC : Sort.Direction.ASC;
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
-        Page<OrganizationDTO> organizations = organizationService.getAllOrganizations(pageable, name);
+    public ResponseEntity<PageInfo<OrganizationDTO>> getAllOrganizations(
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(required = false) String name) {
+        PageInfo<OrganizationDTO> organizations = organizationService.getAllOrganizations(pageNum, pageSize, name);
         return ResponseEntity.ok(organizations);
     }
 
@@ -63,6 +55,12 @@ public class OrganizationController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrganization(@PathVariable Long id) {
         organizationService.deleteOrganization(id);
+        return ResponseEntity.noContent().build();
+    }
+    
+    @DeleteMapping("/batch")
+    public ResponseEntity<Void> deleteOrganizations(@RequestBody List<Long> ids) {
+        organizationService.deleteOrganizations(ids);
         return ResponseEntity.noContent().build();
     }
 } 
