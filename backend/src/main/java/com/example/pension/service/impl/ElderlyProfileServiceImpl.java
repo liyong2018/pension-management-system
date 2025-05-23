@@ -97,6 +97,16 @@ public class ElderlyProfileServiceImpl implements ElderlyProfileService {
         }
 
         elderlyProfileDao.insert(elderlyProfile);
+        
+        // 保存家属信息
+        if (elderlyProfileDTO.getFamilyMembers() != null && !elderlyProfileDTO.getFamilyMembers().isEmpty()) {
+            for (ElderlyFamilyMemberDTO familyMemberDTO : elderlyProfileDTO.getFamilyMembers()) {
+                ElderlyFamilyMember familyMember = elderlyFamilyMemberMapper.toEntity(familyMemberDTO);
+                familyMember.setElderlyProfile(elderlyProfile);
+                elderlyFamilyMemberDao.insert(familyMember);
+            }
+        }
+        
         return mapToDTOWithFamilyMembers(elderlyProfileDao.findById(elderlyProfile.getId()));
     }
 
@@ -167,6 +177,17 @@ public class ElderlyProfileServiceImpl implements ElderlyProfileService {
         }
 
         elderlyProfileDao.update(elderlyProfile);
+        
+        // 更新家属信息：先删除所有现有的家属信息，然后插入新的
+        elderlyFamilyMemberDao.deleteByElderlyId(id);
+        if (elderlyProfileDTO.getFamilyMembers() != null && !elderlyProfileDTO.getFamilyMembers().isEmpty()) {
+            for (ElderlyFamilyMemberDTO familyMemberDTO : elderlyProfileDTO.getFamilyMembers()) {
+                ElderlyFamilyMember familyMember = elderlyFamilyMemberMapper.toEntity(familyMemberDTO);
+                familyMember.setElderlyProfile(elderlyProfile);
+                elderlyFamilyMemberDao.insert(familyMember);
+            }
+        }
+        
         return mapToDTOWithFamilyMembers(elderlyProfileDao.findById(id));
     }
 
