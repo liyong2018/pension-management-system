@@ -362,43 +362,116 @@ components:
           type: integer
           format: int64
           readOnly: true
+        deviceCode:
+          type: string
+          description: 设备编号
         deviceName:
           type: string
+          description: 设备名称
         deviceType:
           type: string
-          description: SOS报警, 烟感, 水浸, 跌倒, 燃气泄露, 健康监测手环等
+          description: 设备类型 (健康监测设备, 智能家居设备, 安全设备, 定位设备)
+        deviceBrand:
+          type: string
+          description: 设备品牌
         deviceModel:
           type: string
-        deviceIdentifier:
+          description: 设备型号
+        deviceStatus:
           type: string
-        status:
-          type: string
-          description: 在线, 离线, 故障, 低电量等
-        installationLocation:
-          type: string
-          nullable: true
+          description: 设备状态 (在线, 离线, 故障, 维护中)
         purchaseDate:
           type: string
           format: date
+          description: 购买日期
+        installationLocation:
+          type: string
+          description: 安装位置
+        elderlyId:
+          type: integer
+          format: int64
           nullable: true
-        warrantyPeriod:
+          description: 绑定老人ID
+        elderlyName:
+          type: string
+          nullable: true
+          description: 绑定老人姓名
+        organizationId:
+          type: integer
+          format: int64
+          nullable: true
+          description: 所属机构ID
+        organizationName:
+          type: string
+          nullable: true
+          description: 机构名称
+        ipAddress:
+          type: string
+          nullable: true
+          description: IP地址
+        macAddress:
+          type: string
+          nullable: true
+          description: MAC地址
+        communicationProtocol:
+          type: string
+          nullable: true
+          description: 通信协议
+        dataCollectionFrequency:
+          type: string
+          nullable: true
+          description: 数据采集频率
+        alarmThreshold:
+          type: string
+          nullable: true
+          description: 报警阈值
+        batteryThreshold:
           type: integer
           nullable: true
-        lastMaintenanceDate:
+          description: 电量阈值
+        realTimeData:
+          type: string
+          nullable: true
+          description: 实时数据
+        batteryLevel:
+          type: integer
+          nullable: true
+          description: 电量百分比
+        signalStrength:
+          type: integer
+          nullable: true
+          description: 信号强度
+        lastCommunicationTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: 最后通信时间
+        dataUploadStatus:
+          type: string
+          nullable: true
+          description: 数据上传状态
+        warrantyExpiryDate:
           type: string
           format: date
           nullable: true
-        elderlyId: # 绑定的老人
-          type: integer
-          format: int64
+          description: 保修期限
+        maintenanceCycle:
+          type: string
           nullable: true
-        organizationId: # 所属机构
-          type: integer
-          format: int64
+          description: 维护周期
+        nextMaintenanceDate:
+          type: string
+          format: date
           nullable: true
+          description: 下次维护时间
+        failureCount:
+          type: integer
+          nullable: true
+          description: 故障次数
         remarks:
           type: string
           nullable: true
+          description: 备注
         createTime:
           type: string
           format: date-time
@@ -418,43 +491,67 @@ components:
         deviceId:
           type: integer
           format: int64
-        deviceName: # 冗余，方便显示
+          description: 设备ID
+        deviceName:
           type: string
+          nullable: true
+          description: 设备名称 (冗余字段，方便显示)
+        deviceCode:
+          type: string
+          nullable: true
+          description: 设备编号 (冗余字段，方便显示)
         elderlyId:
           type: integer
           format: int64
           nullable: true
-        elderlyName: # 冗余，方便显示
+          description: 绑定老人ID
+        elderlyName:
           type: string
           nullable: true
-        alarmTime:
-          type: string
-          format: date-time
+          description: 绑定老人姓名 (冗余字段，方便显示)
         alarmType:
           type: string
+          description: 告警类型 (设备故障, 数据异常, 低电量, 网络断连, 健康异常)
         alarmLevel:
           type: string
+          description: 告警级别 (严重, 警告, 提醒)
         alarmContent:
           type: string
           nullable: true
-        status:
+          description: 告警内容描述
+        alarmTime:
           type: string
-          description: UNPROCESSED, PROCESSING, PROCESSED, IGNORED
-        processingResult:
-          type: string
-          nullable: true
-        processorId:
-          type: integer
-          format: int64
-          nullable: true
-        processorName: # 冗余
+          format: date-time
+          description: 告警产生时间
+        alarmData:
           type: string
           nullable: true
-        processingTime:
+          description: 触发告警的具体数据值
+        processStatus:
+          type: string
+          description: 处理状态 (未处理, 处理中, 已处理, 已忽略)
+        processPerson:
+          type: string
+          nullable: true
+          description: 处理人员
+        processTime:
           type: string
           format: date-time
           nullable: true
+          description: 处理时间
+        processResult:
+          type: string
+          nullable: true
+          description: 处理结果描述
+        processRemark:
+          type: string
+          nullable: true
+          description: 处理备注
         createTime:
+          type: string
+          format: date-time
+          readOnly: true
+        updateTime:
           type: string
           format: date-time
           readOnly: true
@@ -1711,9 +1808,20 @@ paths:
       summary: 获取智能设备列表 (分页)
       operationId: listSmartDevices
       parameters:
-        - $ref: '#/components/parameters/page'
-        - $ref: '#/components/parameters/size'
-        - $ref: '#/components/parameters/sort'
+        - name: page
+          in: query
+          description: 页码 (从1开始)
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          description: 每页数量
+          required: false
+          schema:
+            type: integer
+            default: 10
         - name: deviceName
           in: query
           description: 按设备名称查询
@@ -1724,7 +1832,7 @@ paths:
           description: 按设备类型查询
           schema:
             type: string
-        - name: status
+        - name: deviceStatus
           in: query
           description: 按设备状态查询
           schema:
@@ -1752,11 +1860,11 @@ paths:
                   data:
                     type: object
                     properties:
-                      content:
+                      list:
                         type: array
                         items:
                           $ref: '#/components/schemas/SmartDevice'
-                      totalElements:
+                      total:
                         type: integer
                         format: int64
         default:
@@ -1782,6 +1890,102 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/SmartDevice'
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /smart-devices/search:
+    get:
+      tags:
+        - SmartDevice
+      summary: 搜索智能设备列表 (实际实现的接口)
+      operationId: searchSmartDevices
+      parameters:
+        - name: page
+          in: query
+          description: 页码 (从1开始)
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          description: 每页数量
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: deviceName
+          in: query
+          description: 按设备名称模糊查询
+          schema:
+            type: string
+        - name: deviceType
+          in: query
+          description: 按设备类型查询
+          schema:
+            type: string
+        - name: deviceStatus
+          in: query
+          description: 按设备状态查询
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功获取设备列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      list:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SmartDevice'
+                      total:
+                        type: integer
+                        format: int64
+
+  /smart-devices/statistics/status:
+    get:
+      tags:
+        - SmartDevice
+      summary: 获取设备状态统计
+      operationId: getDeviceStatusStatistics
+      responses:
+        '200':
+          description: 成功获取状态统计
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: object
+                    additionalProperties:
+                      type: integer
+
+  /smart-devices/batch:
+    delete:
+      tags:
+        - SmartDevice
+      summary: 批量删除智能设备
+      operationId: batchDeleteSmartDevices
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+                format: int64
+              description: 要删除的设备ID列表
+      responses:
+        '204':
+          description: 批量删除成功
         default:
           $ref: '#/components/responses/DefaultError'
 
@@ -1860,22 +2064,66 @@ paths:
         default:
           $ref: '#/components/responses/DefaultError'
 
-  /smart-devices/alarms:
+  /smart-devices/{id}/status:
+    put:
+      tags:
+        - SmartDevice
+      summary: 更新设备状态
+      operationId: updateSmartDeviceStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deviceStatus:
+                  type: string
+                  description: 新的设备状态
+                statusChangeReason:
+                  type: string
+                  description: 状态变更原因
+      responses:
+        '200':
+          description: 状态更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SmartDevice'
+
+  # 设备告警相关接口
+  /device-alarms:
     get:
       tags:
         - SmartDevice
       summary: 获取设备告警记录列表 (分页)
       operationId: listDeviceAlarms
       parameters:
-        - $ref: '#/components/parameters/page'
-        - $ref: '#/components/parameters/size'
-        - $ref: '#/components/parameters/sort'
-        - name: deviceId
+        - name: page
           in: query
+          description: 页码 (从1开始)
+          required: false
           schema:
             type: integer
-            format: int64
-        - name: elderlyId
+            default: 1
+        - name: size
+          in: query
+          description: 每页数量
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: deviceId
           in: query
           schema:
             type: integer
@@ -1884,7 +2132,11 @@ paths:
           in: query
           schema:
             type: string
-        - name: status
+        - name: alarmLevel
+          in: query
+          schema:
+            type: string
+        - name: processStatus
           in: query
           description: 告警处理状态
           schema:
@@ -1910,24 +2162,142 @@ paths:
                   data:
                     type: object
                     properties:
-                      content:
+                      list:
                         type: array
                         items:
                           $ref: '#/components/schemas/DeviceAlarmRecord'
-                      totalElements:
+                      total:
                         type: integer
                         format: int64
         default:
           $ref: '#/components/responses/DefaultError'
+    post:
+      tags:
+        - SmartDevice
+      summary: 创建告警记录
+      operationId: createDeviceAlarm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceAlarmRecord'
+      responses:
+        '201':
+          description: 告警记录创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DeviceAlarmRecord'
+        default:
+          $ref: '#/components/responses/DefaultError'
 
-  /smart-devices/alarms/{alarmId}:
+  /device-alarms/search:
+    get:
+      tags:
+        - SmartDevice
+      summary: 搜索设备告警记录 (实际实现的接口)
+      operationId: searchDeviceAlarms
+      parameters:
+        - name: page
+          in: query
+          description: 页码 (从1开始)
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          description: 每页数量
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: deviceId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: alarmType
+          in: query
+          schema:
+            type: string
+        - name: alarmLevel
+          in: query
+          schema:
+            type: string
+        - name: processStatus
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功获取告警列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      list:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DeviceAlarmRecord'
+                      total:
+                        type: integer
+                        format: int64
+
+  /device-alarms/statistics/level:
+    get:
+      tags:
+        - SmartDevice
+      summary: 获取告警级别统计
+      operationId: getAlarmLevelStatistics
+      responses:
+        '200':
+          description: 成功获取级别统计
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: object
+                    additionalProperties:
+                      type: integer
+
+  /device-alarms/statistics/status:
+    get:
+      tags:
+        - SmartDevice
+      summary: 获取告警状态统计
+      operationId: getAlarmStatusStatistics
+      responses:
+        '200':
+          description: 成功获取状态统计
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: object
+                    additionalProperties:
+                      type: integer
+
+  /device-alarms/{id}:
     get:
       tags:
         - SmartDevice
       summary: 获取特定告警记录详情
       operationId: getDeviceAlarmById
       parameters:
-        - name: alarmId
+        - name: id
           in: path
           required: true
           schema:
@@ -1945,13 +2315,32 @@ paths:
                     $ref: '#/components/schemas/DeviceAlarmRecord'
         default:
           $ref: '#/components/responses/DefaultError'
-    put: # 通常是处理告警
+    delete:
+      tags:
+        - SmartDevice
+      summary: 删除告警记录
+      operationId: deleteDeviceAlarm
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 删除成功
+        default:
+          $ref: '#/components/responses/DefaultError'
+
+  /device-alarms/{id}/process:
+    put:
       tags:
         - SmartDevice
       summary: 处理设备告警
       operationId: processDeviceAlarm
       parameters:
-        - name: alarmId
+        - name: id
           in: path
           required: true
           schema:
@@ -1964,12 +2353,16 @@ paths:
             schema:
               type: object
               properties:
-                status: # 更新处理状态
+                processStatus:
                   type: string
-                  enum: [PROCESSING, PROCESSED, IGNORED]
-                processingResult:
+                  enum: [处理中, 已处理, 已忽略]
+                processPerson:
                   type: string
-                # processorId will be set by backend based on logged-in user
+                processTime:
+                  type: string
+                  format: date-time
+                processRemark:
+                  type: string
       responses:
         '200':
           description: 告警处理成功

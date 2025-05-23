@@ -11,7 +11,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3001, // 更新为当前使用的端口
+    port: 3002, // 更新为当前使用的端口
     proxy: {
       // 配置代理，解决跨域问题
       '/api': { // 将匹配到 /api 的请求代理到后端服务器

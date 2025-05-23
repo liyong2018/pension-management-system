@@ -19,7 +19,8 @@
     <el-card class="search-card">
       <el-form :model="searchForm" label-width="auto" :inline="true">
         <el-form-item label="告警类型">
-          <el-select v-model="searchForm.alarmType" placeholder="请选择告警类型" clearable>
+          <el-select v-model="searchForm.alarmType" placeholder="请选择告警类型" clearable style="width: 150px">
+            <el-option label="全部" value=""></el-option>
             <el-option label="设备故障" value="设备故障"></el-option>
             <el-option label="数据异常" value="数据异常"></el-option>
             <el-option label="低电量" value="低电量"></el-option>
@@ -28,14 +29,16 @@
           </el-select>
         </el-form-item>
         <el-form-item label="告警级别">
-          <el-select v-model="searchForm.alarmLevel" placeholder="请选择告警级别" clearable>
+          <el-select v-model="searchForm.alarmLevel" placeholder="请选择告警级别" clearable style="width: 120px">
+            <el-option label="全部" value=""></el-option>
             <el-option label="严重" value="严重"></el-option>
             <el-option label="警告" value="警告"></el-option>
             <el-option label="提醒" value="提醒"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="处理状态">
-          <el-select v-model="searchForm.processStatus" placeholder="请选择处理状态" clearable>
+          <el-select v-model="searchForm.processStatus" placeholder="请选择处理状态" clearable style="width: 120px">
+            <el-option label="全部" value=""></el-option>
             <el-option label="未处理" value="未处理"></el-option>
             <el-option label="处理中" value="处理中"></el-option>
             <el-option label="已处理" value="已处理"></el-option>
@@ -132,7 +135,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, toRaw } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { deviceAlarmApi } from '@/api/deviceAlarm'
 import AlarmDetailDialog from './AlarmDetailDialog.vue'
@@ -186,12 +189,15 @@ const fetchAlarmList = async () => {
       size: pageSize.value,
       ...searchForm.value
     }
-    const response = await deviceAlarmApi.getList(params)
-    alarmList.value = response.list
-    total.value = response.total
+    const response = await deviceAlarmApi.searchAlarms(params)
+    alarmList.value = response.list || []
+    total.value = response.total || 0
   } catch (error) {
     ElMessage.error('获取告警列表失败')
     console.error('获取告警列表失败:', error)
+    // 设置默认值避免页面报错
+    alarmList.value = []
+    total.value = 0
   } finally {
     loading.value = false
   }
@@ -280,13 +286,13 @@ const handleCreateAlarm = () => {
 
 const handleViewAlarm = (alarm) => {
   alarmMode.value = 'view'
-  selectedAlarm.value = alarm
+  selectedAlarm.value = toRaw(alarm)
   alarmDetailVisible.value = true
 }
 
 const handleProcessAlarm = (alarm) => {
   alarmMode.value = 'process'
-  selectedAlarm.value = alarm
+  selectedAlarm.value = toRaw(alarm)
   alarmDetailVisible.value = true
 }
 
