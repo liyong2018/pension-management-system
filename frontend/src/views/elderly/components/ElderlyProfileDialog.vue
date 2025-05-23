@@ -240,31 +240,50 @@
           
           <el-table :data="form.familyMembers" border>
             <el-table-column prop="name" label="姓名" width="150">
-              <template #default="{ row }">
+              <template #default="{ row, $index }">
                 <el-input
                   v-if="mode !== 'view'"
                   v-model="row.name"
                   placeholder="请输入姓名"
+                  :class="{ 'is-error': familyMemberErrors[$index]?.name }"
+                  @blur="validateFamilyMember($index, 'name')"
                 ></el-input>
                 <span v-else>{{ row.name }}</span>
               </template>
             </el-table-column>
             <el-table-column prop="relationship" label="与老人关系" width="150">
-              <template #default="{ row }">
-                <el-input
+              <template #default="{ row, $index }">
+                <el-select
                   v-if="mode !== 'view'"
                   v-model="row.relationship"
-                  placeholder="请输入关系"
-                ></el-input>
+                  placeholder="请选择关系"
+                  :class="{ 'is-error': familyMemberErrors[$index]?.relationship }"
+                  @change="validateFamilyMember($index, 'relationship')"
+                >
+                  <el-option label="儿子" value="儿子"></el-option>
+                  <el-option label="女儿" value="女儿"></el-option>
+                  <el-option label="儿媳" value="儿媳"></el-option>
+                  <el-option label="女婿" value="女婿"></el-option>
+                  <el-option label="配偶" value="配偶"></el-option>
+                  <el-option label="父亲" value="父亲"></el-option>
+                  <el-option label="母亲" value="母亲"></el-option>
+                  <el-option label="兄弟" value="兄弟"></el-option>
+                  <el-option label="姐妹" value="姐妹"></el-option>
+                  <el-option label="孙子" value="孙子"></el-option>
+                  <el-option label="孙女" value="孙女"></el-option>
+                  <el-option label="其他亲属" value="其他亲属"></el-option>
+                </el-select>
                 <span v-else>{{ row.relationship }}</span>
               </template>
             </el-table-column>
             <el-table-column prop="phone" label="联系电话" width="150">
-              <template #default="{ row }">
+              <template #default="{ row, $index }">
                 <el-input
                   v-if="mode !== 'view'"
                   v-model="row.phone"
                   placeholder="请输入电话"
+                  :class="{ 'is-error': familyMemberErrors[$index]?.phone }"
+                  @blur="validateFamilyMember($index, 'phone')"
                 ></el-input>
                 <span v-else>{{ row.phone }}</span>
               </template>
@@ -279,6 +298,18 @@
               </template>
             </el-table-column>
           </el-table>
+          
+          <!-- 家属信息错误提示 -->
+          <div v-if="familyMemberErrors.length > 0" class="family-errors">
+            <div v-for="(error, index) in familyMemberErrors" :key="index" class="error-item">
+              <span v-if="error && Object.keys(error).length > 0" class="error-text">
+                第{{ index + 1 }}行家属信息：
+                <span v-if="error.name">姓名不能为空；</span>
+                <span v-if="error.relationship">请选择与老人关系；</span>
+                <span v-if="error.phone">{{ error.phone }}；</span>
+              </span>
+            </div>
+          </div>
         </el-tab-pane>
 
         <!-- 备注信息 -->
@@ -395,6 +426,9 @@ const communityOptions = [
 // 机构选项
 const organizationOptions = ref([])
 
+// 家属信息验证错误
+const familyMemberErrors = ref([])
+
 // 对话框标题
 const dialogTitle = computed(() => {
   const titles = {
@@ -491,11 +525,83 @@ const handleAddFamilyMember = () => {
     relationship: '',
     phone: ''
   })
+  // 添加对应的错误状态
+  familyMemberErrors.value.push({})
 }
 
 // 处理删除家属
 const handleRemoveFamilyMember = (index) => {
   form.value.familyMembers.splice(index, 1)
+  familyMemberErrors.value.splice(index, 1)
+}
+
+// 验证家属信息
+const validateFamilyMember = (index, field) => {
+  if (!familyMemberErrors.value[index]) {
+    familyMemberErrors.value[index] = {}
+  }
+  
+  const member = form.value.familyMembers[index]
+  const errors = familyMemberErrors.value[index]
+  
+  switch (field) {
+    case 'name':
+      if (!member.name || member.name.trim() === '') {
+        errors.name = '姓名不能为空'
+      } else {
+        delete errors.name
+      }
+      break
+    case 'relationship':
+      if (!member.relationship || member.relationship.trim() === '') {
+        errors.relationship = '请选择与老人关系'
+      } else {
+        delete errors.relationship
+      }
+      break
+    case 'phone':
+      if (!member.phone || member.phone.trim() === '') {
+        errors.phone = '联系电话不能为空'
+      } else if (!/^1[3-9]\d{9}$/.test(member.phone)) {
+        errors.phone = '请输入正确的手机号码'
+      } else {
+        delete errors.phone
+      }
+      break
+  }
+}
+
+// 验证所有家属信息
+const validateAllFamilyMembers = () => {
+  let isValid = true
+  familyMemberErrors.value = []
+  
+  form.value.familyMembers.forEach((member, index) => {
+    familyMemberErrors.value[index] = {}
+    
+    // 验证姓名
+    if (!member.name || member.name.trim() === '') {
+      familyMemberErrors.value[index].name = '姓名不能为空'
+      isValid = false
+    }
+    
+    // 验证关系
+    if (!member.relationship || member.relationship.trim() === '') {
+      familyMemberErrors.value[index].relationship = '请选择与老人关系'
+      isValid = false
+    }
+    
+    // 验证电话
+    if (!member.phone || member.phone.trim() === '') {
+      familyMemberErrors.value[index].phone = '联系电话不能为空'
+      isValid = false
+    } else if (!/^1[3-9]\d{9}$/.test(member.phone)) {
+      familyMemberErrors.value[index].phone = '请输入正确的手机号码'
+      isValid = false
+    }
+  })
+  
+  return isValid
 }
 
 // 提交表单
@@ -503,7 +609,16 @@ const handleSubmit = async () => {
   if (!formRef.value) return
   
   try {
+    // 验证基本表单
     await formRef.value.validate()
+    
+    // 验证家属信息
+    if (!validateAllFamilyMembers()) {
+      ElMessage.error('请完善家属信息')
+      // 切换到家属信息标签页
+      activeTab.value = 'family'
+      return
+    }
     
     if (props.mode === 'add') {
       await elderlyProfileApi.create(form.value)
@@ -544,6 +659,8 @@ watch([() => props.modelValue, () => props.elderlyId], async ([newVisible, newEl
       }
     });
     form.value.familyMembers = []; 
+    // 重置家属信息错误状态
+    familyMemberErrors.value = []
     console.log('Dialog watch: Form reset complete. Current form value:', JSON.parse(JSON.stringify(form.value)));
 
     console.log('Dialog watch: Fetching organizations');
@@ -614,5 +731,30 @@ watch([() => props.modelValue, () => props.elderlyId], async ([newVisible, newEl
 
 .family-members-header h3 {
   margin: 0;
+}
+
+.family-errors {
+  margin-top: 16px;
+}
+
+.error-item {
+  margin-bottom: 8px;
+}
+
+.error-text {
+  color: var(--el-color-danger);
+  font-size: 14px;
+}
+
+.is-error {
+  border-color: var(--el-color-danger) !important;
+}
+
+.is-error .el-input__wrapper {
+  border-color: var(--el-color-danger) !important;
+}
+
+.is-error .el-select__wrapper {
+  border-color: var(--el-color-danger) !important;
 }
 </style> 
