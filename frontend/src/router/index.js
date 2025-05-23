@@ -33,6 +33,19 @@ const routes = [
     name: 'ElderlyProfiles',
     component: () => import('@/views/elderly/ElderlyProfileList.vue'),
     meta: { title: '人员档案', requiresAuth: true }
+  },
+  // 智能设备模块路由
+  {
+    path: '/smart-devices',
+    name: 'SmartDevices',
+    component: () => import('@/views/smart-device/SmartDeviceList.vue'),
+    meta: { title: '智能设备管理', requiresAuth: true }
+  },
+  {
+    path: '/device-alarms',
+    name: 'DeviceAlarms',
+    component: () => import('@/views/smart-device/DeviceAlarmList.vue'),
+    meta: { title: '设备告警管理', requiresAuth: true }
   }
   // ... 其他模块的路由
 ];

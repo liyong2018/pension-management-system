@@ -478,7 +478,7 @@ const fetchElderlyProfile = async () => {
 // 处理照片上传成功
 const handlePhotoSuccess = (response) => {
   if (response.success) {
-    form.value.photoUrl = response.url
+  form.value.photoUrl = response.url
     ElMessage.success('照片上传成功')
   } else {
     ElMessage.error(response.message || '照片上传失败')
