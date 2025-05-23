@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pension.dao.DeviceAlarmRecordDao">
+
+    <!-- 结果映射 -->
+    <resultMap id="deviceAlarmRecordMap" type="com.example.pension.model.DeviceAlarmRecord">
+        <id property="id" column="id"/>
+        <result property="deviceId" column="device_id"/>
+        <result property="alarmType" column="alarm_type"/>
+        <result property="alarmLevel" column="alarm_level"/>
+        <result property="alarmContent" column="alarm_content"/>
+        <result property="alarmTime" column="alarm_time"/>
+        <result property="alarmData" column="alarm_data"/>
+        <result property="processStatus" column="process_status"/>
+        <result property="processPerson" column="process_person"/>
+        <result property="processTime" column="process_time"/>
+        <result property="processResult" column="process_result"/>
+        <result property="remarks" column="remarks"/>
+        <result property="createTime" column="created_time"/>
+        <result property="updateTime" column="updated_time"/>
+        
+        <!-- 关联映射 -->
+        <association property="smartDevice" javaType="com.example.pension.model.SmartDevice">
+            <id property="id" column="device_id"/>
+            <result property="deviceCode" column="device_code"/>
+            <result property="deviceName" column="device_name"/>
+        </association>
+    </resultMap>
+
+    <!-- 基础查询字段 -->
+    <sql id="baseColumns">
+        dar.id, dar.device_id, dar.alarm_type, dar.alarm_level, dar.alarm_content, dar.alarm_time,
+        dar.alarm_data, dar.process_status, dar.process_person, dar.process_time, dar.process_result,
+        dar.remarks, dar.created_time, dar.updated_time,
+        sd.device_code, sd.device_name
+    </sql>
+
+    <!-- 基础查询表 -->
+    <sql id="baseTables">
+        device_alarm_record dar
+        LEFT JOIN smart_device sd ON dar.device_id = sd.id
+    </sql>
+
+    <!-- 查询条件 -->
+    <sql id="queryConditions">
+        <where>
+            1 = 1
+            <if test="deviceId != null">
+                AND dar.device_id = #{deviceId}
+            </if>
+            <if test="alarmType != null and alarmType != ''">
+                AND dar.alarm_type = #{alarmType}
+            </if>
+            <if test="alarmLevel != null and alarmLevel != ''">
+                AND dar.alarm_level = #{alarmLevel}
+            </if>
+            <if test="processStatus != null and processStatus != ''">
+                AND dar.process_status = #{processStatus}
+            </if>
+        </where>
+    </sql>
+
+    <!-- 插入告警记录 -->
+    <insert id="insert" parameterType="com.example.pension.model.DeviceAlarmRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO device_alarm_record (
+            device_id, alarm_type, alarm_level, alarm_content, alarm_time, alarm_data,
+            process_status, process_person, process_time, process_result, remarks,
+            created_time, updated_time
+        ) VALUES (
+            #{deviceId}, #{alarmType}, #{alarmLevel}, #{alarmContent}, #{alarmTime}, #{alarmData},
+            #{processStatus}, #{processPerson}, #{processTime}, #{processResult}, #{remarks},
+            #{createTime}, #{updateTime}
+        )
+    </insert>
+
+    <!-- 更新告警记录 -->
+    <update id="update" parameterType="com.example.pension.model.DeviceAlarmRecord">
+        UPDATE device_alarm_record
+        <set>
+            <if test="alarmType != null">alarm_type = #{alarmType},</if>
+            <if test="alarmLevel != null">alarm_level = #{alarmLevel},</if>
+            <if test="alarmContent != null">alarm_content = #{alarmContent},</if>
+            <if test="alarmTime != null">alarm_time = #{alarmTime},</if>
+            <if test="alarmData != null">alarm_data = #{alarmData},</if>
+            <if test="processStatus != null">process_status = #{processStatus},</if>
+            <if test="processPerson != null">process_person = #{processPerson},</if>
+            <if test="processTime != null">process_time = #{processTime},</if>
+            <if test="processResult != null">process_result = #{processResult},</if>
+            <if test="remarks != null">remarks = #{remarks},</if>
+            <if test="updateTime != null">updated_time = #{updateTime}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除告警记录 -->
+    <delete id="deleteById">
+        DELETE FROM device_alarm_record WHERE id = #{id}
+    </delete>
+
+    <!-- 批量删除告警记录 -->
+    <delete id="deleteBatchByIds">
+        DELETE FROM device_alarm_record WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 根据设备ID删除告警记录 -->
+    <delete id="deleteByDeviceId">
+        DELETE FROM device_alarm_record WHERE device_id = #{deviceId}
+    </delete>
+
+    <!-- 根据ID查询告警记录 -->
+    <select id="findById" resultMap="deviceAlarmRecordMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="baseTables"/>
+        WHERE dar.id = #{id}
+    </select>
+
+    <!-- 多条件查询告警记录 -->
+    <select id="findWithConditions" resultMap="deviceAlarmRecordMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="baseTables"/>
+        <include refid="queryConditions"/>
+        ORDER BY dar.alarm_time DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <!-- 根据设备ID查询告警记录 -->
+    <select id="findAllByDeviceId" resultMap="deviceAlarmRecordMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="baseTables"/>
+        WHERE dar.device_id = #{deviceId}
+        ORDER BY dar.alarm_time DESC
+    </select>
+
+    <!-- 根据告警类型统计数量 -->
+    <select id="countByAlarmType" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM device_alarm_record 
+        WHERE alarm_type = #{alarmType}
+    </select>
+
+    <!-- 根据告警级别统计数量 -->
+    <select id="countByAlarmLevel" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM device_alarm_record 
+        WHERE alarm_level = #{alarmLevel}
+    </select>
+
+    <!-- 根据处理状态统计数量 -->
+    <select id="countByProcessStatus" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM device_alarm_record 
+        WHERE process_status = #{processStatus}
+    </select>
+
+    <!-- 统计未处理告警数量 -->
+    <select id="countUnprocessedAlarms" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM device_alarm_record 
+        WHERE process_status = '未处理'
+    </select>
+
+</mapper> 
