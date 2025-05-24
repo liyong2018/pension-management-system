@@ -18,6 +18,7 @@
           <el-menu-item index="/smart-devices">设备管理</el-menu-item>
           <el-menu-item index="/device-alarms">告警管理</el-menu-item>
         </el-sub-menu>
+        <el-menu-item index="/service-records">服务记录</el-menu-item>
         <!-- 后续其他模块的导航链接可以加在这里 -->
       </el-menu>
     </el-header>

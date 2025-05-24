@@ -46,6 +46,13 @@ const routes = [
     name: 'DeviceAlarms',
     component: () => import('@/views/smart-device/DeviceAlarmList.vue'),
     meta: { title: '设备告警管理', requiresAuth: true }
+  },
+  // 服务记录模块路由
+  {
+    path: '/service-records',
+    name: 'ServiceRecords',
+    component: () => import('@/views/service-record/ServiceRecordList.vue'),
+    meta: { title: '服务记录管理', requiresAuth: true }
   }
   // ... 其他模块的路由
 ];

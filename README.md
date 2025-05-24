@@ -299,8 +299,18 @@
   - [x] 告警详情查看和处理流程
   - [x] 设备用户绑定管理
   - [x] 批量操作和表单验证
+- [x] 服务记录模块
+  - [x] 创建服务记录
+  - [x] 查询服务记录列表（含分页、搜索、筛选）
+  - [x] 获取服务记录详情
+  - [x] 更新服务记录信息
+  - [x] 删除服务记录
+  - [x] 批量删除服务记录
+  - [x] 服务状态统计
+  - [x] 服务评价系统
+  - [x] 时间范围查询
+  - [x] 与老人档案数据集成
 - [ ] 健康监测模块
-- [ ] 服务记录模块
 - [ ] 志愿者管理模块
 - [ ] 系统管理模块
 
@@ -329,8 +339,16 @@
   - [x] 告警详情查看/新增/处理
   - [x] 设备筛选和搜索功能
   - [x] 批量操作和状态管理
+- [x] 服务记录页面
+  - [x] 列表展示（含分页、搜索、筛选）
+  - [x] 新增/编辑/查看对话框
+  - [x] 删除及批量删除功能
+  - [x] 表单校验和样式优化
+  - [x] 服务评价对话框
+  - [x] 状态统计卡片
+  - [x] 时间范围筛选
+  - [x] 下拉框宽度优化
 - [ ] 健康监测页面
-- [ ] 服务记录页面
 - [ ] 志愿者管理页面
 - [ ] 系统管理页面
 
@@ -586,6 +604,56 @@ GET    /api/device-alarms/unprocessed/count      - 获取未处理告警数量
   "processTime": "处理时间",
   "processResult": "处理结果",
   "remarks": "备注"
+}
+```
+
+### 服务记录模块API
+
+```
+GET    /api/service-records                      - 获取服务记录列表（支持分页和搜索）
+GET    /api/service-records/{id}                 - 获取单个服务记录详情
+POST   /api/service-records                      - 创建新服务记录
+PUT    /api/service-records/{id}                 - 更新服务记录信息
+DELETE /api/service-records/{id}                 - 删除服务记录
+DELETE /api/service-records/batch                - 批量删除服务记录
+
+GET    /api/service-records/statistics/status    - 获取服务状态统计
+GET    /api/service-records/elderly/{elderlyId}  - 获取指定老人的服务记录
+PUT    /api/service-records/{id}/evaluation      - 添加服务评价
+```
+
+服务记录数据结构：
+```json
+{
+  "id": "服务记录ID",
+  "elderlyId": "老人ID",
+  "elderlyName": "老人姓名",
+  "serviceContent": "服务内容",
+  "serviceTime": "服务时间",
+  "serviceAddress": "服务地址",
+  "serviceProviderType": "服务提供者类型",
+  "serviceProviderId": "服务提供者ID",
+  "serviceProviderName": "服务提供者姓名",
+  "workOrderPrice": "工单价格",
+  "status": "状态",
+  "evaluationScore": "评价分数",
+  "evaluationComment": "评价内容",
+  "createTime": "创建时间",
+  "updateTime": "更新时间"
+}
+```
+
+分页查询参数：
+```json
+{
+  "pageNum": 1,
+  "pageSize": 10,
+  "elderlyName": "老人姓名关键词",
+  "serviceContent": "服务内容关键词",
+  "serviceProviderName": "服务提供者关键词",
+  "status": "状态",
+  "startTime": "开始时间",
+  "endTime": "结束时间"
 }
 ```
 

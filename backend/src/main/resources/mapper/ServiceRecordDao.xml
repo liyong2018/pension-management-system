@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pension.dao.ServiceRecordDao">
+
+    <resultMap id="ServiceRecordResultMap" type="com.example.pension.model.ServiceRecord">
+        <id property="id" column="id" />
+        <result property="elderlyId" column="elderly_id" />
+        <result property="elderlyName" column="elderly_name" />
+        <result property="serviceContent" column="service_content" />
+        <result property="serviceTime" column="service_time" />
+        <result property="serviceAddress" column="service_address" />
+        <result property="serviceProviderType" column="service_provider_type" />
+        <result property="serviceProviderId" column="service_provider_id" />
+        <result property="serviceProviderName" column="service_provider_name" />
+        <result property="workOrderPrice" column="work_order_price" />
+        <result property="status" column="status" />
+        <result property="evaluationScore" column="evaluation_score" />
+        <result property="evaluationComment" column="evaluation_comment" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+        <association property="elderlyProfile" javaType="com.example.pension.model.ElderlyProfile">
+            <id property="id" column="ep_id" />
+            <result property="name" column="ep_name" />
+            <result property="phone" column="ep_phone" />
+            <result property="community" column="ep_community" />
+        </association>
+    </resultMap>
+
+    <sql id="selectServiceRecordColumns">
+        sr.id, sr.elderly_id, sr.service_content, sr.service_time, sr.service_address,
+        sr.service_provider_type, sr.service_provider_id, sr.service_provider_name,
+        sr.work_order_price, sr.status, sr.evaluation_score, sr.evaluation_comment,
+        sr.create_time, sr.update_time,
+        ep.id as ep_id, ep.name as ep_name, ep.phone as ep_phone, ep.community as ep_community,
+        ep.name as elderly_name
+    </sql>
+
+    <select id="findById" resultMap="ServiceRecordResultMap">
+        SELECT <include refid="selectServiceRecordColumns" />
+        FROM service_record sr
+        LEFT JOIN elderly_profile ep ON sr.elderly_id = ep.id
+        WHERE sr.id = #{id}
+    </select>
+
+    <select id="findWithConditions" resultMap="ServiceRecordResultMap">
+        SELECT <include refid="selectServiceRecordColumns" />
+        FROM service_record sr
+        LEFT JOIN elderly_profile ep ON sr.elderly_id = ep.id
+        <where>
+            <if test="elderlyName != null and elderlyName != ''">
+                AND ep.name LIKE CONCAT('%', #{elderlyName}, '%')
+            </if>
+            <if test="serviceContent != null and serviceContent != ''">
+                AND sr.service_content LIKE CONCAT('%', #{serviceContent}, '%')
+            </if>
+            <if test="serviceProviderName != null and serviceProviderName != ''">
+                AND sr.service_provider_name LIKE CONCAT('%', #{serviceProviderName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND sr.status = #{status}
+            </if>
+            <if test="startTime != null">
+                AND sr.service_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND sr.service_time &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY sr.service_time DESC, sr.id DESC
+    </select>
+
+    <select id="countWithConditions" resultType="long">
+        SELECT count(sr.id)
+        FROM service_record sr
+        LEFT JOIN elderly_profile ep ON sr.elderly_id = ep.id
+        <where>
+            <if test="elderlyName != null and elderlyName != ''">
+                AND ep.name LIKE CONCAT('%', #{elderlyName}, '%')
+            </if>
+            <if test="serviceContent != null and serviceContent != ''">
+                AND sr.service_content LIKE CONCAT('%', #{serviceContent}, '%')
+            </if>
+            <if test="serviceProviderName != null and serviceProviderName != ''">
+                AND sr.service_provider_name LIKE CONCAT('%', #{serviceProviderName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND sr.status = #{status}
+            </if>
+            <if test="startTime != null">
+                AND sr.service_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND sr.service_time &lt;= #{endTime}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO service_record (elderly_id, service_content, service_time, service_address,
+                                   service_provider_type, service_provider_id, service_provider_name,
+                                   work_order_price, status, evaluation_score, evaluation_comment)
+        VALUES (#{elderlyId}, #{serviceContent}, #{serviceTime}, #{serviceAddress},
+                #{serviceProviderType}, #{serviceProviderId}, #{serviceProviderName},
+                #{workOrderPrice}, #{status}, #{evaluationScore}, #{evaluationComment})
+    </insert>
+
+    <update id="update">
+        UPDATE service_record
+        <set>
+            <if test="elderlyId != null">elderly_id = #{elderlyId},</if>
+            <if test="serviceContent != null">service_content = #{serviceContent},</if>
+            <if test="serviceTime != null">service_time = #{serviceTime},</if>
+            <if test="serviceAddress != null">service_address = #{serviceAddress},</if>
+            <if test="serviceProviderType != null">service_provider_type = #{serviceProviderType},</if>
+            <if test="serviceProviderId != null">service_provider_id = #{serviceProviderId},</if>
+            <if test="serviceProviderName != null">service_provider_name = #{serviceProviderName},</if>
+            <if test="workOrderPrice != null">work_order_price = #{workOrderPrice},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="evaluationScore != null">evaluation_score = #{evaluationScore},</if>
+            <if test="evaluationComment != null">evaluation_comment = #{evaluationComment},</if>
+            update_time = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM service_record WHERE id = #{id}
+    </delete>
+
+    <select id="findAllByElderlyId" resultMap="ServiceRecordResultMap">
+        SELECT <include refid="selectServiceRecordColumns" />
+        FROM service_record sr
+        LEFT JOIN elderly_profile ep ON sr.elderly_id = ep.id
+        WHERE sr.elderly_id = #{elderlyId}
+        ORDER BY sr.service_time DESC
+    </select>
+
+    <select id="countByStatus" resultType="long">
+        SELECT count(*) FROM service_record WHERE status = #{status}
+    </select>
+
+    <select id="countByServiceProviderType" resultType="long">
+        SELECT count(*) FROM service_record WHERE service_provider_type = #{serviceProviderType}
+    </select>
+
+    <delete id="deleteBatchByIds">
+        DELETE FROM service_record
+        WHERE id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+    <select id="findByStatusForEvaluation" resultMap="ServiceRecordResultMap">
+        SELECT <include refid="selectServiceRecordColumns" />
+        FROM service_record sr
+        LEFT JOIN elderly_profile ep ON sr.elderly_id = ep.id
+        WHERE sr.status = #{status}
+        ORDER BY sr.service_time DESC
+    </select>
+
+</mapper> 
