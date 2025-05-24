@@ -1,3 +1,4 @@
+
 -- ----------------------------
 -- 数据库: pension_management_system
 -- ----------------------------
@@ -377,6 +378,7 @@ CREATE TABLE `role` (
   `role_name` VARCHAR(50) NOT NULL UNIQUE COMMENT '角色名称 (如: 系统管理员, 机构管理员, 护理员, 志愿者管理员)',
   `role_key` VARCHAR(50) NOT NULL UNIQUE COMMENT '角色键 (用于代码中判断)',
   `description` TEXT COMMENT '角色描述',
+  `status` VARCHAR(1) DEFAULT '1' COMMENT '状态 (1:启用, 0:禁用)',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`)
@@ -386,12 +388,16 @@ CREATE TABLE `role` (
 -- 用户角色关联表
 -- ----------------------------
 DROP TABLE IF EXISTS `user_role`;
-CREATE TABLE `user_role` (
-  `user_id` BIGINT NOT NULL,
-  `role_id` BIGINT NOT NULL,
-  PRIMARY KEY (`user_id`, `role_id`),
-  FOREIGN KEY (`user_id`) REFERENCES `system_user`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`role_id`) REFERENCES `role`(`id`) ON DELETE CASCADE
+
+-- 创建用户角色关联表（如果不存在）
+CREATE TABLE IF NOT EXISTS user_role (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_user_role (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES system_user(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户角色关联表';
 
 -- ----------------------------
@@ -479,7 +485,15 @@ INSERT INTO `system_user` (`username`, `password_hash`, `full_name`, `is_admin`,
 
 -- 给admin用户分配超级管理员角色 (假设admin用户ID为1, 超级管理员角色ID为1)
 -- INSERT INTO `user_role` (`user_id`, `role_id`) VALUES (1, 1);
-
+INSERT IGNORE INTO user_role (user_id, role_id, create_time)
+SELECT 
+    su.id as user_id,
+    CASE 
+        WHEN su.is_admin = 1 THEN 1  -- 系统管理员角色
+        ELSE 3  -- 普通用户角色
+    END as role_id,
+    NOW() as create_time
+FROM system_user su; 
 -- 修正外键约束，在所有表创建完成后
 ALTER TABLE `health_monitoring_data`
   ADD CONSTRAINT `fk_health_data_device` FOREIGN KEY (`device_id`) REFERENCES `smart_device`(`id`) ON DELETE SET NULL;

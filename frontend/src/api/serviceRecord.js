@@ -61,6 +61,19 @@ export const serviceRecordApi = {
     })
   },
 
+  // 根据志愿者ID获取服务记录
+  getByVolunteerId(volunteerId, params = {}) {
+    return request({
+      url: `/service-records`,
+      method: 'get',
+      params: {
+        serviceProviderId: volunteerId,
+        serviceProviderType: '志愿者',
+        ...params
+      }
+    })
+  },
+
   // 获取状态统计
   getStatusStatistics() {
     return request({

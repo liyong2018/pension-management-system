@@ -53,6 +53,50 @@ const routes = [
     name: 'ServiceRecords',
     component: () => import('@/views/service-record/ServiceRecordList.vue'),
     meta: { title: '服务记录管理', requiresAuth: true }
+  },
+  // 志愿者管理模块路由
+  {
+    path: '/volunteers',
+    name: 'Volunteers',
+    component: () => import('@/views/volunteer/VolunteerListSimple.vue'),
+    meta: { title: '志愿者管理', requiresAuth: true }
+  },
+  // 系统管理模块路由
+  {
+    path: '/system',
+    name: 'SystemManagement',
+    component: () => import('@/views/system/SystemManagement.vue'),
+    meta: { title: '系统管理', requiresAuth: true }
+  },
+  {
+    path: '/system/users',
+    name: 'SystemUsers',
+    component: () => import('@/views/system/SystemUserList.vue'),
+    meta: { title: '用户管理', requiresAuth: true }
+  },
+  {
+    path: '/system/roles',
+    name: 'SystemRoles',
+    component: () => import('@/views/system/RoleList.vue'),
+    meta: { title: '角色管理', requiresAuth: true }
+  },
+  {
+    path: '/system/permissions',
+    name: 'SystemPermissions',
+    component: () => import('@/views/system/PermissionList.vue'),
+    meta: { title: '权限管理', requiresAuth: true }
+  },
+  {
+    path: '/system/menus',
+    name: 'SystemMenus',
+    component: () => import('@/views/system/MenuList.vue'),
+    meta: { title: '菜单管理', requiresAuth: true }
+  },
+  {
+    path: '/system/logs',
+    name: 'SystemLogs',
+    component: () => import('@/views/system/LogList.vue'),
+    meta: { title: '日志管理', requiresAuth: true }
   }
   // ... 其他模块的路由
 ];

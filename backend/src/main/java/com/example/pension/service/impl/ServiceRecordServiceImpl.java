@@ -90,7 +90,7 @@ public class ServiceRecordServiceImpl implements ServiceRecordService {
         PageHelper.startPage(pageNum, pageSize);
         List<ServiceRecord> serviceRecords = serviceRecordDao.findWithConditions(
                 null, null, null, null, null, null, 
-                0, 0);
+                null, null, 0, 0);
         PageInfo<ServiceRecord> entityPageInfo = new PageInfo<>(serviceRecords);
         return convertToDtoPageInfo(entityPageInfo);
     }
@@ -101,6 +101,8 @@ public class ServiceRecordServiceImpl implements ServiceRecordService {
             String elderlyName,
             String serviceContent,
             String serviceProviderName,
+            String serviceProviderType,
+            Long serviceProviderId,
             String status,
             LocalDateTime startTime,
             LocalDateTime endTime,
@@ -111,6 +113,8 @@ public class ServiceRecordServiceImpl implements ServiceRecordService {
                 StringUtils.hasText(elderlyName) ? elderlyName : null,
                 StringUtils.hasText(serviceContent) ? serviceContent : null,
                 StringUtils.hasText(serviceProviderName) ? serviceProviderName : null,
+                StringUtils.hasText(serviceProviderType) ? serviceProviderType : null,
+                serviceProviderId,
                 StringUtils.hasText(status) ? status : null,
                 startTime,
                 endTime,

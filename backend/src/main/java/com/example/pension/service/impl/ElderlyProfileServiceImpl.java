@@ -7,7 +7,7 @@ import com.example.pension.dto.ElderlyFamilyMemberDTO;
 import com.example.pension.dto.ElderlyProfileDTO;
 import com.example.pension.exception.ResourceNotFoundException;
 import com.example.pension.exception.ValidationException;
-import com.example.pension.mapper.ElderlyFamilyMemberMapper;
+import com.example.pension.mapper.ElderlyFamilyMemberDTOMapper;
 import com.example.pension.mapper.ElderlyProfileMapper;
 import com.example.pension.model.ElderlyFamilyMember;
 import com.example.pension.model.ElderlyProfile;
@@ -34,7 +34,7 @@ public class ElderlyProfileServiceImpl implements ElderlyProfileService {
     private final OrganizationDao organizationDao;
     private final ElderlyProfileMapper elderlyProfileMapper;
     private final ElderlyFamilyMemberDao elderlyFamilyMemberDao;
-    private final ElderlyFamilyMemberMapper elderlyFamilyMemberMapper;
+    private final ElderlyFamilyMemberDTOMapper elderlyFamilyMemberMapper;
 
     private ElderlyProfileDTO mapToDTOWithFamilyMembers(ElderlyProfile elderlyProfile) {
         if (elderlyProfile == null) {

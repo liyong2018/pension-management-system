@@ -19,6 +19,15 @@
           <el-menu-item index="/device-alarms">告警管理</el-menu-item>
         </el-sub-menu>
         <el-menu-item index="/service-records">服务记录</el-menu-item>
+        <el-menu-item index="/volunteers">志愿者管理</el-menu-item>
+        <el-sub-menu index="system">
+          <template #title>系统管理</template>
+          <el-menu-item index="/system/users">用户管理</el-menu-item>
+          <el-menu-item index="/system/roles">角色管理</el-menu-item>
+          <el-menu-item index="/system/permissions">权限管理</el-menu-item>
+          <el-menu-item index="/system/menus">菜单管理</el-menu-item>
+          <el-menu-item index="/system/logs">日志管理</el-menu-item>
+        </el-sub-menu>
         <!-- 后续其他模块的导航链接可以加在这里 -->
       </el-menu>
     </el-header>

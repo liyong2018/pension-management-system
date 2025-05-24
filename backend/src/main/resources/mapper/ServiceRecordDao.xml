@@ -56,6 +56,12 @@
             <if test="serviceProviderName != null and serviceProviderName != ''">
                 AND sr.service_provider_name LIKE CONCAT('%', #{serviceProviderName}, '%')
             </if>
+            <if test="serviceProviderType != null and serviceProviderType != ''">
+                AND sr.service_provider_type = #{serviceProviderType}
+            </if>
+            <if test="serviceProviderId != null">
+                AND sr.service_provider_id = #{serviceProviderId}
+            </if>
             <if test="status != null and status != ''">
                 AND sr.status = #{status}
             </if>
@@ -83,6 +89,12 @@
             <if test="serviceProviderName != null and serviceProviderName != ''">
                 AND sr.service_provider_name LIKE CONCAT('%', #{serviceProviderName}, '%')
             </if>
+            <if test="serviceProviderType != null and serviceProviderType != ''">
+                AND sr.service_provider_type = #{serviceProviderType}
+            </if>
+            <if test="serviceProviderId != null">
+                AND sr.service_provider_id = #{serviceProviderId}
+            </if>
             <if test="status != null and status != ''">
                 AND sr.status = #{status}
             </if>
@@ -107,15 +119,15 @@
     <update id="update">
         UPDATE service_record
         <set>
-            <if test="elderlyId != null">elderly_id = #{elderlyId},</if>
-            <if test="serviceContent != null">service_content = #{serviceContent},</if>
-            <if test="serviceTime != null">service_time = #{serviceTime},</if>
-            <if test="serviceAddress != null">service_address = #{serviceAddress},</if>
-            <if test="serviceProviderType != null">service_provider_type = #{serviceProviderType},</if>
-            <if test="serviceProviderId != null">service_provider_id = #{serviceProviderId},</if>
-            <if test="serviceProviderName != null">service_provider_name = #{serviceProviderName},</if>
-            <if test="workOrderPrice != null">work_order_price = #{workOrderPrice},</if>
-            <if test="status != null">status = #{status},</if>
+            elderly_id = #{elderlyId},
+            service_content = #{serviceContent},
+            service_time = #{serviceTime},
+            service_address = #{serviceAddress},
+            service_provider_type = #{serviceProviderType},
+            service_provider_id = #{serviceProviderId},
+            service_provider_name = #{serviceProviderName},
+            work_order_price = #{workOrderPrice},
+            status = #{status},
             <if test="evaluationScore != null">evaluation_score = #{evaluationScore},</if>
             <if test="evaluationComment != null">evaluation_comment = #{evaluationComment},</if>
             update_time = CURRENT_TIMESTAMP

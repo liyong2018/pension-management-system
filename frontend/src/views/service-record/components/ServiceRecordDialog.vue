@@ -79,6 +79,7 @@
               placeholder="请选择服务提供者类型"
               style="width: 100%"
               popper-class="provider-type-select-dropdown"
+              @change="handleProviderTypeChange"
             >
               <el-option label="机构员工" value="机构员工"></el-option>
               <el-option label="志愿者" value="志愿者"></el-option>
@@ -89,7 +90,38 @@
         </el-col>
         <el-col :span="8">
           <el-form-item label="服务提供者" prop="serviceProviderName">
-            <el-input v-model="form.serviceProviderName" placeholder="请输入服务提供者姓名"></el-input>
+            <!-- 当选择志愿者时显示下拉选择 -->
+            <el-select
+              v-if="form.serviceProviderType === '志愿者'"
+              v-model="form.serviceProviderId"
+              placeholder="请选择志愿者"
+              filterable
+              remote
+              :remote-method="searchVolunteers"
+              :loading="volunteerLoading"
+              @change="handleVolunteerChange"
+              style="width: 100%"
+              popper-class="volunteer-select-dropdown"
+              clearable
+            >
+              <el-option
+                v-for="volunteer in volunteerOptions"
+                :key="volunteer.id"
+                :label="`${volunteer.name} - ${volunteer.occupation || ''}`"
+                :value="volunteer.id"
+              >
+                <div class="volunteer-option">
+                  <span class="volunteer-name">{{ volunteer.name }}</span>
+                  <span class="volunteer-info">{{ volunteer.occupation || '' }} | {{ volunteer.phone || '' }}</span>
+                </div>
+              </el-option>
+            </el-select>
+            <!-- 其他类型时显示输入框 -->
+            <el-input 
+              v-else
+              v-model="form.serviceProviderName" 
+              placeholder="请输入服务提供者姓名"
+            />
           </el-form-item>
         </el-col>
         <el-col :span="8">
@@ -158,6 +190,7 @@ import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { serviceRecordApi } from '@/api/serviceRecord'
 import { elderlyProfileApi } from '@/api/elderlyProfile'
+import { volunteerApi } from '@/api/volunteer'
 
 const props = defineProps({
   modelValue: {
@@ -200,6 +233,10 @@ const submitLoading = ref(false)
 // 老人选择相关
 const elderlyOptions = ref([])
 const elderlyLoading = ref(false)
+
+// 志愿者选择相关
+const volunteerOptions = ref([])
+const volunteerLoading = ref(false)
 
 // 表单数据
 const form = ref({
@@ -271,6 +308,73 @@ const handleElderlyChange = (elderlyId) => {
   }
 }
 
+// 搜索志愿者
+const searchVolunteers = async (query) => {
+  try {
+    volunteerLoading.value = true
+    const params = {
+      page: 1,
+      pageSize: 20,
+      status: 'ACTIVE' // 只搜索活跃的志愿者
+    }
+    
+    if (query && query.trim() !== '') {
+      params.name = query.trim()
+    }
+    
+    const response = await volunteerApi.getVolunteerList(params)
+    if (response.success) {
+      volunteerOptions.value = response.data.volunteers || []
+    } else {
+      ElMessage.error('搜索志愿者失败')
+      volunteerOptions.value = []
+    }
+  } catch (error) {
+    console.error('搜索志愿者失败:', error)
+    ElMessage.error('搜索志愿者失败')
+    volunteerOptions.value = []
+  } finally {
+    volunteerLoading.value = false
+  }
+}
+
+// 服务提供者类型变化
+const handleProviderTypeChange = (type) => {
+  // 清空相关字段
+  form.value.serviceProviderId = null
+  form.value.serviceProviderName = ''
+  volunteerOptions.value = []
+  
+  console.log('服务提供者类型变化:', type)
+  
+  // 如果选择了志愿者，加载志愿者列表
+  if (type === '志愿者') {
+    searchVolunteers('')
+  }
+}
+
+// 志愿者选择变化
+const handleVolunteerChange = (volunteerId) => {
+  console.log('志愿者选择变化:', volunteerId)
+  
+  if (volunteerId) {
+    const selectedVolunteer = volunteerOptions.value.find(item => item.id === volunteerId)
+    if (selectedVolunteer) {
+      form.value.serviceProviderName = selectedVolunteer.name
+      form.value.serviceProviderId = selectedVolunteer.id
+      console.log('设置志愿者信息:', {
+        id: selectedVolunteer.id,
+        name: selectedVolunteer.name
+      })
+    }
+  } else {
+    // 清空选择
+    form.value.serviceProviderName = ''
+    form.value.serviceProviderId = null
+    console.log('清空志愿者选择')
+  }
+}
+
 // 重置表单
 const resetForm = () => {
   form.value = {
@@ -287,6 +391,7 @@ const resetForm = () => {
     evaluationComment: ''
   }
   elderlyOptions.value = []
+  volunteerOptions.value = []
   nextTick(() => {
     formRef.value?.clearValidate()
   })
@@ -297,6 +402,8 @@ const loadData = async () => {
   if (props.recordId && (props.mode === 'view' || props.mode === 'edit')) {
     try {
       const res = await serviceRecordApi.getById(props.recordId)
+      
+      console.log('加载的服务记录数据:', res)
       
       // 处理日期时间格式
       if (res.serviceTime) {
@@ -320,12 +427,39 @@ const loadData = async () => {
       
       form.value = formData
       
+      console.log('设置表单数据:', formData)
+      
       // 如果有老人信息，添加到选项中
       if (res.elderlyId && res.elderlyName) {
         elderlyOptions.value = [{
           id: res.elderlyId,
           name: res.elderlyName
         }]
+      }
+      
+      // 如果是志愿者类型，处理志愿者信息
+      if (res.serviceProviderType === '志愿者') {
+        if (res.serviceProviderId) {
+          // 有具体的志愿者ID，尝试加载志愿者详情
+          try {
+            const volunteerResponse = await volunteerApi.getVolunteerById(res.serviceProviderId)
+            if (volunteerResponse.success) {
+              volunteerOptions.value = [volunteerResponse.data]
+              console.log('加载志愿者详情成功:', volunteerResponse.data)
+            } else {
+              console.log('志愿者详情加载失败，搜索活跃志愿者')
+              await searchVolunteers('')
+            }
+          } catch (error) {
+            console.error('加载志愿者信息失败:', error)
+            // 如果获取失败，尝试搜索活跃志愿者
+            await searchVolunteers('')
+          }
+        } else {
+          // 没有具体志愿者ID，加载志愿者列表供选择
+          console.log('没有志愿者ID，加载志愿者列表')
+          await searchVolunteers('')
+        }
       }
     } catch (error) {
       console.error('加载服务记录失败:', error)
@@ -358,7 +492,6 @@ const handleSubmit = async () => {
       return
     }
     ElMessage.error(props.mode === 'add' ? '创建失败' : '更新失败')
-    console.error('提交失败:', error)
   } finally {
     submitLoading.value = false
   }
@@ -419,11 +552,38 @@ onMounted(() => {
   min-width: 100px !important;
 }
 
+.volunteer-select-dropdown {
+  min-width: 300px !important;
+  max-width: 400px !important;
+}
+
 .elderly-select-dropdown .el-select-dropdown__item,
 .provider-type-select-dropdown .el-select-dropdown__item,
 .status-select-dropdown .el-select-dropdown__item {
   white-space: nowrap;
   overflow: visible;
   text-overflow: ellipsis;
+}
+
+.volunteer-select-dropdown .el-select-dropdown__item {
+  height: auto;
+  padding: 8px 20px;
+  line-height: 1.4;
+}
+
+.volunteer-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.volunteer-name {
+  font-weight: 600;
+  color: #303133;
+}
+
+.volunteer-info {
+  font-size: 12px;
+  color: #909399;
 }
 </style> 

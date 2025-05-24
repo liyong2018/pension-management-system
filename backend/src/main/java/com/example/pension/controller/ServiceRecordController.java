@@ -27,6 +27,8 @@ public class ServiceRecordController {
             @RequestParam(required = false) String elderlyName,
             @RequestParam(required = false) String serviceContent,
             @RequestParam(required = false) String serviceProviderName,
+            @RequestParam(required = false) String serviceProviderType,
+            @RequestParam(required = false) Long serviceProviderId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
@@ -39,14 +41,16 @@ public class ServiceRecordController {
         boolean hasSearchCriteria = StringUtils.hasText(elderlyName) || 
                                    StringUtils.hasText(serviceContent) || 
                                    StringUtils.hasText(serviceProviderName) || 
+                                   StringUtils.hasText(serviceProviderType) ||
+                                   serviceProviderId != null ||
                                    StringUtils.hasText(status) ||
                                    startTime != null ||
                                    endTime != null;
 
         if (hasSearchCriteria) {
             page = serviceRecordService.searchByMultipleConditions(
-                    elderlyName, serviceContent, serviceProviderName, status, 
-                    startTime, endTime, pageNum, pageSize);
+                    elderlyName, serviceContent, serviceProviderName, serviceProviderType,
+                    serviceProviderId, status, startTime, endTime, pageNum, pageSize);
         } else {
             page = serviceRecordService.getAll(pageNum, pageSize);
         }

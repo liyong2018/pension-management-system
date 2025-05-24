@@ -16,6 +16,8 @@ public interface ServiceRecordDao {
             @Param("elderlyName") String elderlyName,
             @Param("serviceContent") String serviceContent,
             @Param("serviceProviderName") String serviceProviderName,
+            @Param("serviceProviderType") String serviceProviderType,
+            @Param("serviceProviderId") Long serviceProviderId,
             @Param("status") String status,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime,
@@ -26,6 +28,8 @@ public interface ServiceRecordDao {
             @Param("elderlyName") String elderlyName,
             @Param("serviceContent") String serviceContent,
             @Param("serviceProviderName") String serviceProviderName,
+            @Param("serviceProviderType") String serviceProviderType,
+            @Param("serviceProviderId") Long serviceProviderId,
             @Param("status") String status,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime);

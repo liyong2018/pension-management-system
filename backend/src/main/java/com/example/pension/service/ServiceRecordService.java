@@ -19,6 +19,8 @@ public interface ServiceRecordService {
             String elderlyName,
             String serviceContent,
             String serviceProviderName,
+            String serviceProviderType,
+            Long serviceProviderId,
             String status,
             LocalDateTime startTime,
             LocalDateTime endTime,

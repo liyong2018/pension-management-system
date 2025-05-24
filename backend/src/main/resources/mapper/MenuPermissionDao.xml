@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pension.dao.MenuPermissionDao">
+
+    <!-- 结果映射 -->
+    <resultMap id="menuPermissionMap" type="com.example.pension.model.MenuPermission">
+        <id property="id" column="id"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="name" column="name"/>
+        <result property="type" column="type"/>
+        <result property="permissionKey" column="permission_key"/>
+        <result property="routePath" column="route_path"/>
+        <result property="componentPath" column="component_path"/>
+        <result property="icon" column="icon"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="isVisible" column="is_visible"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <!-- 基础查询字段 -->
+    <sql id="baseColumns">
+        id, parent_id, name, type, permission_key, route_path, component_path,
+        icon, sort_order, is_visible, status, create_time, update_time
+    </sql>
+
+    <!-- 插入权限 -->
+    <insert id="insert" parameterType="com.example.pension.model.MenuPermission" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO menu_permission (
+            parent_id, name, type, permission_key, route_path, component_path,
+            icon, sort_order, is_visible, status, create_time, update_time
+        ) VALUES (
+            #{parentId}, #{name}, #{type}, #{permissionKey}, #{routePath}, #{componentPath},
+            #{icon}, #{sortOrder}, #{isVisible}, #{status}, NOW(), NOW()
+        )
+    </insert>
+
+    <!-- 更新权限 -->
+    <update id="update" parameterType="com.example.pension.model.MenuPermission">
+        UPDATE menu_permission SET
+            parent_id = #{parentId},
+            name = #{name},
+            type = #{type},
+            permission_key = #{permissionKey},
+            route_path = #{routePath},
+            component_path = #{componentPath},
+            icon = #{icon},
+            sort_order = #{sortOrder},
+            is_visible = #{isVisible},
+            status = #{status},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除权限 -->
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM menu_permission WHERE id = #{id}
+    </delete>
+
+    <!-- 批量删除权限 -->
+    <delete id="deleteBatchByIds">
+        DELETE FROM menu_permission WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 根据ID查询权限 -->
+    <select id="findById" parameterType="long" resultMap="menuPermissionMap">
+        SELECT <include refid="baseColumns"/>
+        FROM menu_permission
+        WHERE id = #{id}
+    </select>
+
+    <!-- 查询所有权限 -->
+    <select id="findAll" resultMap="menuPermissionMap">
+        SELECT <include refid="baseColumns"/>
+        FROM menu_permission
+        ORDER BY sort_order ASC, create_time DESC
+    </select>
+
+    <!-- 查询根级权限 -->
+    <select id="findRootPermissions" resultMap="menuPermissionMap">
+        SELECT <include refid="baseColumns"/>
+        FROM menu_permission
+        WHERE parent_id IS NULL
+        ORDER BY sort_order ASC
+    </select>
+
+    <!-- 根据父ID查询子权限 -->
+    <select id="findByParentId" parameterType="long" resultMap="menuPermissionMap">
+        SELECT <include refid="baseColumns"/>
+        FROM menu_permission
+        WHERE parent_id = #{parentId}
+        ORDER BY sort_order ASC
+    </select>
+
+    <!-- 条件查询权限 -->
+    <select id="findWithConditions" resultMap="menuPermissionMap">
+        SELECT <include refid="baseColumns"/>
+        FROM menu_permission
+        WHERE 1=1
+        <if test="name != null and name != ''">
+            AND name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+        <if test="permissionKey != null and permissionKey != ''">
+            AND permission_key LIKE CONCAT('%', #{permissionKey}, '%')
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        ORDER BY sort_order ASC, create_time DESC
+    </select>
+
+    <!-- 根据角色ID查询权限 -->
+    <select id="findByRoleId" parameterType="long" resultMap="menuPermissionMap">
+        SELECT mp.id, mp.parent_id, mp.name, mp.type, mp.permission_key, mp.route_path,
+               mp.component_path, mp.icon, mp.sort_order, mp.is_visible, mp.status,
+               mp.create_time, mp.update_time
+        FROM menu_permission mp
+        INNER JOIN role_permission rp ON mp.id = rp.permission_id
+        WHERE rp.role_id = #{roleId}
+        ORDER BY mp.sort_order ASC
+    </select>
+
+    <!-- 根据用户ID查询权限 -->
+    <select id="findByUserId" parameterType="long" resultMap="menuPermissionMap">
+        SELECT DISTINCT mp.id, mp.parent_id, mp.name, mp.type, mp.permission_key, mp.route_path,
+                        mp.component_path, mp.icon, mp.sort_order, mp.is_visible, mp.status,
+                        mp.create_time, mp.update_time
+        FROM menu_permission mp
+        INNER JOIN role_permission rp ON mp.id = rp.permission_id
+        INNER JOIN user_role ur ON rp.role_id = ur.role_id
+        WHERE ur.user_id = #{userId} AND mp.status = true
+        ORDER BY mp.sort_order ASC
+    </select>
+
+    <!-- 查询菜单类型的权限 -->
+    <select id="findMenuPermissions" resultMap="menuPermissionMap">
+        SELECT <include refid="baseColumns"/>
+        FROM menu_permission
+        WHERE type = 'MENU' AND status = true
+        ORDER BY sort_order ASC
+    </select>
+
+    <!-- 检查权限标识是否存在 -->
+    <select id="existsByPermissionKey" parameterType="string" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM menu_permission WHERE permission_key = #{permissionKey}
+    </select>
+
+    <!-- 检查权限标识是否存在（排除指定ID） -->
+    <select id="existsByPermissionKeyExcludeId" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM menu_permission 
+        WHERE permission_key = #{permissionKey} AND id != #{excludeId}
+    </select>
+
+</mapper> 

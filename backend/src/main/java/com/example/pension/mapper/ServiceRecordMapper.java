@@ -20,6 +20,7 @@ public interface ServiceRecordMapper {
     @Mapping(target = "updateTime", ignore = true)
     ServiceRecord toEntity(ServiceRecordDTO dto);
     
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "elderlyProfile", ignore = true)
     @Mapping(target = "elderlyName", ignore = true)
     @Mapping(target = "createTime", ignore = true)
