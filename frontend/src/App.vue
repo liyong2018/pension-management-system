@@ -1,16 +1,20 @@
 <template>
   <el-container id="app-container" style="height: 100vh;">
-    <el-header class="app-header">
+    <!-- 左侧边栏 -->
+    <el-aside class="app-aside" width="250px">
+      <!-- 系统标题 -->
       <div class="logo-title">养老信息管理系统</div>
+      
+      <!-- 侧边菜单 -->
       <el-menu
-        mode="horizontal"
         :default-active="activeIndex"
         router
-        background-color="#545c64"
-        text-color="#fff"
-        text-align="center"
-        active-text-color="#ffd04b"
+        background-color="#2c3e50"
+        text-color="#ecf0f1"
+        active-text-color="#3498db"
         v-loading="menuLoading"
+        class="sidebar-menu"
+        :collapse="false"
       >
         <!-- 动态渲染菜单 -->
         <template v-for="menu in visibleMenus" :key="menu.id">
@@ -23,10 +27,10 @@
             <el-icon v-if="menu.icon" style="margin-right: 8px;">
               <component :is="getIconComponent(menu.icon)" />
             </el-icon>
-            {{ menu.name }}
+            <span>{{ menu.name }}</span>
           </el-menu-item>
           
-          <!-- 子菜单 -->
+          <!-- 子菜单（手风琴样式） -->
           <el-sub-menu 
             v-else-if="menu.type === 'CATALOG' && menu.children && menu.children.length > 0"
             :index="menu.routePath || menu.permissionKey"
@@ -36,7 +40,7 @@
               <el-icon v-if="menu.icon" style="margin-right: 8px;">
                 <component :is="getIconComponent(menu.icon)" />
               </el-icon>
-              {{ menu.name }}
+              <span>{{ menu.name }}</span>
             </template>
             
             <!-- 递归渲染子菜单 -->
@@ -49,16 +53,34 @@
                 <el-icon v-if="child.icon" style="margin-right: 8px;">
                   <component :is="getIconComponent(child.icon)" />
                 </el-icon>
-                {{ child.name }}
+                <span>{{ child.name }}</span>
               </el-menu-item>
             </template>
           </el-sub-menu>
         </template>
       </el-menu>
-    </el-header>
-    <el-main class="app-main">
-      <router-view />
-    </el-main>
+    </el-aside>
+    
+    <!-- 主内容区域 -->
+    <el-container>
+      <!-- 顶部头部（可选，用于放置用户信息等） -->
+      <el-header class="app-header" height="60px">
+        <div class="header-content">
+          <div class="header-left">
+            <!-- 可以放置面包屑导航等 -->
+          </div>
+          <div class="header-right">
+            <!-- 可以放置用户头像、退出按钮等 -->
+            <el-avatar :size="32" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
+          </div>
+        </div>
+      </el-header>
+      
+      <!-- 主内容 -->
+      <el-main class="app-main">
+        <router-view />
+      </el-main>
+    </el-container>
   </el-container>
 </template>
 
@@ -386,38 +408,131 @@ html, body {
   /* height: 100%; 已通过内联样式设置 */
 }
 
-.app-header {
-  display: flex;
-  align-items: center; /* 垂直居中导航项 */
-  background-color: #545c64;
-  padding: 0 20px; /* 移除默认的左右 padding，让 menu 占满 */
-  justify-content: space-between; /* 让标题和菜单分布在两端 */
+/* 左侧边栏样式 */
+.app-aside {
+  background-color: #2c3e50;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
 }
 
+/* 系统标题样式 */
 .logo-title {
-  color: #fff;
-  font-size: 20px;
+  color: #ecf0f1;
+  font-size: 18px;
   font-weight: bold;
-  margin-right: 40px; /* Logo 和菜单之间的距离 */
-  flex-shrink: 0; /* 防止标题被压缩 */
+  padding: 20px 16px;
+  text-align: center;
+  border-bottom: 1px solid #34495e;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
 }
 
-/* Element Plus 菜单样式调整 */
-.el-header .el-menu {
-  border-bottom: none; /* 移除菜单底部的边框 */
-  flex-grow: 1; /* 让菜单占据剩余空间 */
-  justify-content: center; /* 菜单项居中显示 */
+/* 侧边菜单样式 */
+.sidebar-menu {
+  border-right: none;
+  height: calc(100vh - 80px); /* 减去标题高度 */
+  overflow-y: auto;
 }
 
+.sidebar-menu .el-menu-item {
+  height: 50px;
+  line-height: 50px;
+  padding-left: 20px !important;
+  transition: all 0.3s ease;
+}
+
+.sidebar-menu .el-menu-item:hover {
+  background-color: #34495e !important;
+  color: #3498db !important;
+}
+
+.sidebar-menu .el-menu-item.is-active {
+  background-color: #3498db !important;
+  color: #ffffff !important;
+  border-right: 3px solid #2980b9;
+}
+
+.sidebar-menu .el-sub-menu__title {
+  height: 50px;
+  line-height: 50px;
+  padding-left: 20px !important;
+  color: #ecf0f1 !important;
+  transition: all 0.3s ease;
+}
+
+.sidebar-menu .el-sub-menu__title:hover {
+  background-color: #34495e !important;
+  color: #3498db !important;
+}
+
+.sidebar-menu .el-sub-menu .el-menu-item {
+  padding-left: 40px !important;
+  background-color: #34495e;
+  height: 45px;
+  line-height: 45px;
+}
+
+.sidebar-menu .el-sub-menu .el-menu-item:hover {
+  background-color: #4a6741 !important;
+}
+
+.sidebar-menu .el-sub-menu .el-menu-item.is-active {
+  background-color: #3498db !important;
+  color: #ffffff !important;
+}
+
+/* 顶部头部样式 */
+.app-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e6e6e6;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0 20px;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* 主内容区域样式 */
 .app-main {
   padding: 20px;
-  background-color: #f4f5f7; /* 给主内容区一个背景色 */
+  background-color: #f4f5f7;
   height: calc(100vh - 60px); /* 减去header的高度 */
-  overflow-y: auto; /* 如果内容超出则显示滚动条 */
+  overflow-y: auto;
 }
 
 /* Element Plus 组件的某些全局覆盖 (谨慎使用) */
 .el-card__header {
     font-weight: bold;
+}
+
+/* 滚动条样式优化 */
+.sidebar-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+  background: #2c3e50;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+  background: #34495e;
+  border-radius: 3px;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb:hover {
+  background: #4a6741;
 }
 </style> 
