@@ -54,6 +54,7 @@
             :index="menu.routePath || menu.permissionKey || `sub-menu-${index}`" 
             :disabled="!menu.status"
             class="custom-sub-menu"
+            :popper-class="'dark-theme-popper'"
           >
             <template #title>
               <el-icon class="menu-icon">
@@ -706,8 +707,8 @@ html, body {
   display: none; /* 强制隐藏 */
 }
 
-/* 折叠时弹出的子菜单容器样式 (el-menu-popper) - 彻底重新定义 */
-div.el-popper.el-menu-popper[role^="menu"] { /* 更精确地定位菜单相关的Popper */
+/* 折叠时弹出的子菜单容器样式 (el-menu-popper) - 使用自定义popper-class */
+.dark-theme-popper { /* 定位我们自定义的popper类 */
   background-color: #2c3e50 !important;      /* 深色背景 */
   border: 1px solid #34495e !important;       /* 边框颜色协调 */
   border-radius: 8px !important;              /* 圆角与主菜单一致 */
@@ -716,14 +717,14 @@ div.el-popper.el-menu-popper[role^="menu"] { /* 更精确地定位菜单相关�
 }
 
 /* 确保Popper内部的el-menu本身背景透明，无额外边框和内边距 */
-div.el-popper.el-menu-popper[role^="menu"] .el-menu {
+.dark-theme-popper .el-menu {
   background-color: transparent !important;
   border: none !important;
   padding: 0 !important;
 }
 
 /* 折叠时弹出的子菜单项样式 - 继承主菜单风格 */
-div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item {
+.dark-theme-popper .custom-sub-menu-item {
   display: flex !important;
   align-items: center !important;
   width: auto !important; /* 宽度自动，由内容和容器padding决定 */
@@ -737,14 +738,14 @@ div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item {
   transition: background-color 0.2s ease, color 0.2s ease !important;
 }
 
-div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item .menu-icon {
+.dark-theme-popper .custom-sub-menu-item .menu-icon {
   color: #ecf0f1 !important; /* 图标颜色与文字一致 */
   margin-right: 10px !important;
   font-size: 16px !important; /* 图标大小 */
   flex-shrink: 0;
 }
 
-div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item .menu-text {
+.dark-theme-popper .custom-sub-menu-item .menu-text {
   font-size: 14px !important; /* 文字大小 */
   white-space: nowrap;
   overflow: hidden;
@@ -752,33 +753,35 @@ div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item .menu-text {
 }
 
 /* 弹出子菜单项的 hover 状态 */
-div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item:not(.is-disabled):hover {
+.dark-theme-popper .custom-sub-menu-item:not(.is-disabled):hover {
   background-color: rgba(52, 152, 219, 0.25) !important; /* 悬停背景色，更明显一些 */
   color: #ffffff !important; /* 悬停文字颜色提亮 */
 }
 
-div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item:not(.is-disabled):hover .menu-icon {
+.dark-theme-popper .custom-sub-menu-item:not(.is-disabled):hover .menu-icon {
   color: #ffffff !important; /* 悬停图标颜色随文字提亮 */
 }
 
 /* 弹出子菜单项的 active 状态 */
-div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item.is-active {
+.dark-theme-popper .custom-sub-menu-item.is-active {
   background-color: #3498db !important; /* 激活背景色 - 主题蓝 */
   color: #ffffff !important;           /* 激活文字颜色 - 白色 */
   font-weight: 500 !important;          /* 激活文字略加粗 */
   box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3) !important; /* 激活时细微阴影 */
 }
 
-div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item.is-active .menu-icon {
+.dark-theme-popper .custom-sub-menu-item.is-active .menu-icon {
   color: #ffffff !important; /* 激活图标颜色 - 白色 */
 }
 
 /* 如果Element Plus在popper的el-menu上使用is-light或类似的主题类，尝试覆盖 */
-div.el-popper.el-menu-popper.is-light {
+/* 注意：当使用popper-class时，Element Plus通常不会再给popper添加 is-light 这类全局主题类， */
+/* 但保留以下规则以防万一，或者如果popper-class没有完全覆盖所有情况 */
+.dark-theme-popper.is-light { /* 理论上这种情况会比较少见 */
     background-color: #2c3e50 !important; 
     border-color: #34495e !important;
 }
-div.el-popper.el-menu-popper.is-light .el-menu {
+.dark-theme-popper.is-light .el-menu {
     background-color: transparent !important;
 }
 
