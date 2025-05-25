@@ -1,9 +1,17 @@
 <template>
   <el-container id="app-container" style="height: 100vh;">
     <!-- 左侧边栏 -->
-    <el-aside class="app-aside" width="250px">
+    <el-aside class="app-aside" :width="isCollapsed ? '64px' : '250px'">
+      <!-- 折叠按钮 -->
+      <div class="collapse-trigger" @click="toggleCollapse">
+        <el-icon :size="20">
+          <Expand v-if="isCollapsed" />
+          <Fold v-else />
+        </el-icon>
+      </div>
+      
       <!-- 系统标题 -->
-      <div class="logo-title">养老信息管理系统</div>
+      <div class="logo-title" v-show="!isCollapsed">养老信息管理系统</div>
       
       <!-- 侧边菜单 -->
       <el-menu
@@ -14,7 +22,9 @@
         active-text-color="#3498db"
         v-loading="menuLoading"
         class="sidebar-menu"
-        :collapse="false"
+        :collapse="isCollapsed"
+        :unique-opened="true"
+        @click="handleMenuClick"
       >
         <!-- 动态渲染菜单 -->
         <template v-for="menu in visibleMenus" :key="menu.id">
@@ -77,10 +87,17 @@
       </el-header>
       
       <!-- 主内容 -->
-      <el-main class="app-main">
+      <el-main class="app-main" @click="handleMainClick">
         <router-view />
       </el-main>
     </el-container>
+    
+    <!-- 遮罩层，用于点击外部区域收起菜单 -->
+    <div 
+      v-if="!isCollapsed && showMask" 
+      class="sidebar-mask" 
+      @click="handleMaskClick"
+    ></div>
   </el-container>
 </template>
 
@@ -90,13 +107,15 @@ import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { 
   House, OfficeBuilding, User, Monitor, Warning, Avatar, 
-  Setting, Key, Collection, Document, Menu 
+  Setting, Key, Collection, Document, Menu, Expand, Fold 
 } from '@element-plus/icons-vue';
 
 const route = useRoute();
 const activeIndex = ref(route.path);
 const menuLoading = ref(false);
 const menuData = ref([]);
+const isCollapsed = ref(true); // 默认收起状态
+const showMask = ref(false);
 
 // 图标映射
 const iconMap = {
@@ -365,6 +384,52 @@ watch(() => route.path, (newPath) => {
   activeIndex.value = newPath;
 });
 
+// 处理菜单点击事件
+const handleMenuClick = () => {
+  // 在移动端或小屏幕时，点击菜单项后自动收起
+  if (window.innerWidth <= 768) {
+    isCollapsed.value = true;
+    showMask.value = false;
+  }
+};
+
+// 处理主内容区域点击事件
+const handleMainClick = () => {
+  // 点击主内容区域时收起菜单（仅在展开状态下）
+  if (!isCollapsed.value) {
+    isCollapsed.value = true;
+    showMask.value = false;
+  }
+};
+
+// 处理遮罩层点击事件
+const handleMaskClick = () => {
+  // 点击遮罩层收起菜单
+  isCollapsed.value = true;
+  showMask.value = false;
+};
+
+// 处理折叠按钮点击事件
+const toggleCollapse = () => {
+  isCollapsed.value = !isCollapsed.value;
+  
+  // 展开时显示遮罩层（在小屏幕上）
+  if (!isCollapsed.value && window.innerWidth <= 768) {
+    showMask.value = true;
+  } else {
+    showMask.value = false;
+  }
+};
+
+// 监听窗口大小变化
+const handleResize = () => {
+  if (window.innerWidth > 768) {
+    showMask.value = false;
+  } else if (!isCollapsed.value) {
+    showMask.value = true;
+  }
+};
+
 // 组件挂载时加载菜单数据
 onMounted(() => {
   console.log('🚀 App组件挂载，开始初始化菜单...');
@@ -375,6 +440,9 @@ onMounted(() => {
   
   // 强制刷新菜单数据
   loadMenuData();
+  
+  // 添加窗口大小变化监听
+  window.addEventListener('resize', handleResize);
   
   // 添加页面可见性变化监听，确保页面重新激活时刷新菜单
   document.addEventListener('visibilitychange', () => {
@@ -412,6 +480,33 @@ html, body {
 .app-aside {
   background-color: #2c3e50;
   box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+  transition: width 0.3s ease;
+  position: relative;
+  z-index: 1001;
+}
+
+/* 折叠按钮样式 */
+.collapse-trigger {
+  position: absolute;
+  top: 20px;
+  right: -12px;
+  width: 24px;
+  height: 24px;
+  background-color: #3498db;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  z-index: 1002;
+}
+
+.collapse-trigger:hover {
+  background-color: #2980b9;
+  transform: scale(1.1);
 }
 
 /* 系统标题样式 */
@@ -423,6 +518,9 @@ html, body {
   text-align: center;
   border-bottom: 1px solid #34495e;
   background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 /* 侧边菜单样式 */
@@ -430,6 +528,27 @@ html, body {
   border-right: none;
   height: calc(100vh - 80px); /* 减去标题高度 */
   overflow-y: auto;
+  transition: all 0.3s ease;
+}
+
+/* 折叠状态下的菜单样式 */
+.sidebar-menu.el-menu--collapse {
+  width: 64px;
+}
+
+.sidebar-menu.el-menu--collapse .el-menu-item,
+.sidebar-menu.el-menu--collapse .el-sub-menu__title {
+  padding: 0 !important;
+  text-align: center;
+}
+
+.sidebar-menu.el-menu--collapse .el-menu-item span,
+.sidebar-menu.el-menu--collapse .el-sub-menu__title span {
+  display: none;
+}
+
+.sidebar-menu.el-menu--collapse .el-sub-menu .el-menu-item {
+  display: none;
 }
 
 .sidebar-menu .el-menu-item {
@@ -479,6 +598,18 @@ html, body {
   color: #ffffff !important;
 }
 
+/* 遮罩层样式 */
+.sidebar-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  transition: opacity 0.3s ease;
+}
+
 /* 顶部头部样式 */
 .app-header {
   background-color: #ffffff;
@@ -511,6 +642,7 @@ html, body {
   background-color: #f4f5f7;
   height: calc(100vh - 60px); /* 减去header的高度 */
   overflow-y: auto;
+  transition: margin-left 0.3s ease;
 }
 
 /* Element Plus 组件的某些全局覆盖 (谨慎使用) */
@@ -534,5 +666,24 @@ html, body {
 
 .sidebar-menu::-webkit-scrollbar-thumb:hover {
   background: #4a6741;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .app-aside {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1001;
+  }
+  
+  .app-main {
+    margin-left: 0 !important;
+  }
+  
+  .collapse-trigger {
+    right: -16px;
+  }
 }
 </style> 
