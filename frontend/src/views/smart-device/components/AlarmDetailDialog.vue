@@ -53,7 +53,7 @@
               placeholder="请选择告警时间"
               style="width: 100%"
               format="YYYY-MM-DD HH:mm:ss"
-              value-format="YYYY-MM-DDTHH:mm:ss"
+              value-format="YYYY-MM-DD HH:mm:ss"
               :disabled="mode === 'view'"
             ></el-date-picker>
           </el-form-item>
@@ -83,16 +83,16 @@
             placeholder="请选择处理时间"
             style="width: 100%"
             format="YYYY-MM-DD HH:mm:ss"
-            value-format="YYYY-MM-DDTHH:mm:ss"
+            value-format="YYYY-MM-DD HH:mm:ss"
           ></el-date-picker>
         </el-form-item>
         
-        <el-form-item label="处理备注" prop="processRemark">
+        <el-form-item label="处理结果" prop="processResult">
           <el-input
-            v-model="formData.processRemark"
+            v-model="formData.processResult"
             type="textarea"
             :rows="3"
-            placeholder="请输入处理备注"
+            placeholder="请输入处理结果"
           ></el-input>
         </el-form-item>
       </template>
@@ -112,8 +112,8 @@
             </el-form-item>
           </el-col>
         </el-row>
-        <el-form-item label="处理备注">
-          <span>{{ formData.processRemark || '-' }}</span>
+        <el-form-item label="处理结果">
+          <span>{{ formData.processResult || '-' }}</span>
         </el-form-item>
       </template>
     </el-form>
@@ -186,7 +186,7 @@ const formData = ref({
   processStatus: '未处理',
   processPerson: '',
   processTime: '',
-  processRemark: ''
+  processResult: ''
 })
 
 // 表单验证规则
@@ -221,11 +221,19 @@ const initFormData = () => {
       alarmType: '',
       alarmLevel: '',
       alarmContent: '',
-      alarmTime: new Date().toISOString().slice(0, 19),
+      alarmTime: new Date().toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).replace(/\//g, '-'),
       processStatus: '未处理',
       processPerson: '',
       processTime: '',
-      processRemark: ''
+      processResult: ''
     }
   } else if (props.mode === 'view' || props.mode === 'process') {
     const alarm = toRaw(props.alarm) || {}
@@ -234,14 +242,11 @@ const initFormData = () => {
     const formatTime = (timeStr) => {
       if (!timeStr) return ''
       try {
-        // 如果是完整的ISO时间格式，截取前19位
+        // 如果是完整的ISO时间格式，转换为标准格式
         if (timeStr.includes('T')) {
-          return timeStr.slice(0, 19)
+          return timeStr.replace('T', ' ').slice(0, 19)
         }
-        // 如果是带空格的格式，转换为T格式
-        if (timeStr.includes(' ')) {
-          return timeStr.replace(' ', 'T')
-        }
+        // 如果已经是标准格式，直接返回
         return timeStr
       } catch (e) {
         console.error('时间格式处理错误:', e)
@@ -257,9 +262,17 @@ const initFormData = () => {
       processStatus: alarm.processStatus || '未处理',
       processPerson: alarm.processPerson || '',
       processTime: props.mode === 'process' && !alarm.processTime 
-        ? new Date().toISOString().slice(0, 19)
+        ? new Date().toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          }).replace(/\//g, '-')
         : formatTime(alarm.processTime),
-      processRemark: alarm.processRemark || ''
+      processResult: alarm.processResult || ''
     }
     
     if (props.mode === 'process' && !formData.value.processPerson) {
@@ -276,9 +289,21 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     loading.value = true
     
+    // 格式化时间字段
+    const formatTimeForSubmit = (timeStr) => {
+      if (!timeStr) return null
+      // 如果是ISO格式，转换为标准格式
+      if (timeStr.includes('T')) {
+        return timeStr.replace('T', ' ').slice(0, 19)
+      }
+      return timeStr
+    }
+    
     const submitData = {
       ...formData.value,
-      deviceId: props.device.id
+      deviceId: props.device.id,
+      alarmTime: formatTimeForSubmit(formData.value.alarmTime),
+      processTime: formatTimeForSubmit(formData.value.processTime)
     }
     
     if (props.mode === 'add') {
@@ -288,8 +313,8 @@ const handleSubmit = async () => {
       await deviceAlarmApi.processAlarm(props.alarm.id, {
         processStatus: formData.value.processStatus,
         processPerson: formData.value.processPerson,
-        processTime: formData.value.processTime,
-        processRemark: formData.value.processRemark
+        processTime: formatTimeForSubmit(formData.value.processTime),
+        processResult: formData.value.processResult
       })
       ElMessage.success('处理告警成功')
     }

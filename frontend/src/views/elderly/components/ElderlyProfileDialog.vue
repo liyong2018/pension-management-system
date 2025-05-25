@@ -86,12 +86,17 @@
             </el-col>
             <el-col :span="8">
               <el-form-item label="所属社区" prop="community">
-                <el-select v-model="form.community" placeholder="请选择所属社区">
+                <el-select 
+                  v-model="form.community" 
+                  placeholder="请选择所属社区"
+                  :loading="communityLoading"
+                  filterable
+                >
                   <el-option
                     v-for="item in communityOptions"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
+                    :key="item.dictCode"
+                    :label="item.dictLabel"
+                    :value="item.dictValue"
                   ></el-option>
                 </el-select>
               </el-form-item>
@@ -101,14 +106,22 @@
           <el-row :gutter="20">
             <el-col :span="8">
               <el-form-item label="养老类型" prop="pensionType">
-                <el-select v-model="form.pensionType" placeholder="请选择养老类型">
-                  <el-option label="居家养老" value="居家养老"></el-option>
-                  <el-option label="社区养老" value="社区养老"></el-option>
-                  <el-option label="机构养老" value="机构养老"></el-option>
+                <el-select 
+                  v-model="form.pensionType" 
+                  placeholder="请选择养老类型"
+                  :loading="pensionTypeLoading"
+                  filterable
+                >
+                  <el-option
+                    v-for="item in pensionTypeOptions"
+                    :key="item.dictCode"
+                    :label="item.dictLabel"
+                    :value="item.dictValue"
+                  ></el-option>
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="8" v-if="form.pensionType === '机构养老'">
+            <el-col :span="8" v-if="form.pensionType === '机构养老（养老院）'">
               <el-form-item label="所属机构" prop="organizationId">
                 <el-select v-model="form.organizationId" placeholder="请选择所属机构">
                   <el-option
@@ -341,6 +354,7 @@ import { ElMessage } from 'element-plus'
 import { elderlyProfileApi } from '@/api/elderlyProfile'
 import organizationService from '@/services/organizationService'
 import { Plus } from '@element-plus/icons-vue'
+import { dictionaryApi } from '@/api/dictionary'
 console.log('--- ElderlyProfileDialog.vue SCRIPT SETUP EXECUTING --- v2');
 const props = defineProps({
   modelValue: Boolean,
@@ -415,13 +429,11 @@ const rules = {
   pensionType: [{ required: true, message: '请选择养老类型', trigger: 'change' }]
 }
 
-// 社区选项（示例数据，实际应该从后端获取）
-const communityOptions = [
-  { value: '阳光社区', label: '阳光社区' },
-  { value: '春晖社区', label: '春晖社区' },
-  { value: '德胜社区', label: '德胜社区' },
-  { value: '东直门社区', label: '东直门社区' }
-]
+// 字典选项数据
+const communityOptions = ref([])
+const pensionTypeOptions = ref([])
+const communityLoading = ref(false)
+const pensionTypeLoading = ref(false)
 
 // 机构选项
 const organizationOptions = ref([])
@@ -438,6 +450,38 @@ const dialogTitle = computed(() => {
   }
   return titles[props.mode]
 })
+
+// 获取社区字典数据
+const fetchCommunityOptions = async () => {
+  communityLoading.value = true
+  try {
+    const data = await dictionaryApi.getByType('community')
+    communityOptions.value = data.filter(item => item.status === 'ACTIVE') || []
+    console.log('获取社区字典数据成功:', communityOptions.value)
+  } catch (error) {
+    console.error('获取社区字典数据失败:', error)
+    ElMessage.error('获取社区选项失败')
+    communityOptions.value = []
+  } finally {
+    communityLoading.value = false
+  }
+}
+
+// 获取养老类型字典数据
+const fetchPensionTypeOptions = async () => {
+  pensionTypeLoading.value = true
+  try {
+    const data = await dictionaryApi.getByType('pensionType')
+    pensionTypeOptions.value = data.filter(item => item.status === 'ACTIVE') || []
+    console.log('获取养老类型字典数据成功:', pensionTypeOptions.value)
+  } catch (error) {
+    console.error('获取养老类型字典数据失败:', error)
+    ElMessage.error('获取养老类型选项失败')
+    pensionTypeOptions.value = []
+  } finally {
+    pensionTypeLoading.value = false
+  }
+}
 
 // 获取机构列表
 const fetchOrganizations = async () => {
@@ -663,8 +707,13 @@ watch([() => props.modelValue, () => props.elderlyId], async ([newVisible, newEl
     familyMemberErrors.value = []
     console.log('Dialog watch: Form reset complete. Current form value:', JSON.parse(JSON.stringify(form.value)));
 
-    console.log('Dialog watch: Fetching organizations');
-    await fetchOrganizations();
+    console.log('Dialog watch: Fetching organizations and dictionary data');
+    // 并行加载所有必需的数据
+    await Promise.all([
+      fetchOrganizations(),
+      fetchCommunityOptions(),
+      fetchPensionTypeOptions()
+    ]);
     
     if (props.mode !== 'add' && newElderlyId) {
       console.log(`Dialog watch: Mode is ${props.mode} and elderlyId is ${newElderlyId}. Fetching elderly profile.`);

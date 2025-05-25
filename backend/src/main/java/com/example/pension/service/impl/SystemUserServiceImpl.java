@@ -3,6 +3,7 @@ package com.example.pension.service.impl;
 import com.example.pension.dao.SystemUserDao;
 import com.example.pension.dao.OrganizationDao;
 import com.example.pension.dto.SystemUserDTO;
+import com.example.pension.dto.DirectorDTO;
 import com.example.pension.dto.RoleDTO;
 import com.example.pension.mapper.SystemUserDTOMapper;
 import com.example.pension.mapper.RoleDTOMapper;
@@ -342,5 +343,15 @@ public class SystemUserServiceImpl implements SystemUserService {
                     return roleMap;
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DirectorDTO> getAllDirectors() {
+        return systemUserDao.findDirectorsByRole();
+    }
+
+    @Override
+    public List<DirectorDTO> getDirectorsByOrganization(Long organizationId) {
+        return systemUserDao.findDirectorsByOrganization(organizationId);
     }
 } 

@@ -49,8 +49,8 @@
                 <el-icon size="24"><Avatar /></el-icon>
               </div>
               <div class="stat-info">
-                <div class="stat-title">已分配角色</div>
-                <div class="stat-value info">{{ stats.assignedRoles }}</div>
+                <div class="stat-title">目录权限</div>
+                <div class="stat-value info">{{ stats.catalogPermissions }}</div>
               </div>
             </div>
           </el-card>
@@ -64,6 +64,14 @@
         <el-form-item class="table-operations-left">
           <el-button type="danger" :disabled="!multipleSelection.length" @click="handleBatchDelete">
             批量删除
+          </el-button>
+          <el-button type="warning" @click="expandAll">
+            <el-icon><Expand /></el-icon>
+            展开全部
+          </el-button>
+          <el-button type="info" @click="collapseAll">
+            <el-icon><Fold /></el-icon>
+            收起全部
           </el-button>
         </el-form-item>
 
@@ -90,9 +98,20 @@
             clearable
             style="width: 120px"
           >
+            <el-option label="目录" value="CATALOG" />
             <el-option label="菜单" value="MENU" />
             <el-option label="按钮" value="BUTTON" />
-            <el-option label="接口" value="API" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select 
+            v-model="searchForm.status" 
+            placeholder="请选择状态" 
+            clearable
+            style="width: 120px"
+          >
+            <el-option label="启用" value="1" />
+            <el-option label="禁用" value="0" />
           </el-select>
         </el-form-item>
         <el-form-item class="search-buttons-left">
@@ -111,52 +130,69 @@
     <!-- 数据表格 -->
     <el-card class="table-card">
       <el-table
-        :data="permissions"
+        ref="tableRef"
+        :data="permissionTree"
         v-loading="loading"
         @selection-change="handleSelectionChange"
         border
         stripe
+        row-key="id"
+        :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
+        :default-expand-all="false"
         style="width: 100%"
         :header-cell-style="{ backgroundColor: '#f5f7fa', color: '#303133', fontWeight: '600' }"
         :row-style="{ height: '60px' }"
         class="permission-table"
       >
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="id" label="ID" width="80" align="center" />
-        <el-table-column prop="name" label="权限名称" width="160">
+        <el-table-column prop="name" label="权限名称" min-width="200">
           <template #default="scope">
             <div class="permission-info">
-              <el-avatar :size="32" class="permission-avatar">
-                <el-icon><Lock /></el-icon>
-              </el-avatar>
+              <el-icon v-if="scope.row.icon" :size="20" class="permission-icon">
+                <component :is="getIconComponent(scope.row.icon)" />
+              </el-icon>
+              <el-icon v-else :size="20" class="permission-icon default-icon">
+                <Lock />
+              </el-icon>
               <span class="permission-name">{{ scope.row.name }}</span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="code" label="权限标识" width="180" />
+        <el-table-column prop="permissionKey" label="权限标识" width="180" show-overflow-tooltip />
         <el-table-column prop="type" label="类型" width="100" align="center">
           <template #default="scope">
             <el-tag :type="getTypeColor(scope.row.type)" size="small" effect="light">
               <el-icon style="margin-right: 4px">
-                <Menu v-if="scope.row.type === 'MENU'" />
-                <Operation v-else-if="scope.row.type === 'BUTTON'" />
-                <Link v-else />
+                <Folder v-if="scope.row.type === 'CATALOG'" />
+                <Document v-else-if="scope.row.type === 'MENU'" />
+                <Operation v-else />
               </el-icon>
               {{ getTypeText(scope.row.type) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="url" label="路径/接口" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="parentName" label="父级权限" width="140" show-overflow-tooltip />
-        <el-table-column prop="sort" label="排序" width="80" align="center" />
+        <el-table-column prop="routePath" label="路由路径" width="180" show-overflow-tooltip />
+        <el-table-column prop="componentPath" label="组件路径" width="180" show-overflow-tooltip />
+        <el-table-column prop="sortOrder" label="排序" width="80" align="center" />
+        <el-table-column prop="isVisible" label="显示" width="80" align="center">
+          <template #default="scope">
+            <el-tag :type="scope.row.isVisible ? 'success' : 'info'" size="small" effect="light">
+              <el-icon style="margin-right: 4px">
+                <View v-if="scope.row.isVisible" />
+                <Hide v-else />
+              </el-icon>
+              {{ scope.row.isVisible ? '显示' : '隐藏' }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="90" align="center">
           <template #default="scope">
-            <el-tag :type="scope.row.status === '1' ? 'success' : 'warning'" size="small" effect="light">
+            <el-tag :type="scope.row.status ? 'success' : 'warning'" size="small" effect="light">
               <el-icon style="margin-right: 4px">
-                <CircleCheck v-if="scope.row.status === '1'" />
+                <CircleCheck v-if="scope.row.status" />
                 <CircleClose v-else />
               </el-icon>
-              {{ scope.row.status === '1' ? '启用' : '禁用' }}
+              {{ scope.row.status ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -176,7 +212,7 @@
                 </el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item command="addChild">
+                    <el-dropdown-item command="addChild" v-if="scope.row.type !== 'BUTTON'">
                       <el-icon><Plus /></el-icon>
                       添加子权限
                     </el-dropdown-item>
@@ -188,9 +224,13 @@
                       <el-icon><CopyDocument /></el-icon>
                       复制权限
                     </el-dropdown-item>
+                    <el-dropdown-item command="toggleVisible">
+                      <el-icon><View /></el-icon>
+                      {{ scope.row.isVisible ? '隐藏权限' : '显示权限' }}
+                    </el-dropdown-item>
                     <el-dropdown-item command="toggleStatus">
                       <el-icon><Switch /></el-icon>
-                      {{ scope.row.status === '1' ? '禁用权限' : '启用权限' }}
+                      {{ scope.row.status ? '禁用权限' : '启用权限' }}
                     </el-dropdown-item>
                     <el-dropdown-item command="delete" divided class="delete-item">
                       <el-icon><Delete /></el-icon>
@@ -222,7 +262,7 @@
     <el-dialog 
       v-model="dialogVisible" 
       :title="dialogMode === 'create' ? '添加权限' : dialogMode === 'edit' ? '编辑权限' : '权限详情'" 
-      width="700px" 
+      width="800px" 
       class="permission-dialog"
       :close-on-click-modal="false"
       destroy-on-close
@@ -247,30 +287,20 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="权限标识" prop="code">
-                <el-input 
-                  v-model="currentPermission.code" 
-                  placeholder="请输入权限标识"
-                  maxlength="100"
-                  show-word-limit
-                />
+              <el-form-item label="权限类型" prop="type">
+                <el-select v-model="currentPermission.type" placeholder="请选择权限类型" style="width: 100%">
+                  <el-option label="目录" value="CATALOG" />
+                  <el-option label="菜单" value="MENU" />
+                  <el-option label="按钮" value="BUTTON" />
+                </el-select>
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="20">
             <el-col :span="12">
-              <el-form-item label="权限类型" prop="type">
-                <el-select v-model="currentPermission.type" placeholder="请选择权限类型" style="width: 100%">
-                  <el-option label="菜单" value="MENU" />
-                  <el-option label="按钮" value="BUTTON" />
-                  <el-option label="接口" value="API" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
               <el-form-item label="父级权限" prop="parentId">
                 <el-select v-model="currentPermission.parentId" placeholder="请选择父级权限" style="width: 100%" clearable>
-                  <el-option label="无" :value="null" />
+                  <el-option label="顶级权限" :value="null" />
                   <el-option 
                     v-for="item in parentPermissions" 
                     :key="item.id" 
@@ -280,45 +310,92 @@
                 </el-select>
               </el-form-item>
             </el-col>
-          </el-row>
-          <el-form-item label="路径/接口" prop="url">
-            <el-input 
-              v-model="currentPermission.url" 
-              placeholder="请输入菜单路径或API接口地址"
-              maxlength="255"
-              show-word-limit
-            />
-          </el-form-item>
-          <el-form-item label="权限描述" prop="description">
-            <el-input 
-              v-model="currentPermission.description" 
-              type="textarea" 
-              :rows="3"
-              placeholder="请输入权限描述"
-              maxlength="255"
-              show-word-limit
-            />
-          </el-form-item>
-          <el-row :gutter="20">
             <el-col :span="12">
-              <el-form-item label="排序" prop="sort">
+              <el-form-item label="权限图标" prop="icon">
+                <el-input 
+                  v-model="currentPermission.icon" 
+                  placeholder="请输入图标名称"
+                  maxlength="50"
+                >
+                  <template #append>
+                    <el-button @click="showIconSelector">选择</el-button>
+                  </template>
+                </el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20" v-if="currentPermission.type !== 'BUTTON'">
+            <el-col :span="12">
+              <el-form-item label="路由路径" prop="routePath">
+                <el-input 
+                  v-model="currentPermission.routePath" 
+                  placeholder="请输入路由路径"
+                  maxlength="200"
+                  show-word-limit
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="组件路径" prop="componentPath" v-if="currentPermission.type === 'MENU'">
+                <el-input 
+                  v-model="currentPermission.componentPath" 
+                  placeholder="请输入组件路径"
+                  maxlength="200"
+                  show-word-limit
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20" v-if="currentPermission.type === 'BUTTON'">
+            <el-col :span="12">
+              <el-form-item label="权限标识" prop="permissionKey">
+                <el-input 
+                  v-model="currentPermission.permissionKey" 
+                  placeholder="请输入权限标识"
+                  maxlength="100"
+                  show-word-limit
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="8">
+              <el-form-item label="排序" prop="sortOrder">
                 <el-input-number 
-                  v-model="currentPermission.sort" 
+                  v-model="currentPermission.sortOrder" 
                   :min="0" 
                   :max="999" 
                   style="width: 100%"
                 />
               </el-form-item>
             </el-col>
-            <el-col :span="12">
-              <el-form-item label="状态" prop="status">
+            <el-col :span="8">
+              <el-form-item label="显示状态" prop="isVisible">
+                <el-radio-group v-model="currentPermission.isVisible">
+                  <el-radio :label="true">显示</el-radio>
+                  <el-radio :label="false">隐藏</el-radio>
+                </el-radio-group>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="权限状态" prop="status">
                 <el-radio-group v-model="currentPermission.status">
-                  <el-radio label="1">启用</el-radio>
-                  <el-radio label="0">禁用</el-radio>
+                  <el-radio :label="true">启用</el-radio>
+                  <el-radio :label="false">禁用</el-radio>
                 </el-radio-group>
               </el-form-item>
             </el-col>
           </el-row>
+          <el-form-item label="备注说明" prop="remark">
+            <el-input 
+              v-model="currentPermission.remark" 
+              type="textarea" 
+              :rows="3"
+              placeholder="请输入备注说明"
+              maxlength="255"
+              show-word-limit
+            />
+          </el-form-item>
         </el-form>
       </div>
       <template #footer>
@@ -338,14 +415,18 @@ import { ref, onMounted, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   Lock, Menu, Operation, Avatar, Plus, CircleCheck, CircleClose, 
-  ArrowDown, Link, CopyDocument, Switch, Delete
+  ArrowDown, Link, CopyDocument, Switch, Delete, Expand, Fold, 
+  Folder, Document, View, Hide, House, OfficeBuilding, User, 
+  Monitor, Warning, Setting, Key, Collection
 } from '@element-plus/icons-vue'
 
 export default {
   name: 'PermissionList',
   components: {
     Lock, Menu, Operation, Avatar, Plus, CircleCheck, CircleClose,
-    ArrowDown, Link, CopyDocument, Switch, Delete
+    ArrowDown, Link, CopyDocument, Switch, Delete, Expand, Fold,
+    Folder, Document, View, Hide, House, OfficeBuilding, User,
+    Monitor, Warning, Setting, Key, Collection
   },
   setup() {
     // 响应式数据
@@ -353,24 +434,26 @@ export default {
     const createLoading = ref(false)
     const editLoading = ref(false)
     const roleLoading = ref(false)
-    const permissions = ref([])
+    const permissionTree = ref([])
     const selectedPermission = ref(null)
     const multipleSelection = ref([])
     const parentPermissions = ref([])
     const availableRoles = ref([])
     const selectedRoles = ref([])
+    const tableRef = ref()
     const stats = ref({
       totalPermissions: 0,
       menuPermissions: 0,
       operationPermissions: 0,
-      assignedRoles: 0
+      catalogPermissions: 0
     })
 
     // 搜索表单
     const searchForm = reactive({
       name: '',
       code: '',
-      type: ''
+      type: '',
+      status: ''
     })
 
     // 分页信息
@@ -391,13 +474,16 @@ export default {
     const dialogMode = ref('view') // 'view', 'create', 'edit'
     const currentPermission = reactive({
       name: '',
-      code: '',
-      type: 'MENU',
       parentId: null,
-      url: '',
-      description: '',
-      sort: 0,
-      status: '1'
+      sortOrder: 0,
+      routePath: '',
+      componentPath: '',
+      type: 'CATALOG',
+      isVisible: true,
+      status: true,
+      permissionKey: '',
+      icon: '',
+      remark: ''
     })
 
     // 表单验证规则
@@ -405,80 +491,207 @@ export default {
       name: [
         { required: true, message: '请输入权限名称', trigger: 'blur' }
       ],
-      code: [
-        { required: true, message: '请输入权限标识', trigger: 'blur' }
+      sortOrder: [
+        { required: true, message: '请输入排序', trigger: 'blur' }
       ],
       type: [
         { required: true, message: '请选择权限类型', trigger: 'change' }
       ]
     }
 
-    // 模拟权限数据
-    const mockPermissions = [
-      { id: 1, name: '用户管理', code: 'user:manage', type: 'MENU', description: '用户管理菜单权限', parentId: null, parentName: null, createTime: '2024-01-01 10:00:00' },
-      { id: 2, name: '创建用户', code: 'user:create', type: 'ACTION', description: '创建用户操作权限', parentId: 1, parentName: '用户管理', createTime: '2024-01-01 10:00:00' },
-      { id: 3, name: '编辑用户', code: 'user:edit', type: 'ACTION', description: '编辑用户操作权限', parentId: 1, parentName: '用户管理', createTime: '2024-01-01 10:00:00' },
-      { id: 4, name: '删除用户', code: 'user:delete', type: 'ACTION', description: '删除用户操作权限', parentId: 1, parentName: '用户管理', createTime: '2024-01-01 10:00:00' },
-      { id: 5, name: '角色管理', code: 'role:manage', type: 'MENU', description: '角色管理菜单权限', parentId: null, parentName: null, createTime: '2024-01-01 10:00:00' },
-      { id: 6, name: '机构管理', code: 'org:manage', type: 'MENU', description: '机构管理菜单权限', parentId: null, parentName: null, createTime: '2024-01-01 10:00:00' }
-    ]
+    // 图标映射
+    const iconMap = {
+      'House': House,
+      'OfficeBuilding': OfficeBuilding,
+      'User': User,
+      'Monitor': Monitor,
+      'Warning': Warning,
+      'Avatar': Avatar,
+      'Setting': Setting,
+      'Key': Key,
+      'Collection': Collection,
+      'Document': Document,
+      'Menu': Menu,
+      'Lock': Lock
+    }
 
-    // 模拟角色数据
-    const mockRoles = [
-      { id: 1, name: '系统管理员', roleKey: 'SYSTEM_ADMIN', description: '拥有所有系统权限' },
-      { id: 2, name: '机构管理员', roleKey: 'ORG_ADMIN', description: '管理机构相关业务' },
-      { id: 3, name: '普通用户', roleKey: 'USER', description: '基础查看权限' },
-      { id: 4, name: '数据分析师', roleKey: 'DATA_ANALYST', description: '数据查看和分析权限' }
-    ]
+    // 获取图标组件
+    const getIconComponent = (iconName) => {
+      return iconMap[iconName] || Lock
+    }
 
-    // 加载权限列表
+    // 计算统计数据
+    const calculateStats = (permissions) => {
+      let total = 0
+      let menuPermissions = 0
+      let operationPermissions = 0
+      let catalogPermissions = 0
+
+      const traverse = (permissionList) => {
+        for (const permission of permissionList) {
+          total++
+          if (permission.type === 'MENU') {
+            menuPermissions++
+          } else if (permission.type === 'BUTTON') {
+            operationPermissions++
+          } else if (permission.type === 'CATALOG') {
+            catalogPermissions++
+          }
+          if (permission.children && permission.children.length > 0) {
+            traverse(permission.children)
+          }
+        }
+      }
+
+      traverse(permissions)
+      
+      return {
+        totalPermissions: total,
+        menuPermissions: menuPermissions,
+        operationPermissions: operationPermissions,
+        catalogPermissions: catalogPermissions
+      }
+    }
+
+    // 加载权限树
     const loadPermissions = async () => {
       loading.value = true
       try {
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 500))
+        console.log('开始加载权限数据...')
         
-        let filteredData = [...mockPermissions]
+        // 调用后端API获取权限树
+        const response = await fetch('/api/permissions/tree')
+        console.log('权限API响应状态:', response.status)
         
-        // 模拟搜索
-        if (searchForm.name) {
-          filteredData = filteredData.filter(p => 
-            p.name.includes(searchForm.name)
-          )
+        if (response.ok) {
+          const data = await response.json()
+          console.log('权限API响应数据:', data)
+          
+          // 转换后端数据格式为前端需要的格式
+          const convertPermissionData = (permissions) => {
+            return permissions.map(permission => ({
+              id: permission.id,
+              name: permission.name,
+              parentId: permission.parentId,
+              sortOrder: permission.sortOrder || 0,
+              routePath: permission.routePath || '',
+              componentPath: permission.componentPath || '',
+              type: permission.type,
+              isVisible: permission.isVisible,
+              status: permission.status,
+              permissionKey: permission.permissionKey || '',
+              icon: permission.icon || '',
+              createTime: permission.createTime || '',
+              remark: permission.remark || '',
+              children: permission.children ? convertPermissionData(permission.children) : []
+            }))
+          }
+          
+          let permissionData = []
+          if (Array.isArray(data)) {
+            permissionData = convertPermissionData(data)
+          } else {
+            console.warn('权限API返回数据格式异常:', data)
+            permissionData = []
+          }
+          
+          // 应用搜索过滤
+          let filteredData = JSON.parse(JSON.stringify(permissionData))
+          
+          if (searchForm.name || searchForm.code || searchForm.type || searchForm.status) {
+            const filterPermissions = (permissions) => {
+              return permissions.filter(permission => {
+                let matches = true
+                
+                if (searchForm.name) {
+                  matches = matches && permission.name.includes(searchForm.name)
+                }
+                
+                if (searchForm.code) {
+                  matches = matches && permission.permissionKey && permission.permissionKey.includes(searchForm.code)
+                }
+                
+                if (searchForm.type) {
+                  matches = matches && permission.type === searchForm.type
+                }
+                
+                if (searchForm.status) {
+                  const statusValue = searchForm.status === '1'
+                  matches = matches && permission.status === statusValue
+                }
+                
+                if (permission.children && permission.children.length > 0) {
+                  permission.children = filterPermissions(permission.children)
+                  // 如果子权限有匹配的，保留父权限
+                  if (permission.children.length > 0) {
+                    matches = true
+                  }
+                }
+                
+                return matches
+              })
+            }
+            
+            filteredData = filterPermissions(filteredData)
+          }
+          
+          permissionTree.value = filteredData
+          stats.value = calculateStats(filteredData)
+          
+          // 设置父级权限选项（扁平化处理）
+          const flattenPermissions = (permissions, level = 0) => {
+            let result = []
+            for (const permission of permissions) {
+              if (permission.type !== 'BUTTON') { // 排除按钮类型
+                result.push({
+                  id: permission.id,
+                  name: '　'.repeat(level) + permission.name,
+                  level: level
+                })
+                if (permission.children && permission.children.length > 0) {
+                  result = result.concat(flattenPermissions(permission.children, level + 1))
+                }
+              }
+            }
+            return result
+          }
+          
+          parentPermissions.value = flattenPermissions(filteredData)
+          
+          console.log('权限数据加载成功:', filteredData.length, '条')
+          
+        } else {
+          console.error('权限API请求失败，状态码:', response.status)
+          const errorText = await response.text()
+          console.error('错误响应:', errorText)
+          
+          // 如果API失败，使用空数据
+          permissionTree.value = []
+          stats.value = {
+            totalPermissions: 0,
+            menuPermissions: 0,
+            operationPermissions: 0,
+            catalogPermissions: 0
+          }
+          parentPermissions.value = []
+          
+          ElMessage.error(`加载权限数据失败: ${response.status}`)
         }
-        if (searchForm.code) {
-          filteredData = filteredData.filter(p => 
-            p.code.includes(searchForm.code)
-          )
-        }
-        if (searchForm.type) {
-          filteredData = filteredData.filter(p => 
-            p.type === searchForm.type
-          )
-        }
         
-        // 模拟分页
-        const startIndex = (pagination.page - 1) * pagination.pageSize
-        const endIndex = startIndex + pagination.pageSize
-        permissions.value = filteredData.slice(startIndex, endIndex)
-        pagination.total = filteredData.length
-        
-        // 更新统计信息
-        stats.value = {
-          totalPermissions: mockPermissions.length,
-          menuPermissions: mockPermissions.filter(p => p.type === 'MENU').length,
-          operationPermissions: mockPermissions.filter(p => p.type === 'ACTION').length,
-          assignedRoles: mockRoles.length
-        }
-        
-        // 设置父级权限选项
-        parentPermissions.value = mockPermissions.filter(p => p.type === 'MENU')
-        
-        // 设置可用角色
-        availableRoles.value = mockRoles
       } catch (error) {
-        ElMessage.error('加载权限列表失败')
-        console.error('Error loading permissions:', error)
+        console.error('加载权限列表异常:', error)
+        ElMessage.error('加载权限列表失败: ' + error.message)
+        
+        // 异常情况下使用空数据
+        permissionTree.value = []
+        stats.value = {
+          totalPermissions: 0,
+          menuPermissions: 0,
+          operationPermissions: 0,
+          catalogPermissions: 0
+        }
+        parentPermissions.value = []
+        
       } finally {
         loading.value = false
       }
@@ -487,9 +700,9 @@ export default {
     // 获取权限类型文本
     const getTypeText = (type) => {
       const typeMap = {
-        'MENU': '菜单权限',
-        'ACTION': '操作权限', 
-        'API': '接口权限'
+        'CATALOG': '目录',
+        'MENU': '菜单',
+        'BUTTON': '按钮'
       }
       return typeMap[type] || type
     }
@@ -497,16 +710,15 @@ export default {
     // 获取权限类型颜色
     const getTypeColor = (type) => {
       const colorMap = {
-        'MENU': 'primary',
-        'ACTION': 'success',
-        'API': 'warning'
+        'CATALOG': 'primary',
+        'MENU': 'success',
+        'BUTTON': 'warning'
       }
       return colorMap[type] || 'info'
     }
 
     // 搜索
     const handleSearch = () => {
-      pagination.page = 1
       loadPermissions()
     }
 
@@ -515,14 +727,61 @@ export default {
       Object.keys(searchForm).forEach(key => {
         searchForm[key] = ''
       })
-      pagination.page = 1
       loadPermissions()
     }
 
+    // 展开所有
+    const expandAll = () => {
+      if (tableRef.value) {
+        const allRows = getAllRows(permissionTree.value)
+        allRows.forEach(row => {
+          if (row.children && row.children.length > 0) {
+            tableRef.value.toggleRowExpansion(row, true)
+          }
+        })
+      }
+    }
+
+    // 收起所有
+    const collapseAll = () => {
+      if (tableRef.value) {
+        const allRows = getAllRows(permissionTree.value)
+        allRows.forEach(row => {
+          if (row.children && row.children.length > 0) {
+            tableRef.value.toggleRowExpansion(row, false)
+          }
+        })
+      }
+    }
+
+    // 获取所有行数据（递归）
+    const getAllRows = (data) => {
+      let result = []
+      for (const item of data) {
+        result.push(item)
+        if (item.children && item.children.length > 0) {
+          result = result.concat(getAllRows(item.children))
+        }
+      }
+      return result
+    }
+
     // 显示创建对话框
-    const showCreateDialog = () => {
+    const showCreateDialog = (parentPermission = null) => {
       Object.keys(currentPermission).forEach(key => {
-        currentPermission[key] = key === 'parentId' ? null : ''
+        if (key === 'parentId') {
+          currentPermission[key] = parentPermission ? parentPermission.id : null
+        } else if (key === 'sortOrder') {
+          currentPermission[key] = 0
+        } else if (key === 'isVisible') {
+          currentPermission[key] = true
+        } else if (key === 'status') {
+          currentPermission[key] = true
+        } else if (key === 'type') {
+          currentPermission[key] = 'CATALOG'
+        } else {
+          currentPermission[key] = ''
+        }
       })
       dialogMode.value = 'create'
       dialogVisible.value = true
@@ -532,15 +791,65 @@ export default {
     const handleCreate = async () => {
       createLoading.value = true
       try {
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        console.log('开始创建权限:', currentPermission)
         
-        ElMessage.success('创建成功')
-        dialogVisible.value = false
-        loadPermissions()
+        // 构建创建数据
+        const createData = {
+          name: currentPermission.name,
+          parentId: currentPermission.parentId,
+          type: currentPermission.type,
+          permissionKey: currentPermission.permissionKey,
+          routePath: currentPermission.routePath,
+          componentPath: currentPermission.componentPath,
+          icon: currentPermission.icon,
+          sortOrder: currentPermission.sortOrder,
+          isVisible: currentPermission.isVisible,
+          status: currentPermission.status,
+          remark: currentPermission.remark
+        }
+        
+        console.log('创建权限数据:', createData)
+        
+        // 调用后端API创建权限
+        const response = await fetch('/api/permissions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(createData)
+        })
+        
+        console.log('创建权限API响应状态:', response.status)
+        
+        if (response.ok) {
+          const result = await response.json()
+          console.log('创建权限API响应数据:', result)
+          ElMessage.success('创建成功')
+          dialogVisible.value = false
+          loadPermissions()
+          
+          // 刷新顶部菜单
+          if (window.refreshTopMenu) {
+            window.refreshTopMenu()
+          }
+        } else {
+          const errorText = await response.text()
+          console.error('创建权限失败，状态码:', response.status)
+          console.error('错误响应:', errorText)
+          
+          let errorMessage = '创建失败'
+          try {
+            const errorData = JSON.parse(errorText)
+            errorMessage = errorData.message || errorData.error || errorMessage
+          } catch (e) {
+            errorMessage = `创建失败 (${response.status}): ${errorText}`
+          }
+          
+          ElMessage.error(errorMessage)
+        }
       } catch (error) {
-        ElMessage.error('创建失败')
-        console.error('Error creating permission:', error)
+        console.error('创建权限异常:', error)
+        ElMessage.error('创建失败: ' + error.message)
       } finally {
         createLoading.value = false
       }
@@ -549,6 +858,10 @@ export default {
     // 显示详情对话框
     const showDetailDialog = (permission) => {
       selectedPermission.value = { ...permission }
+      // 设置表单数据
+      Object.keys(currentPermission).forEach(key => {
+        currentPermission[key] = permission[key] || (key === 'parentId' ? null : (key === 'sortOrder' ? 0 : (key === 'isVisible' ? true : '')))
+      })
       dialogMode.value = 'view'
       dialogVisible.value = true
     }
@@ -556,8 +869,9 @@ export default {
     // 显示编辑对话框
     const showEditDialog = (permission) => {
       selectedPermission.value = permission
+      // 设置表单数据
       Object.keys(currentPermission).forEach(key => {
-        currentPermission[key] = permission[key] || (key === 'parentId' ? null : '')
+        currentPermission[key] = permission[key] || (key === 'parentId' ? null : (key === 'sortOrder' ? 0 : (key === 'isVisible' ? true : '')))
       })
       dialogMode.value = 'edit'
       dialogVisible.value = true
@@ -567,15 +881,66 @@ export default {
     const handleUpdate = async () => {
       editLoading.value = true
       try {
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        console.log('开始更新权限:', selectedPermission.value.id, currentPermission)
         
-        ElMessage.success('更新成功')
-        dialogVisible.value = false
-        loadPermissions()
+        // 构建更新数据
+        const updateData = {
+          id: selectedPermission.value.id,
+          name: currentPermission.name,
+          parentId: currentPermission.parentId,
+          type: currentPermission.type,
+          permissionKey: currentPermission.permissionKey,
+          routePath: currentPermission.routePath,
+          componentPath: currentPermission.componentPath,
+          icon: currentPermission.icon,
+          sortOrder: currentPermission.sortOrder,
+          isVisible: currentPermission.isVisible,
+          status: currentPermission.status,
+          remark: currentPermission.remark
+        }
+        
+        console.log('更新权限数据:', updateData)
+        
+        // 调用后端API更新权限
+        const response = await fetch(`/api/permissions/${selectedPermission.value.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updateData)
+        })
+        
+        console.log('更新权限API响应状态:', response.status)
+        
+        if (response.ok) {
+          const result = await response.json()
+          console.log('更新权限API响应数据:', result)
+          ElMessage.success('更新成功')
+          dialogVisible.value = false
+          loadPermissions()
+          
+          // 刷新顶部菜单
+          if (window.refreshTopMenu) {
+            window.refreshTopMenu()
+          }
+        } else {
+          const errorText = await response.text()
+          console.error('更新权限失败，状态码:', response.status)
+          console.error('错误响应:', errorText)
+          
+          let errorMessage = '更新失败'
+          try {
+            const errorData = JSON.parse(errorText)
+            errorMessage = errorData.message || errorData.error || errorMessage
+          } catch (e) {
+            errorMessage = `更新失败 (${response.status}): ${errorText}`
+          }
+          
+          ElMessage.error(errorMessage)
+        }
       } catch (error) {
-        ElMessage.error('更新失败')
-        console.error('Error updating permission:', error)
+        console.error('更新权限异常:', error)
+        ElMessage.error('更新失败: ' + error.message)
       } finally {
         editLoading.value = false
       }
@@ -619,12 +984,42 @@ export default {
           }
         )
         
-        ElMessage.success('删除成功')
-        loadPermissions()
+        console.log('开始删除权限:', permission.id)
+        
+        // 调用后端API删除权限
+        const response = await fetch(`/api/permissions/${permission.id}`, {
+          method: 'DELETE'
+        })
+        
+        console.log('删除权限API响应状态:', response.status)
+        
+        if (response.ok) {
+          ElMessage.success('删除成功')
+          loadPermissions()
+          
+          // 刷新顶部菜单
+          if (window.refreshTopMenu) {
+            window.refreshTopMenu()
+          }
+        } else {
+          const errorText = await response.text()
+          console.error('删除权限失败，状态码:', response.status)
+          console.error('错误响应:', errorText)
+          
+          let errorMessage = '删除失败'
+          try {
+            const errorData = JSON.parse(errorText)
+            errorMessage = errorData.message || errorData.error || errorMessage
+          } catch (e) {
+            errorMessage = `删除失败 (${response.status}): ${errorText}`
+          }
+          
+          ElMessage.error(errorMessage)
+        }
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除失败')
-          console.error('Error deleting permission:', error)
+          console.error('删除权限异常:', error)
+          ElMessage.error('删除失败: ' + error.message)
         }
       }
     }
@@ -633,12 +1028,14 @@ export default {
     const handleSizeChange = (size) => {
       pagination.pageSize = size
       pagination.page = 1
-      loadPermissions()
+      // 如果是树形结构，可能不需要重新加载
+      // loadPermissions()
     }
 
     const handleCurrentChange = (page) => {
       pagination.page = page
-      loadPermissions()
+      // 如果是树形结构，可能不需要重新加载
+      // loadPermissions()
     }
 
     // 表格选择变化
@@ -672,17 +1069,19 @@ export default {
     const handleAction = (command, permission) => {
       switch (command) {
         case 'addChild':
-          showCreateDialog()
+          showCreateDialog(permission)
           break
         case 'roles':
           showRoleDialog(permission)
           break
         case 'copy':
-          // 实现复制权限逻辑
-          ElMessage.info('复制权限功能正在开发中...')
+          handleCopyPermission(permission)
+          break
+        case 'toggleVisible':
+          handleToggleVisible(permission)
           break
         case 'toggleStatus':
-          toggleStatus(permission)
+          handleToggleStatus(permission)
           break
         case 'delete':
           deletePermission(permission)
@@ -690,19 +1089,114 @@ export default {
       }
     }
 
-    // 切换权限状态
-    const toggleStatus = async (permission) => {
+    // 复制权限
+    const handleCopyPermission = (permission) => {
+      ElMessage.info('复制权限功能正在开发中...')
+    }
+
+    // 切换显示状态
+    const handleToggleVisible = async (permission) => {
       try {
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 300))
+        const newVisible = !permission.isVisible
+        console.log('切换权限显示状态:', permission.id, '从', permission.isVisible, '到', newVisible)
         
-        permission.status = permission.status === '1' ? '0' : '1'
-        ElMessage.success('状态更新成功')
-        loadPermissions()
+        // 构建更新数据
+        const updateData = {
+          id: permission.id,
+          name: permission.name,
+          parentId: permission.parentId,
+          type: permission.type,
+          permissionKey: permission.permissionKey,
+          routePath: permission.routePath,
+          componentPath: permission.componentPath,
+          icon: permission.icon,
+          sortOrder: permission.sortOrder,
+          isVisible: newVisible,
+          status: permission.status,
+          remark: permission.remark
+        }
+        
+        // 调用后端API更新权限
+        const response = await fetch(`/api/permissions/${permission.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updateData)
+        })
+        
+        if (response.ok) {
+          permission.isVisible = newVisible
+          ElMessage.success(`权限已${newVisible ? '显示' : '隐藏'}`)
+          
+          // 刷新顶部菜单
+          if (window.refreshTopMenu) {
+            window.refreshTopMenu()
+          }
+        } else {
+          const errorText = await response.text()
+          console.error('更新权限显示状态失败:', response.status, errorText)
+          ElMessage.error('更新显示状态失败')
+        }
       } catch (error) {
-        ElMessage.error('切换状态失败')
-        console.error('Error toggling status:', error)
+        console.error('切换权限显示状态异常:', error)
+        ElMessage.error('更新显示状态失败: ' + error.message)
       }
+    }
+
+    // 切换启用状态
+    const handleToggleStatus = async (permission) => {
+      try {
+        const newStatus = !permission.status
+        console.log('切换权限启用状态:', permission.id, '从', permission.status, '到', newStatus)
+        
+        // 构建更新数据
+        const updateData = {
+          id: permission.id,
+          name: permission.name,
+          parentId: permission.parentId,
+          type: permission.type,
+          permissionKey: permission.permissionKey,
+          routePath: permission.routePath,
+          componentPath: permission.componentPath,
+          icon: permission.icon,
+          sortOrder: permission.sortOrder,
+          isVisible: permission.isVisible,
+          status: newStatus,
+          remark: permission.remark
+        }
+        
+        // 调用后端API更新权限
+        const response = await fetch(`/api/permissions/${permission.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updateData)
+        })
+        
+        if (response.ok) {
+          permission.status = newStatus
+          ElMessage.success(`权限已${newStatus ? '启用' : '禁用'}`)
+          
+          // 刷新顶部菜单
+          if (window.refreshTopMenu) {
+            window.refreshTopMenu()
+          }
+        } else {
+          const errorText = await response.text()
+          console.error('更新权限启用状态失败:', response.status, errorText)
+          ElMessage.error('更新启用状态失败')
+        }
+      } catch (error) {
+        console.error('切换权限启用状态异常:', error)
+        ElMessage.error('更新启用状态失败: ' + error.message)
+      }
+    }
+
+    // 显示图标选择器
+    const showIconSelector = () => {
+      ElMessage.info('图标选择功能正在开发中...')
     }
 
     // 表单提交
@@ -737,12 +1231,13 @@ export default {
       createLoading,
       editLoading,
       roleLoading,
-      permissions,
+      permissionTree,
       selectedPermission,
       multipleSelection,
       parentPermissions,
       availableRoles,
       selectedRoles,
+      tableRef,
       stats,
       searchForm,
       pagination,
@@ -757,8 +1252,11 @@ export default {
       loadPermissions,
       getTypeText,
       getTypeColor,
+      getIconComponent,
       handleSearch,
       handleReset,
+      expandAll,
+      collapseAll,
       showCreateDialog,
       handleCreate,
       showDetailDialog,
@@ -772,6 +1270,10 @@ export default {
       handleSelectionChange,
       handleBatchDelete,
       handleAction,
+      handleCopyPermission,
+      handleToggleVisible,
+      handleToggleStatus,
+      showIconSelector,
       handleSubmit,
       submitLoading,
       formRef

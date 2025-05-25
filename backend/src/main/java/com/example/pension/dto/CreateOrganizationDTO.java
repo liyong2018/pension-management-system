@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.LocalDate;
 
@@ -54,6 +55,9 @@ public class CreateOrganizationDTO {
 
     @Size(max = 100, message = "面积长度不能超过100个字符")
     private String area;
+
+    @JsonIgnore
+    private Long directorUserId; // 前端选择的负责人用户ID，不存储到数据库
 
     @NotBlank(message = "负责人姓名不能为空")
     @Size(max = 50, message = "负责人姓名长度不能超过50个字符")

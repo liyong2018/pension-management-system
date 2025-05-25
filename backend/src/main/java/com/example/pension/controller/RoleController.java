@@ -131,6 +131,15 @@ public class RoleController {
     }
 
     /**
+     * 获取角色权限
+     */
+    @GetMapping("/{roleId}/permissions")
+    public ResponseEntity<List<Long>> getRolePermissions(@PathVariable Long roleId) {
+        List<Long> permissionIds = roleService.getRolePermissions(roleId);
+        return ResponseEntity.ok(permissionIds);
+    }
+
+    /**
      * 根据用户ID获取角色列表
      */
     @GetMapping("/user/{userId}")

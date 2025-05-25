@@ -34,6 +34,9 @@ public interface RoleService {
 
     void updateRolePermissions(Long roleId, List<Long> permissionIds);
 
+    // 获取角色权限ID列表
+    List<Long> getRolePermissions(Long roleId);
+
     List<RoleDTO> getRolesByUserId(Long userId);
 
     // 验证方法

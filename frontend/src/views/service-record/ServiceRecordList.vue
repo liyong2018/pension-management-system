@@ -93,6 +93,13 @@
         <el-table-column type="selection" width="55"></el-table-column>
         <el-table-column prop="elderlyName" label="老人姓名" width="100"></el-table-column>
         <el-table-column prop="serviceContent" label="服务内容" min-width="150"></el-table-column>
+        <el-table-column prop="serviceType" label="服务类型" width="120"></el-table-column>
+        <el-table-column prop="serviceDuration" label="服务时长" width="100">
+          <template #default="{ row }">
+            <span v-if="row.serviceDuration">{{ row.serviceDuration }}小时</span>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="serviceTime" label="服务时间" width="160">
           <template #default="{ row }">
             {{ formatDateTime(row.serviceTime) }}

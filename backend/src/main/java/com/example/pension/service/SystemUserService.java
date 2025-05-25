@@ -1,6 +1,7 @@
 package com.example.pension.service;
 
 import com.example.pension.dto.SystemUserDTO;
+import com.example.pension.dto.DirectorDTO;
 import com.github.pagehelper.PageInfo;
 
 import java.util.List;
@@ -44,6 +45,20 @@ public interface SystemUserService {
     void updateUserRoles(Long userId, List<Long> roleIds);
 
     List<SystemUserDTO> getUsersByRoleId(Long roleId);
+
+    // 机构负责人管理
+    /**
+     * 获取所有机构负责人列表
+     * @return 机构负责人列表
+     */
+    List<DirectorDTO> getAllDirectors();
+
+    /**
+     * 根据机构ID获取机构负责人列表
+     * @param organizationId 机构ID
+     * @return 机构负责人列表
+     */
+    List<DirectorDTO> getDirectorsByOrganization(Long organizationId);
 
     // 统计方法
     Map<String, Long> getUserStatistics();

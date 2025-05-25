@@ -123,7 +123,7 @@
     <el-card class="table-card">
       <el-table
         ref="tableRef"
-        :data="menus"
+        :data="menuTree"
         v-loading="loading"
         @selection-change="handleSelectionChange"
         border
@@ -141,7 +141,7 @@
           <template #default="scope">
             <div class="menu-info">
               <el-icon v-if="scope.row.icon" :size="20" class="menu-icon">
-                <component :is="scope.row.icon" />
+                <component :is="getIconComponent(scope.row.icon)" />
               </el-icon>
               <el-icon v-else :size="20" class="menu-icon default-icon">
                 <Menu />
@@ -403,7 +403,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   Menu, FolderOpened, Operation, Link, Plus, CircleCheck, CircleClose, 
   ArrowDown, Expand, Fold, Folder, Document, View, Hide, CopyDocument, 
-  Switch, Delete
+  Switch, Delete, House, OfficeBuilding, User, Monitor, Warning, Avatar, 
+  Setting, Key, Collection
 } from '@element-plus/icons-vue'
 
 export default {
@@ -411,7 +412,8 @@ export default {
   components: {
     Menu, FolderOpened, Operation, Link, Plus, CircleCheck, CircleClose,
     ArrowDown, Expand, Fold, Folder, Document, View, Hide, CopyDocument,
-    Switch, Delete
+    Switch, Delete, House, OfficeBuilding, User, Monitor, Warning, Avatar,
+    Setting, Key, Collection
   },
   setup() {
     // 响应式数据
@@ -424,7 +426,7 @@ export default {
     const parentMenuOptions = ref([])
     const parentMenuForCreate = ref(null)
     const showIconSelectorDialog = ref(false)
-    const menuTableRef = ref()
+    const tableRef = ref()
     const stats = ref({
       totalMenus: 0,
       topLevelMenus: 0,
@@ -478,94 +480,28 @@ export default {
       ],
       type: [
         { required: true, message: '请选择菜单类型', trigger: 'change' }
-      ],
-      path: [
-        { required: true, message: '请输入路由路径', trigger: 'blur' }
       ]
     }
 
-    // 模拟菜单数据
-    const mockMenus = [
-      {
-        id: 1,
-        name: '系统管理',
-        parentId: null,
-        sort: 1,
-        path: '/system',
-        component: null,
-        type: 'CATALOG',
-        visible: '1',
-        status: '1',
-        permission: null,
-        icon: 'Setting',
-        createTime: '2024-01-01 10:00:00',
-        remark: '系统管理目录',
-        children: [
-          {
-            id: 11,
-            name: '用户管理',
-            parentId: 1,
-            sort: 1,
-            path: '/system/users',
-            component: 'views/system/SystemUserList',
-            type: 'MENU',
-            visible: '1',
-            status: '1',
-            permission: 'system:user:list',
-            icon: 'User',
-            createTime: '2024-01-01 10:00:00',
-            remark: '用户管理菜单'
-          },
-          {
-            id: 12,
-            name: '角色管理',
-            parentId: 1,
-            sort: 2,
-            path: '/system/roles',
-            component: 'views/system/RoleList',
-            type: 'MENU',
-            visible: '1',
-            status: '1',
-            permission: 'system:role:list',
-            icon: 'Avatar',
-            createTime: '2024-01-01 10:00:00',
-            remark: '角色管理菜单'
-          }
-        ]
-      },
-      {
-        id: 2,
-        name: '业务管理',
-        parentId: null,
-        sort: 2,
-        path: '/business',
-        component: null,
-        type: 'CATALOG',
-        visible: '1',
-        status: '1',
-        permission: null,
-        icon: 'Management',
-        createTime: '2024-01-01 10:00:00',
-        remark: '业务管理目录',
-        children: [
-          {
-            id: 21,
-            name: '机构管理',
-            parentId: 2,
-            sort: 1,
-            path: '/business/organizations',
-            component: 'views/organization/OrganizationList',
-            type: 'MENU',
-            visible: '1',
-            status: '1',
-            permission: 'business:org:list',
-            icon: 'OfficeBuilding',
-            createTime: '2024-01-01 10:00:00',
-            remark: '机构管理菜单'
-          }
-        ]
-      }
-    ]
+    // 图标映射
+    const iconMap = {
+      'House': House,
+      'OfficeBuilding': OfficeBuilding,
+      'User': User,
+      'Monitor': Monitor,
+      'Warning': Warning,
+      'Avatar': Avatar,
+      'Setting': Setting,
+      'Key': Key,
+      'Collection': Collection,
+      'Document': Document,
+      'Menu': Menu
+    }
+
+    // 获取图标组件
+    const getIconComponent = (iconName) => {
+      return iconMap[iconName] || Menu
+    }
 
     // 计算统计数据
     const calculateStats = (menus) => {
@@ -605,77 +541,143 @@ export default {
     const loadMenuTree = async () => {
       loading.value = true
       try {
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 500))
+        console.log('开始加载菜单权限数据...')
         
-        let filteredData = JSON.parse(JSON.stringify(mockMenus))
+        // 调用后端API获取菜单权限树
+        const response = await fetch('/api/permissions/tree')
+        console.log('菜单权限API响应状态:', response.status)
         
-        // 模拟搜索
-        if (searchForm.name || searchForm.type || searchForm.status) {
-          const filterMenus = (menus) => {
-            return menus.filter(menu => {
-              let matches = true
-              
-              if (searchForm.name) {
-                matches = matches && menu.name.includes(searchForm.name)
-              }
-              
-              if (searchForm.type) {
-                matches = matches && menu.type === searchForm.type
-              }
-              
-              if (searchForm.status) {
-                matches = matches && menu.status === searchForm.status
-              }
-              
-              if (menu.children && menu.children.length > 0) {
-                menu.children = filterMenus(menu.children)
-                // 如果子菜单有匹配的，保留父菜单
-                if (menu.children.length > 0) {
-                  matches = true
-                }
-              }
-              
-              return matches
-            })
+        if (response.ok) {
+          const data = await response.json()
+          console.log('菜单权限API响应数据:', data)
+          
+          // 转换后端数据格式为前端需要的格式
+          const convertMenuData = (menus) => {
+            return menus.map(menu => ({
+              id: menu.id,
+              name: menu.name,
+              parentId: menu.parentId,
+              sort: menu.sortOrder || 0,
+              path: menu.routePath || '',
+              component: menu.componentPath || '',
+              type: menu.type,
+              visible: menu.isVisible ? '1' : '0',
+              status: menu.status ? '1' : '0',
+              permission: menu.permissionKey || '',
+              icon: menu.icon || '',
+              createTime: menu.createTime || '',
+              remark: menu.remark || '',
+              children: menu.children ? convertMenuData(menu.children) : []
+            }))
           }
           
-          filteredData = filterMenus(filteredData)
-        }
-        
-        menuTree.value = filteredData
-        stats.value = calculateStats(filteredData)
-        
-        // 设置父级菜单选项（扁平化处理）
-        const flattenMenus = (menus, level = 0) => {
-          let result = []
-          for (const menu of menus) {
-            if (menu.type !== 'BUTTON') { // 排除按钮类型
-              result.push({
-                id: menu.id,
-                name: '　'.repeat(level) + menu.name,
-                level: level
+          let menuData = []
+          if (Array.isArray(data)) {
+            menuData = convertMenuData(data)
+          } else {
+            console.warn('菜单权限API返回数据格式异常:', data)
+            menuData = []
+          }
+          
+          // 应用搜索过滤
+          let filteredData = JSON.parse(JSON.stringify(menuData))
+          
+          if (searchForm.name || searchForm.type || searchForm.status) {
+            const filterMenus = (menus) => {
+              return menus.filter(menu => {
+                let matches = true
+                
+                if (searchForm.name) {
+                  matches = matches && menu.name.includes(searchForm.name)
+                }
+                
+                if (searchForm.type) {
+                  matches = matches && menu.type === searchForm.type
+                }
+                
+                if (searchForm.status) {
+                  matches = matches && menu.status === searchForm.status
+                }
+                
+                if (menu.children && menu.children.length > 0) {
+                  menu.children = filterMenus(menu.children)
+                  // 如果子菜单有匹配的，保留父菜单
+                  if (menu.children.length > 0) {
+                    matches = true
+                  }
+                }
+                
+                return matches
               })
-              if (menu.children && menu.children.length > 0) {
-                result = result.concat(flattenMenus(menu.children, level + 1))
+            }
+            
+            filteredData = filterMenus(filteredData)
+          }
+          
+          menuTree.value = filteredData
+          stats.value = calculateStats(filteredData)
+          
+          // 设置父级菜单选项（扁平化处理）
+          const flattenMenus = (menus, level = 0) => {
+            let result = []
+            for (const menu of menus) {
+              if (menu.type !== 'BUTTON') { // 排除按钮类型
+                result.push({
+                  id: menu.id,
+                  name: '　'.repeat(level) + menu.name,
+                  level: level
+                })
+                if (menu.children && menu.children.length > 0) {
+                  result = result.concat(flattenMenus(menu.children, level + 1))
+                }
               }
             }
+            return result
           }
-          return result
+          
+          parentMenuOptions.value = flattenMenus(filteredData)
+          
+          console.log('菜单数据加载成功:', filteredData.length, '条')
+          
+        } else {
+          console.error('菜单权限API请求失败，状态码:', response.status)
+          const errorText = await response.text()
+          console.error('错误响应:', errorText)
+          
+          // 如果API失败，使用空数据
+          menuTree.value = []
+          stats.value = {
+            totalMenus: 0,
+            topLevelMenus: 0,
+            functionMenus: 0,
+            externalLinks: 0
+          }
+          parentMenuOptions.value = []
+          
+          ElMessage.error(`加载菜单数据失败: ${response.status}`)
         }
         
-        parentMenuOptions.value = flattenMenus(filteredData)
-        
       } catch (error) {
-        ElMessage.error('加载菜单列表失败')
-        console.error('Error loading menus:', error)
+        console.error('加载菜单列表异常:', error)
+        ElMessage.error('加载菜单列表失败: ' + error.message)
+        
+        // 异常情况下使用空数据
+        menuTree.value = []
+        stats.value = {
+          totalMenus: 0,
+          topLevelMenus: 0,
+          functionMenus: 0,
+          externalLinks: 0
+        }
+        parentMenuOptions.value = []
+        
       } finally {
         loading.value = false
       }
     }
 
     // 获取菜单类型文本
-    const getMenuTypeText = (type) => {
+    const getTypeText = (type) => {
       const typeMap = {
         'CATALOG': '目录',
         'MENU': '菜单',
@@ -685,7 +687,7 @@ export default {
     }
 
     // 获取菜单类型颜色
-    const getMenuTypeColor = (type) => {
+    const getTypeColor = (type) => {
       const colorMap = {
         'CATALOG': 'primary',
         'MENU': 'success',
@@ -710,11 +712,11 @@ export default {
     // 展开所有
     const expandAll = () => {
       // Element Plus的表格展开所有行的方法
-      if (menuTableRef.value) {
+      if (tableRef.value) {
         const allRows = getAllRows(menuTree.value)
         allRows.forEach(row => {
           if (row.children && row.children.length > 0) {
-            menuTableRef.value.toggleRowExpansion(row, true)
+            tableRef.value.toggleRowExpansion(row, true)
           }
         })
       }
@@ -722,11 +724,11 @@ export default {
 
     // 收起所有
     const collapseAll = () => {
-      if (menuTableRef.value) {
+      if (tableRef.value) {
         const allRows = getAllRows(menuTree.value)
         allRows.forEach(row => {
           if (row.children && row.children.length > 0) {
-            menuTableRef.value.toggleRowExpansion(row, false)
+            tableRef.value.toggleRowExpansion(row, false)
           }
         })
       }
@@ -762,6 +764,7 @@ export default {
           currentMenu[key] = ''
         }
       })
+      dialogMode.value = 'create'
       dialogVisible.value = true
     }
 
@@ -769,15 +772,65 @@ export default {
     const handleCreate = async () => {
       createLoading.value = true
       try {
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        console.log('开始创建菜单:', currentMenu)
         
-        ElMessage.success('创建成功')
-        dialogVisible.value = false
-        loadMenuTree()
+        // 构建创建数据
+        const createData = {
+          name: currentMenu.name,
+          parentId: currentMenu.parentId,
+          type: currentMenu.type,
+          permissionKey: currentMenu.permission,
+          routePath: currentMenu.path,
+          componentPath: currentMenu.component,
+          icon: currentMenu.icon,
+          sortOrder: currentMenu.sort,
+          isVisible: currentMenu.visible === '1',
+          status: currentMenu.status === '1',
+          remark: currentMenu.remark
+        }
+        
+        console.log('创建菜单数据:', createData)
+        
+        // 调用后端API创建菜单
+        const response = await fetch('/api/permissions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(createData)
+        })
+        
+        console.log('创建菜单API响应状态:', response.status)
+        
+        if (response.ok) {
+          const result = await response.json()
+          console.log('创建菜单API响应数据:', result)
+          ElMessage.success('创建成功')
+          dialogVisible.value = false
+          loadMenuTree()
+          
+          // 刷新顶部菜单
+          if (window.refreshTopMenu) {
+            window.refreshTopMenu()
+          }
+        } else {
+          const errorText = await response.text()
+          console.error('创建菜单失败，状态码:', response.status)
+          console.error('错误响应:', errorText)
+          
+          let errorMessage = '创建失败'
+          try {
+            const errorData = JSON.parse(errorText)
+            errorMessage = errorData.message || errorData.error || errorMessage
+          } catch (e) {
+            errorMessage = `创建失败 (${response.status}): ${errorText}`
+          }
+          
+          ElMessage.error(errorMessage)
+        }
       } catch (error) {
-        ElMessage.error('创建失败')
-        console.error('Error creating menu:', error)
+        console.error('创建菜单异常:', error)
+        ElMessage.error('创建失败: ' + error.message)
       } finally {
         createLoading.value = false
       }
@@ -786,15 +839,22 @@ export default {
     // 显示详情对话框
     const showDetailDialog = (menu) => {
       selectedMenu.value = { ...menu }
+      // 设置表单数据
+      Object.keys(currentMenu).forEach(key => {
+        currentMenu[key] = menu[key] || (key === 'parentId' ? null : (key === 'sort' ? 0 : (key === 'visible' ? '1' : '')))
+      })
+      dialogMode.value = 'view'
       dialogVisible.value = true
     }
 
     // 显示编辑对话框
     const showEditDialog = (menu) => {
       selectedMenu.value = menu
+      // 设置表单数据
       Object.keys(currentMenu).forEach(key => {
         currentMenu[key] = menu[key] || (key === 'parentId' ? null : (key === 'sort' ? 0 : (key === 'visible' ? '1' : '')))
       })
+      dialogMode.value = 'edit'
       dialogVisible.value = true
     }
 
@@ -802,15 +862,66 @@ export default {
     const handleUpdate = async () => {
       editLoading.value = true
       try {
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        console.log('开始更新菜单:', selectedMenu.value.id, currentMenu)
         
-        ElMessage.success('更新成功')
-        dialogVisible.value = false
-        loadMenuTree()
+        // 构建更新数据
+        const updateData = {
+          id: selectedMenu.value.id,
+          name: currentMenu.name,
+          parentId: currentMenu.parentId,
+          type: currentMenu.type,
+          permissionKey: currentMenu.permission,
+          routePath: currentMenu.path,
+          componentPath: currentMenu.component,
+          icon: currentMenu.icon,
+          sortOrder: currentMenu.sort,
+          isVisible: currentMenu.visible === '1',
+          status: currentMenu.status === '1',
+          remark: currentMenu.remark
+        }
+        
+        console.log('更新菜单数据:', updateData)
+        
+        // 调用后端API更新菜单
+        const response = await fetch(`/api/permissions/${selectedMenu.value.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updateData)
+        })
+        
+        console.log('更新菜单API响应状态:', response.status)
+        
+        if (response.ok) {
+          const result = await response.json()
+          console.log('更新菜单API响应数据:', result)
+          ElMessage.success('更新成功')
+          dialogVisible.value = false
+          loadMenuTree()
+          
+          // 刷新顶部菜单
+          if (window.refreshTopMenu) {
+            window.refreshTopMenu()
+          }
+        } else {
+          const errorText = await response.text()
+          console.error('更新菜单失败，状态码:', response.status)
+          console.error('错误响应:', errorText)
+          
+          let errorMessage = '更新失败'
+          try {
+            const errorData = JSON.parse(errorText)
+            errorMessage = errorData.message || errorData.error || errorMessage
+          } catch (e) {
+            errorMessage = `更新失败 (${response.status}): ${errorText}`
+          }
+          
+          ElMessage.error(errorMessage)
+        }
       } catch (error) {
-        ElMessage.error('更新失败')
-        console.error('Error updating menu:', error)
+        console.error('更新菜单异常:', error)
+        ElMessage.error('更新失败: ' + error.message)
       } finally {
         editLoading.value = false
       }
@@ -843,12 +954,42 @@ export default {
           }
         )
         
-        ElMessage.success('删除成功')
-        loadMenuTree()
+        console.log('开始删除菜单:', menu.id)
+        
+        // 调用后端API删除菜单
+        const response = await fetch(`/api/permissions/${menu.id}`, {
+          method: 'DELETE'
+        })
+        
+        console.log('删除菜单API响应状态:', response.status)
+        
+        if (response.ok) {
+          ElMessage.success('删除成功')
+          loadMenuTree()
+          
+          // 刷新顶部菜单
+          if (window.refreshTopMenu) {
+            window.refreshTopMenu()
+          }
+        } else {
+          const errorText = await response.text()
+          console.error('删除菜单失败，状态码:', response.status)
+          console.error('错误响应:', errorText)
+          
+          let errorMessage = '删除失败'
+          try {
+            const errorData = JSON.parse(errorText)
+            errorMessage = errorData.message || errorData.error || errorMessage
+          } catch (e) {
+            errorMessage = `删除失败 (${response.status}): ${errorText}`
+          }
+          
+          ElMessage.error(errorMessage)
+        }
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除失败')
-          console.error('Error deleting menu:', error)
+          console.error('删除菜单异常:', error)
+          ElMessage.error('删除失败: ' + error.message)
         }
       }
     }
@@ -923,22 +1064,100 @@ export default {
     // 切换显示状态
     const handleToggleVisible = async (menu) => {
       try {
-        menu.visible = menu.visible === '1' ? '0' : '1'
-        ElMessage.success('显示状态更新成功')
+        const newVisible = menu.visible === '1' ? '0' : '1'
+        console.log('切换菜单显示状态:', menu.id, '从', menu.visible, '到', newVisible)
+        
+        // 构建更新数据
+        const updateData = {
+          id: menu.id,
+          name: menu.name,
+          parentId: menu.parentId,
+          type: menu.type,
+          permissionKey: menu.permission,
+          routePath: menu.path,
+          componentPath: menu.component,
+          icon: menu.icon,
+          sortOrder: menu.sort,
+          isVisible: newVisible === '1',
+          status: menu.status === '1',
+          remark: menu.remark
+        }
+        
+        // 调用后端API更新菜单
+        const response = await fetch(`/api/permissions/${menu.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updateData)
+        })
+        
+        if (response.ok) {
+          menu.visible = newVisible
+          ElMessage.success(`菜单已${newVisible === '1' ? '显示' : '隐藏'}`)
+          
+          // 刷新顶部菜单
+          if (window.refreshTopMenu) {
+            window.refreshTopMenu()
+          }
+        } else {
+          const errorText = await response.text()
+          console.error('更新菜单显示状态失败:', response.status, errorText)
+          ElMessage.error('更新显示状态失败')
+        }
       } catch (error) {
-        menu.visible = menu.visible === '1' ? '0' : '1'
-        ElMessage.error('显示状态更新失败')
+        console.error('切换菜单显示状态异常:', error)
+        ElMessage.error('更新显示状态失败: ' + error.message)
       }
     }
 
     // 切换启用状态
     const handleToggleStatus = async (menu) => {
       try {
-        menu.status = menu.status === '1' ? '0' : '1'
-        ElMessage.success('启用状态更新成功')
+        const newStatus = menu.status === '1' ? '0' : '1'
+        console.log('切换菜单启用状态:', menu.id, '从', menu.status, '到', newStatus)
+        
+        // 构建更新数据
+        const updateData = {
+          id: menu.id,
+          name: menu.name,
+          parentId: menu.parentId,
+          type: menu.type,
+          permissionKey: menu.permission,
+          routePath: menu.path,
+          componentPath: menu.component,
+          icon: menu.icon,
+          sortOrder: menu.sort,
+          isVisible: menu.visible === '1',
+          status: newStatus === '1',
+          remark: menu.remark
+        }
+        
+        // 调用后端API更新菜单
+        const response = await fetch(`/api/permissions/${menu.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updateData)
+        })
+        
+        if (response.ok) {
+          menu.status = newStatus
+          ElMessage.success(`菜单已${newStatus === '1' ? '启用' : '禁用'}`)
+          
+          // 刷新顶部菜单
+          if (window.refreshTopMenu) {
+            window.refreshTopMenu()
+          }
+        } else {
+          const errorText = await response.text()
+          console.error('更新菜单启用状态失败:', response.status, errorText)
+          ElMessage.error('更新启用状态失败')
+        }
       } catch (error) {
-        menu.status = menu.status === '1' ? '0' : '1'
-        ElMessage.error('启用状态更新失败')
+        console.error('切换菜单启用状态异常:', error)
+        ElMessage.error('更新启用状态失败: ' + error.message)
       }
     }
 
@@ -1008,7 +1227,7 @@ export default {
       parentMenuForCreate,
       showIconSelectorDialog,
       showIconSelector,
-      menuTableRef,
+      tableRef,
       stats,
       searchForm,
       pagination,
@@ -1020,8 +1239,9 @@ export default {
       currentMenu,
       formRules,
       loadMenuTree,
-      getMenuTypeText,
-      getMenuTypeColor,
+      getTypeText,
+      getTypeColor,
+      getIconComponent,
       handleSearch,
       handleReset,
       expandAll,

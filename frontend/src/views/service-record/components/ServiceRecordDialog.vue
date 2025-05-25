@@ -72,6 +72,40 @@
       </el-row>
 
       <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="服务类型" prop="serviceType">
+            <el-select 
+              v-model="form.serviceType" 
+              placeholder="请选择服务类型"
+              style="width: 100%"
+              popper-class="service-type-select-dropdown"
+            >
+              <el-option
+                v-for="option in serviceTypeOptions"
+                :key="option.dictCode"
+                :label="option.dictLabel"
+                :value="option.dictValue"
+              ></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="服务时长" prop="serviceDuration">
+            <el-input-number
+              v-model="form.serviceDuration"
+              :precision="1"
+              :min="0.1"
+              :step="0.5"
+              placeholder="请输入服务时长"
+              style="width: 100%"
+            >
+              <template #append>小时</template>
+            </el-input-number>
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+      <el-row :gutter="20">
         <el-col :span="8">
           <el-form-item label="服务提供者类型" prop="serviceProviderType">
             <el-select 
@@ -191,6 +225,7 @@ import { ElMessage } from 'element-plus'
 import { serviceRecordApi } from '@/api/serviceRecord'
 import { elderlyProfileApi } from '@/api/elderlyProfile'
 import { volunteerApi } from '@/api/volunteer'
+import { dictionaryApi } from '@/api/dictionary'
 
 const props = defineProps({
   modelValue: {
@@ -238,12 +273,17 @@ const elderlyLoading = ref(false)
 const volunteerOptions = ref([])
 const volunteerLoading = ref(false)
 
+// 服务类型选项
+const serviceTypeOptions = ref([])
+
 // 表单数据
 const form = ref({
   elderlyId: null,
   serviceContent: '',
   serviceTime: '',
   serviceAddress: '',
+  serviceType: '',
+  serviceDuration: null,
   serviceProviderType: '',
   serviceProviderId: null,
   serviceProviderName: '',
@@ -382,6 +422,8 @@ const resetForm = () => {
     serviceContent: '',
     serviceTime: '',
     serviceAddress: '',
+    serviceType: '',
+    serviceDuration: null,
     serviceProviderType: '',
     serviceProviderId: null,
     serviceProviderName: '',
@@ -416,6 +458,8 @@ const loadData = async () => {
         serviceContent: res.serviceContent || '',
         serviceTime: res.serviceTime || '',
         serviceAddress: res.serviceAddress || '',
+        serviceType: res.serviceType || '',
+        serviceDuration: res.serviceDuration,
         serviceProviderType: res.serviceProviderType || '',
         serviceProviderId: res.serviceProviderId,
         serviceProviderName: res.serviceProviderName || '',
@@ -522,7 +566,20 @@ watch([() => props.modelValue, () => props.recordId, () => props.mode],
 onMounted(() => {
   // 初始加载一些老人选项供搜索
   searchElderly('')
+  // 加载服务类型选项
+  loadServiceTypeOptions()
 })
+
+// 加载服务类型选项
+const loadServiceTypeOptions = async () => {
+  try {
+    const res = await dictionaryApi.getByType('serviceType')
+    serviceTypeOptions.value = res || []
+  } catch (error) {
+    console.error('加载服务类型选项失败:', error)
+    ElMessage.error('加载服务类型选项失败')
+  }
+}
 </script>
 
 <style scoped>

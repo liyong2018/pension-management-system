@@ -137,6 +137,7 @@
         FROM elderly_profile ep
         LEFT JOIN organization o ON ep.organization_id = o.id
         WHERE ep.organization_id = #{organizationId}
+        AND ep.pension_type = '机构养老（养老院）'
     </select>
 
     <select id="countByPensionType" resultType="long">

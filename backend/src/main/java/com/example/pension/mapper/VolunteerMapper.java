@@ -3,6 +3,7 @@ package com.example.pension.mapper;
 import com.example.pension.model.Volunteer;
 import org.apache.ibatis.annotations.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Mapper
@@ -120,4 +121,23 @@ public interface VolunteerMapper {
 
     @Select("SELECT * FROM volunteer WHERE id_card_number = #{idCardNumber}")
     Volunteer findByIdCardNumber(String idCardNumber);
+
+    // 计算志愿者的服务时长总和（从服务记录表）
+    @Select("SELECT COALESCE(SUM(service_duration), 0) FROM service_record " +
+            "WHERE service_provider_type = '志愿者' AND service_provider_id = #{volunteerId}")
+    BigDecimal calculateTotalServiceHours(@Param("volunteerId") Long volunteerId);
+
+    // 计算志愿者的积分总和（从服务记录表的工单价格）
+    @Select("SELECT COALESCE(SUM(work_order_price), 0) FROM service_record " +
+            "WHERE service_provider_type = '志愿者' AND service_provider_id = #{volunteerId}")
+    BigDecimal calculateTotalPoints(@Param("volunteerId") Long volunteerId);
+
+    // 更新志愿者的服务时长和积分（基于服务记录计算）
+    @Update("UPDATE volunteer SET " +
+            "total_service_hours = (SELECT COALESCE(SUM(service_duration), 0) FROM service_record " +
+            "WHERE service_provider_type = '志愿者' AND service_provider_id = #{volunteerId}), " +
+            "points = (SELECT COALESCE(SUM(work_order_price), 0) FROM service_record " +
+            "WHERE service_provider_type = '志愿者' AND service_provider_id = #{volunteerId}) " +
+            "WHERE id = #{volunteerId}")
+    int updateServiceStatsFromRecords(@Param("volunteerId") Long volunteerId);
 } 

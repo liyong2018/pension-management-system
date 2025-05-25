@@ -31,6 +31,8 @@ public class MenuPermissionDTO {
 
     private Boolean status = true;
 
+    private String remark;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 

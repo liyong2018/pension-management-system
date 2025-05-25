@@ -1,15 +1,19 @@
 package com.example.pension.controller;
 
 import com.example.pension.dto.SystemUserDTO;
+import com.example.pension.dto.DirectorDTO;
 import com.example.pension.service.SystemUserService;
 import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/system-users")
 @CrossOrigin(origins = "*")
@@ -218,5 +222,37 @@ public class SystemUserController {
     public ResponseEntity<List<Map<String, Object>>> getUserRoles(@PathVariable Long id) {
         List<Map<String, Object>> result = systemUserService.getUserRoles(id);
         return ResponseEntity.ok(result);
+    }
+
+    /**
+     * 获取所有机构负责人列表
+     * @return 机构负责人列表
+     */
+    @GetMapping("/directors")
+    public ResponseEntity<List<DirectorDTO>> getAllDirectors() {
+        try {
+            List<DirectorDTO> directors = systemUserService.getAllDirectors();
+            return ResponseEntity.ok(directors);
+        } catch (Exception e) {
+            log.error("获取机构负责人列表失败", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * 根据机构ID获取机构负责人列表
+     * @param organizationId 机构ID（可选）
+     * @return 机构负责人列表
+     */
+    @GetMapping("/directors/by-organization")
+    public ResponseEntity<List<DirectorDTO>> getDirectorsByOrganization(
+            @RequestParam(required = false) Long organizationId) {
+        try {
+            List<DirectorDTO> directors = systemUserService.getDirectorsByOrganization(organizationId);
+            return ResponseEntity.ok(directors);
+        } catch (Exception e) {
+            log.error("根据机构获取负责人列表失败", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 } 

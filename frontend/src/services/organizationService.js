@@ -83,6 +83,30 @@ const organizationService = {
   },
 
   /**
+   * 获取所有机构负责人列表
+   * @returns {Promise<Object>}
+   */
+  getAllDirectors() {
+    return request({
+      url: 'system-users/directors',
+      method: 'get'
+    });
+  },
+
+  /**
+   * 根据机构ID获取机构负责人列表
+   * @param {number} organizationId - 机构ID（可选）
+   * @returns {Promise<Object>}
+   */
+  getDirectorsByOrganization(organizationId) {
+    return request({
+      url: 'system-users/directors/by-organization',
+      method: 'get',
+      params: { organizationId }
+    });
+  },
+
+  /**
    * 根据名称搜索机构 (假设后端支持此功能, 如果不支持则前端自行过滤或调整)
    * 请注意: 后端 OrganizationService 已包含 getOrganizationByName，但控制器未暴露，
    * 如果需要此功能，需要在 OrganizationController 中添加相应端点。

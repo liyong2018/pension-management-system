@@ -96,4 +96,33 @@ public class VolunteerController {
     public ApiResponse<Map<String, Object>> getVolunteerStats() {
         return volunteerService.getVolunteerStats();
     }
+
+    /**
+     * 分页查询志愿者列表（包含最新的服务统计数据）
+     */
+    @GetMapping("/with-stats")
+    public ApiResponse<Map<String, Object>> getVolunteerListWithStats(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return volunteerService.getVolunteerListWithStats(name, phone, status, page, pageSize);
+    }
+
+    /**
+     * 更新单个志愿者的服务统计数据（基于服务记录计算）
+     */
+    @PutMapping("/{id}/update-stats")
+    public ApiResponse<Void> updateVolunteerServiceStats(@PathVariable Long id) {
+        return volunteerService.updateVolunteerServiceStatsFromRecords(id);
+    }
+
+    /**
+     * 批量更新所有志愿者的服务统计数据（基于服务记录计算）
+     */
+    @PutMapping("/update-all-stats")
+    public ApiResponse<Void> updateAllVolunteersServiceStats() {
+        return volunteerService.updateAllVolunteersServiceStats();
+    }
 } 

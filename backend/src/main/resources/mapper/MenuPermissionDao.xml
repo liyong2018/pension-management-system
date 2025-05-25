@@ -15,6 +15,7 @@
         <result property="sortOrder" column="sort_order"/>
         <result property="isVisible" column="is_visible"/>
         <result property="status" column="status"/>
+        <result property="remark" column="remark"/>
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
     </resultMap>
@@ -22,17 +23,17 @@
     <!-- 基础查询字段 -->
     <sql id="baseColumns">
         id, parent_id, name, type, permission_key, route_path, component_path,
-        icon, sort_order, is_visible, status, create_time, update_time
+        icon, sort_order, is_visible, status, remark, create_time, update_time
     </sql>
 
     <!-- 插入权限 -->
     <insert id="insert" parameterType="com.example.pension.model.MenuPermission" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO menu_permission (
             parent_id, name, type, permission_key, route_path, component_path,
-            icon, sort_order, is_visible, status, create_time, update_time
+            icon, sort_order, is_visible, status, remark, create_time, update_time
         ) VALUES (
             #{parentId}, #{name}, #{type}, #{permissionKey}, #{routePath}, #{componentPath},
-            #{icon}, #{sortOrder}, #{isVisible}, #{status}, NOW(), NOW()
+            #{icon}, #{sortOrder}, #{isVisible}, #{status}, #{remark}, NOW(), NOW()
         )
     </insert>
 
@@ -49,6 +50,7 @@
             sort_order = #{sortOrder},
             is_visible = #{isVisible},
             status = #{status},
+            remark = #{remark},
             update_time = NOW()
         WHERE id = #{id}
     </update>
@@ -120,7 +122,7 @@
     <select id="findByRoleId" parameterType="long" resultMap="menuPermissionMap">
         SELECT mp.id, mp.parent_id, mp.name, mp.type, mp.permission_key, mp.route_path,
                mp.component_path, mp.icon, mp.sort_order, mp.is_visible, mp.status,
-               mp.create_time, mp.update_time
+               mp.remark, mp.create_time, mp.update_time
         FROM menu_permission mp
         INNER JOIN role_permission rp ON mp.id = rp.permission_id
         WHERE rp.role_id = #{roleId}
@@ -131,7 +133,7 @@
     <select id="findByUserId" parameterType="long" resultMap="menuPermissionMap">
         SELECT DISTINCT mp.id, mp.parent_id, mp.name, mp.type, mp.permission_key, mp.route_path,
                         mp.component_path, mp.icon, mp.sort_order, mp.is_visible, mp.status,
-                        mp.create_time, mp.update_time
+                        mp.remark, mp.create_time, mp.update_time
         FROM menu_permission mp
         INNER JOIN role_permission rp ON mp.id = rp.permission_id
         INNER JOIN user_role ur ON rp.role_id = ur.role_id

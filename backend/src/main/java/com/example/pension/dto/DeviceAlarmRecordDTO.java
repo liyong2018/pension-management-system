@@ -24,6 +24,7 @@ public class DeviceAlarmRecordDTO {
 
     private String alarmContent;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime alarmTime;
 
     private String alarmData;

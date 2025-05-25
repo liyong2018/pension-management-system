@@ -107,12 +107,29 @@
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="负责人姓名" prop="directorName">
-                <el-input v-model="form.directorName" placeholder="请输入负责人姓名"></el-input>
+                <el-select 
+                  v-model="form.directorUserId" 
+                  placeholder="请选择负责人"
+                  style="width: 100%"
+                  @change="handleDirectorChange"
+                  clearable
+                >
+                  <el-option
+                    v-for="director in directorList"
+                    :key="director.userId"
+                    :label="director.directorName"
+                    :value="director.userId"
+                  />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="负责人联系方式" prop="directorContact">
-                <el-input v-model="form.directorContact" placeholder="请输入负责人联系方式"></el-input>
+                <el-input 
+                  v-model="form.directorContact" 
+                  placeholder="选择负责人后自动填充"
+                  readonly
+                />
               </el-form-item>
             </el-col>
           </el-row>
@@ -179,6 +196,7 @@ const dialogVisible = computed({
 const formRef = ref(null);
 const loading = ref(false);
 const activeTab = ref('basic');
+const directorList = ref([]);
 
 const form = reactive({
   name: '',
@@ -196,6 +214,7 @@ const form = reactive({
   actualServiceCount: 0,
   chargingStandard: '',
   area: '',
+  directorUserId: null, // 新增：负责人用户ID
   directorName: '',
   directorContact: '',
   employeeCount: 0,
@@ -217,7 +236,7 @@ const rules = {
   email: [
     { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }
   ],
-  directorName: [{ required: true, message: '请输入负责人姓名', trigger: 'blur' }],
+  directorUserId: [{ required: true, message: '请选择负责人', trigger: 'change' }],
   directorContact: [
       { required: true, message: '请输入负责人联系方式', trigger: 'blur' },
       { pattern: /^1[3-9]\d{9}$|^0\d{2,3}-?\d{7,8}$/, message: '请输入正确的电话号码', trigger: 'blur' }
@@ -236,6 +255,16 @@ const loadOrganizationData = async () => {
     if (form.establishmentDate && typeof form.establishmentDate === 'string') {
       form.establishmentDate = new Date(form.establishmentDate);
     }
+    
+    // 根据负责人姓名和联系方式查找对应的用户ID
+    if (form.directorName && form.directorContact) {
+      const matchedDirector = directorList.value.find(d => 
+        d.directorName === form.directorName && d.directorContact === form.directorContact
+      );
+      if (matchedDirector) {
+        form.directorUserId = matchedDirector.userId;
+      }
+    }
   } catch (error) {
     console.error('Failed to load organization:', error);
     ElMessage.error('加载机构信息失败: ' + (error.message || '未知错误'));
@@ -244,15 +273,99 @@ const loadOrganizationData = async () => {
   }
 };
 
+// 加载负责人列表
+const loadDirectors = async () => {
+  try {
+    const response = await organizationService.getAllDirectors();
+    directorList.value = response;
+  } catch (error) {
+    console.error('加载负责人列表失败:', error);
+    ElMessage.error('加载负责人列表失败');
+  }
+};
+
+// 负责人选择变化处理
+const handleDirectorChange = (userId) => {
+  if (userId) {
+    const selectedDirector = directorList.value.find(d => d.userId === userId);
+    if (selectedDirector) {
+      form.directorName = selectedDirector.directorName;
+      form.directorContact = selectedDirector.directorContact;
+    }
+  } else {
+    form.directorName = '';
+    form.directorContact = '';
+  }
+};
+
 const handleSubmit = async () => {
   if (!formRef.value) return;
   
   try {
-    await formRef.value.validate();
+    // 先进行表单验证，如果验证失败会抛出异常
+    const isValid = await formRef.value.validate();
+    if (!isValid) {
+      console.log('Form validation failed');
+      // 清理被验证错误污染的字段
+      cleanValidationErrors();
+      return;
+    }
+    
     loading.value = true;
     
+    console.log('Original form data:', JSON.stringify(form, null, 2));
+    
     const payload = { ...form };
-    // 不需要再手动拼接 address 字段，因为它已经是单一字段了
+    
+    console.log('Payload before processing:', JSON.stringify(payload, null, 2));
+    
+    // 强制确保所有字段都是正确的类型
+    const stringFields = [
+      'name', 'shortName', 'type', 'address', 'phone', 'email', 'website', 
+      'description', 'licenseNumber', 'businessScope', 'chargingStandard', 
+      'area', 'directorUserId', 'directorContact', 'fireLicense', 
+      'sanitaryLicense', 'medicalLicense', 'otherQualifications'
+    ];
+    
+    stringFields.forEach(field => {
+      const value = payload[field];
+      console.log(`Processing field ${field}:`, value, typeof value, Array.isArray(value));
+      
+      // 如果是验证错误对象（数组），跳过处理并记录错误
+      if (Array.isArray(value)) {
+        console.error(`Field ${field} contains validation errors:`, value);
+        ElMessage.error(`字段 ${field} 包含验证错误，请检查表单输入`);
+        loading.value = false;
+        return;
+      }
+      
+      if (value === null || value === undefined) {
+        payload[field] = '';
+        console.log(`Converted ${field} from null/undefined to empty string`);
+      } else {
+        payload[field] = String(value);
+        console.log(`Ensured ${field} is string:`, payload[field]);
+      }
+    });
+    
+    // 检查是否有任何字段包含验证错误
+    const hasValidationErrors = stringFields.some(field => Array.isArray(payload[field]));
+    if (hasValidationErrors) {
+      loading.value = false;
+      return;
+    }
+    
+    // 确保数字字段是数字类型
+    const numberFields = ['bedCount', 'actualServiceCount', 'employeeCount', 'professionalNurseCount'];
+    numberFields.forEach(field => {
+      if (payload[field] === null || payload[field] === undefined || payload[field] === '') {
+        payload[field] = 0;
+      } else {
+        payload[field] = Number(payload[field]);
+      }
+    });
+    
+    console.log('Final payload:', JSON.stringify(payload, null, 2));
 
     if (props.organizationId) {
       await organizationService.updateOrganization(props.organizationId, payload);
@@ -265,11 +378,38 @@ const handleSubmit = async () => {
     emit('success');
     handleClose();
   } catch (error) {
-    console.error('Failed to save organization:', error);
-    ElMessage.error('保存失败: ' + (error.response?.data?.message || error.message));
+    console.error('Form validation or submission failed:', error);
+    if (error && typeof error === 'object' && !error.response) {
+      // 这是表单验证错误
+      console.log('Form validation failed, not submitting');
+      // 清理被验证错误污染的字段
+      cleanValidationErrors();
+      ElMessage.warning('请填写必填字段并确保格式正确');
+    } else {
+      // 这是网络或其他错误
+      console.error('Failed to save organization:', error);
+      ElMessage.error('保存失败: ' + (error.response?.data?.message || error.message));
+    }
   } finally {
     loading.value = false;
   }
+};
+
+// 清理验证错误污染的字段
+const cleanValidationErrors = () => {
+  const allFields = [
+    'name', 'shortName', 'type', 'address', 'phone', 'email', 'website', 
+    'description', 'licenseNumber', 'businessScope', 'chargingStandard', 
+    'area', 'directorUserId', 'directorContact', 'fireLicense', 
+    'sanitaryLicense', 'medicalLicense', 'otherQualifications'
+  ];
+  
+  allFields.forEach(field => {
+    if (Array.isArray(form[field])) {
+      console.log(`Cleaning validation error from field: ${field}`);
+      form[field] = '';
+    }
+  });
 };
 
 const handleClose = () => {
@@ -309,6 +449,8 @@ watch(() => props.organizationId, (newId) => {
 
 
 onMounted(() => {
+  // 加载负责人列表
+  loadDirectors();
   // 如果编辑时有 organizationId，则加载数据
   // 这个逻辑已经通过 watch immediate:true 处理了，所以这里可能不需要再次调用
   // if (props.organizationId) {

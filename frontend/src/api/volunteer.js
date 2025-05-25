@@ -76,5 +76,30 @@ export const volunteerApi = {
       url: '/volunteers/stats',
       method: 'get'
     })
+  },
+
+  // 获取志愿者列表（包含最新的服务统计数据）
+  getVolunteerListWithStats(params) {
+    return request({
+      url: '/volunteers/with-stats',
+      method: 'get',
+      params
+    })
+  },
+
+  // 更新单个志愿者的服务统计数据（基于服务记录计算）
+  updateVolunteerServiceStats(id) {
+    return request({
+      url: `/volunteers/${id}/update-stats`,
+      method: 'put'
+    })
+  },
+
+  // 批量更新所有志愿者的服务统计数据（基于服务记录计算）
+  updateAllVolunteersServiceStats() {
+    return request({
+      url: '/volunteers/update-all-stats',
+      method: 'put'
+    })
   }
 } 

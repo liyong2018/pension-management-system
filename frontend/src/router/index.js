@@ -97,6 +97,24 @@ const routes = [
     name: 'SystemLogs',
     component: () => import('@/views/system/LogList.vue'),
     meta: { title: '日志管理', requiresAuth: true }
+  },
+  {
+    path: '/system/dictionaries',
+    name: 'SystemDictionaries',
+    component: () => import('@/views/system/DictionaryManagementSimple.vue'),
+    meta: { title: '字典管理', requiresAuth: true }
+  },
+  {
+    path: '/system/dictionary-test',
+    name: 'DictionaryTest',
+    component: () => import('@/views/system/DictionaryTest.vue'),
+    meta: { title: '字典管理测试', requiresAuth: true }
+  },
+  {
+    path: '/system/dictionary-diagnosis',
+    name: 'DictionaryDiagnosis',
+    component: () => import('@/views/system/DictionaryDiagnosis.vue'),
+    meta: { title: '字典问题诊断', requiresAuth: true }
   }
   // ... 其他模块的路由
 ];

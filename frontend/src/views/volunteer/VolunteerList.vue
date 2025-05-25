@@ -4,10 +4,16 @@
       <template #header>
         <div class="card-header">
           <span>志愿者管理</span>
-          <el-button type="primary" @click="showCreateDialog">
-            <el-icon><Plus /></el-icon>
-            添加志愿者
-          </el-button>
+          <div class="header-buttons">
+            <el-button type="success" @click="updateAllStats" :loading="updatingStats">
+              <el-icon><Refresh /></el-icon>
+              更新统计数据
+            </el-button>
+            <el-button type="primary" @click="showCreateDialog">
+              <el-icon><Plus /></el-icon>
+              添加志愿者
+            </el-button>
+          </div>
         </div>
       </template>
 
@@ -155,7 +161,7 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, ArrowDown } from '@element-plus/icons-vue'
+import { Plus, ArrowDown, Refresh } from '@element-plus/icons-vue'
 import VolunteerDetailDialog from './components/VolunteerDetailDialog.vue'
 import VolunteerEditDialog from './components/VolunteerEditDialog.vue'
 import VolunteerStatusDialog from './components/VolunteerStatusDialog.vue'
@@ -164,6 +170,7 @@ import { volunteerApi } from '@/api/volunteer'
 
 // 响应式数据
 const loading = ref(false)
+const updatingStats = ref(false)
 const volunteers = ref([])
 const stats = ref(null)
 const selectedVolunteer = ref(null)
@@ -189,11 +196,11 @@ const editDialogVisible = ref(false)
 const statusDialogVisible = ref(false)
 const statsDialogVisible = ref(false)
 
-// 加载志愿者列表
+// 加载志愿者列表（包含最新统计数据）
 const loadVolunteers = async () => {
   loading.value = true
   try {
-    const response = await volunteerApi.getVolunteerList({
+    const response = await volunteerApi.getVolunteerListWithStats({
       ...searchForm,
       page: pagination.page,
       pageSize: pagination.pageSize
@@ -209,6 +216,25 @@ const loadVolunteers = async () => {
     ElMessage.error('加载志愿者列表失败')
   } finally {
     loading.value = false
+  }
+}
+
+// 更新所有志愿者的统计数据
+const updateAllStats = async () => {
+  updatingStats.value = true
+  try {
+    const response = await volunteerApi.updateAllVolunteersServiceStats()
+    if (response.success) {
+      ElMessage.success(response.message || '统计数据更新成功')
+      // 重新加载列表以显示最新数据
+      await loadVolunteers()
+    } else {
+      ElMessage.error(response.message || '统计数据更新失败')
+    }
+  } catch (error) {
+    ElMessage.error('统计数据更新失败')
+  } finally {
+    updatingStats.value = false
   }
 }
 
@@ -266,11 +292,27 @@ const handleAction = (command, volunteer) => {
       statusDialogVisible.value = true
       break
     case 'updateStats':
-      statsDialogVisible.value = true
+      updateSingleVolunteerStats(volunteer)
       break
     case 'delete':
       handleDelete(volunteer)
       break
+  }
+}
+
+// 更新单个志愿者的统计数据
+const updateSingleVolunteerStats = async (volunteer) => {
+  try {
+    const response = await volunteerApi.updateVolunteerServiceStats(volunteer.id)
+    if (response.success) {
+      ElMessage.success(`${volunteer.name} 的统计数据更新成功`)
+      // 重新加载列表以显示最新数据
+      await loadVolunteers()
+    } else {
+      ElMessage.error(response.message || '统计数据更新失败')
+    }
+  } catch (error) {
+    ElMessage.error('统计数据更新失败')
   }
 }
 
@@ -361,6 +403,11 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 10px;
 }
 
 .search-area {

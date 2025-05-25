@@ -213,4 +213,14 @@ public class RoleServiceImpl implements RoleService {
     public boolean existsByRoleKeyExcludeId(String roleKey, Long excludeId) {
         return roleDao.existsByRoleKeyExcludeId(roleKey, excludeId);
     }
+
+    @Override
+    public List<Long> getRolePermissions(Long roleId) {
+        Role role = roleDao.findById(roleId);
+        if (role == null) {
+            throw new RuntimeException("角色不存在，ID：" + roleId);
+        }
+        
+        return rolePermissionMapper.findPermissionIdsByRoleId(roleId);
+    }
 } 

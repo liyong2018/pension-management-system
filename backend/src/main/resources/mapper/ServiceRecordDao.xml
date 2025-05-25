@@ -9,6 +9,8 @@
         <result property="serviceContent" column="service_content" />
         <result property="serviceTime" column="service_time" />
         <result property="serviceAddress" column="service_address" />
+        <result property="serviceType" column="service_type" />
+        <result property="serviceDuration" column="service_duration" />
         <result property="serviceProviderType" column="service_provider_type" />
         <result property="serviceProviderId" column="service_provider_id" />
         <result property="serviceProviderName" column="service_provider_name" />
@@ -28,6 +30,7 @@
 
     <sql id="selectServiceRecordColumns">
         sr.id, sr.elderly_id, sr.service_content, sr.service_time, sr.service_address,
+        sr.service_type, sr.service_duration,
         sr.service_provider_type, sr.service_provider_id, sr.service_provider_name,
         sr.work_order_price, sr.status, sr.evaluation_score, sr.evaluation_comment,
         sr.create_time, sr.update_time,
@@ -109,9 +112,11 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO service_record (elderly_id, service_content, service_time, service_address,
+                                   service_type, service_duration,
                                    service_provider_type, service_provider_id, service_provider_name,
                                    work_order_price, status, evaluation_score, evaluation_comment)
         VALUES (#{elderlyId}, #{serviceContent}, #{serviceTime}, #{serviceAddress},
+                #{serviceType}, #{serviceDuration},
                 #{serviceProviderType}, #{serviceProviderId}, #{serviceProviderName},
                 #{workOrderPrice}, #{status}, #{evaluationScore}, #{evaluationComment})
     </insert>
@@ -123,6 +128,8 @@
             service_content = #{serviceContent},
             service_time = #{serviceTime},
             service_address = #{serviceAddress},
+            service_type = #{serviceType},
+            service_duration = #{serviceDuration},
             service_provider_type = #{serviceProviderType},
             service_provider_id = #{serviceProviderId},
             service_provider_name = #{serviceProviderName},

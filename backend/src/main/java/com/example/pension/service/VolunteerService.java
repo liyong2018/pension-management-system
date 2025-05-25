@@ -247,4 +247,59 @@ public class VolunteerService {
     private boolean isValidStatus(String status) {
         return "ACTIVE".equals(status) || "INACTIVE".equals(status) || "PENDING_APPROVAL".equals(status);
     }
+
+    /**
+     * 更新单个志愿者的服务统计数据（基于服务记录计算）
+     */
+    @Transactional
+    public ApiResponse<Void> updateVolunteerServiceStatsFromRecords(Long volunteerId) {
+        try {
+            Volunteer volunteer = volunteerMapper.findById(volunteerId);
+            if (volunteer == null) {
+                return ApiResponse.error("志愿者不存在");
+            }
+
+            volunteerMapper.updateServiceStatsFromRecords(volunteerId);
+            return ApiResponse.success(null);
+        } catch (Exception e) {
+            return ApiResponse.error("更新志愿者服务统计失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量更新所有志愿者的服务统计数据（基于服务记录计算）
+     */
+    @Transactional
+    public ApiResponse<Void> updateAllVolunteersServiceStats() {
+        try {
+            // 获取所有志愿者
+            List<Volunteer> allVolunteers = volunteerMapper.findByConditions(null, null, null, 0, Integer.MAX_VALUE);
+            
+            int updatedCount = 0;
+            for (Volunteer volunteer : allVolunteers) {
+                volunteerMapper.updateServiceStatsFromRecords(volunteer.getId());
+                updatedCount++;
+            }
+
+            return ApiResponse.success(null, "成功更新 " + updatedCount + " 个志愿者的服务统计数据");
+        } catch (Exception e) {
+            return ApiResponse.error("批量更新志愿者服务统计失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 分页查询志愿者列表（包含最新的服务统计数据）
+     */
+    public ApiResponse<Map<String, Object>> getVolunteerListWithStats(String name, String phone, String status, 
+                                                                     int page, int pageSize) {
+        try {
+            // 先更新所有志愿者的统计数据
+            updateAllVolunteersServiceStats();
+            
+            // 然后查询列表
+            return getVolunteerList(name, phone, status, page, pageSize);
+        } catch (Exception e) {
+            return ApiResponse.error("查询志愿者列表失败: " + e.getMessage());
+        }
+    }
 } 

@@ -20,6 +20,10 @@ public class ServiceRecord {
     
     private String serviceAddress;
     
+    private String serviceType;
+    
+    private BigDecimal serviceDuration;
+    
     private String serviceProviderType;
     
     private Long serviceProviderId;

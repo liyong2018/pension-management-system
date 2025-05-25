@@ -42,9 +42,9 @@ public interface MenuPermissionMapper {
                                           @Param("status") Boolean status);
 
     @Insert("INSERT INTO menu_permission (parent_id, name, type, permission_key, route_path, " +
-            "component_path, icon, sort_order, is_visible, status, create_time, update_time) " +
+            "component_path, icon, sort_order, is_visible, status, remark, create_time, update_time) " +
             "VALUES (#{parentId}, #{name}, #{type}, #{permissionKey}, #{routePath}, " +
-            "#{componentPath}, #{icon}, #{sortOrder}, #{isVisible}, #{status}, NOW(), NOW())")
+            "#{componentPath}, #{icon}, #{sortOrder}, #{isVisible}, #{status}, #{remark}, NOW(), NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(MenuPermission menuPermission);
 
@@ -59,6 +59,7 @@ public interface MenuPermissionMapper {
             "sort_order = #{sortOrder}, " +
             "is_visible = #{isVisible}, " +
             "status = #{status}, " +
+            "remark = #{remark}, " +
             "update_time = NOW() " +
             "WHERE id = #{id}")
     void update(MenuPermission menuPermission);

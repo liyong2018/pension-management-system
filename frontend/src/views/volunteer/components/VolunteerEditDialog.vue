@@ -308,21 +308,6 @@ const rules = {
   ]
 }
 
-// 监听志愿者数据变化
-watch(() => props.volunteer, (newVolunteer) => {
-  if (newVolunteer) {
-    // 编辑模式，填充表单数据
-    Object.keys(formData.value).forEach(key => {
-      if (newVolunteer[key] !== undefined) {
-        formData.value[key] = newVolunteer[key]
-      }
-    })
-  } else {
-    // 新增模式，重置表单
-    resetForm()
-  }
-}, { immediate: true })
-
 // 重置表单
 const resetForm = () => {
   formData.value = {
@@ -354,6 +339,21 @@ const resetForm = () => {
     formRef.value?.clearValidate()
   })
 }
+
+// 监听志愿者数据变化
+watch(() => props.volunteer, (newVolunteer) => {
+  if (newVolunteer) {
+    // 编辑模式，填充表单数据
+    Object.keys(formData.value).forEach(key => {
+      if (newVolunteer[key] !== undefined) {
+        formData.value[key] = newVolunteer[key]
+      }
+    })
+  } else {
+    // 新增模式，重置表单
+    resetForm()
+  }
+}, { immediate: true })
 
 // 关闭对话框
 const handleClose = () => {

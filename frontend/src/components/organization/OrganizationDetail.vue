@@ -54,6 +54,52 @@
           <el-descriptions-item label="其他资质证书" :span="2">{{ organizationData.otherQualifications }}</el-descriptions-item>
         </el-descriptions>
       </el-tab-pane>
+
+      <!-- 人员档案 Tab -->
+      <el-tab-pane label="人员档案" name="elderly">
+        <div class="elderly-list-container">
+          <div class="elderly-list-header">
+            <el-row :gutter="20" style="margin-bottom: 20px;">
+              <el-col :span="12">
+                <h4>机构老人列表 (共 {{ elderlyList.length }} 人)</h4>
+              </el-col>
+              <el-col :span="12" style="text-align: right;">
+                <el-button @click="refreshElderlyList" :loading="elderlyLoading">
+                  <el-icon><Refresh /></el-icon>
+                  刷新
+                </el-button>
+              </el-col>
+            </el-row>
+          </div>
+          
+          <el-table 
+            :data="elderlyList" 
+            v-loading="elderlyLoading"
+            stripe
+            border
+            style="width: 100%"
+            empty-text="暂无老人档案数据"
+          >
+            <el-table-column prop="name" label="姓名" width="100" />
+            <el-table-column prop="gender" label="性别" width="80" />
+            <el-table-column prop="age" label="年龄" width="80">
+              <template #default="scope">
+                {{ calculateAge(scope.row.birthDate) }}岁
+              </template>
+            </el-table-column>
+            <el-table-column prop="phone" label="联系电话" width="130" />
+            <el-table-column prop="pensionType" label="养老类型" width="120" />
+            <el-table-column prop="careLevel" label="护理等级" width="100" />
+            <el-table-column prop="abilityAssessment" label="能力评估" width="100" />
+            <el-table-column prop="currentHealthStatus" label="健康状况" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="createTime" label="入档时间" width="120">
+              <template #default="scope">
+                {{ formatDate(scope.row.createTime) }}
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </el-tab-pane>
     </el-tabs>
 
     <template #footer>
@@ -67,8 +113,10 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
+import { Refresh } from '@element-plus/icons-vue';
 import { formatDate } from '@/utils/dateUtils';
 import organizationService from '@/services/organizationService';
+import { elderlyProfileApi } from '@/api/elderlyProfile';
 
 const props = defineProps({
   visible: {
@@ -88,6 +136,10 @@ const activeTab = ref('basic');
 const loading = ref(false);
 const organizationData = ref({});
 
+// 老人列表相关数据
+const elderlyList = ref([]);
+const elderlyLoading = ref(false);
+
 // 获取机构详情数据
 const fetchOrganizationDetail = async () => {
   loading.value = true;
@@ -101,6 +153,41 @@ const fetchOrganizationDetail = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+// 获取机构老人列表
+const fetchElderlyList = async () => {
+  if (!props.organizationId) return;
+  
+  elderlyLoading.value = true;
+  try {
+    const response = await elderlyProfileApi.getByOrganizationId(props.organizationId);
+    elderlyList.value = response || [];
+  } catch (error) {
+    console.error('获取老人列表失败:', error);
+    ElMessage.error('获取老人列表失败');
+    elderlyList.value = [];
+  } finally {
+    elderlyLoading.value = false;
+  }
+};
+
+// 刷新老人列表
+const refreshElderlyList = () => {
+  fetchElderlyList();
+};
+
+// 计算年龄
+const calculateAge = (birthDate) => {
+  if (!birthDate) return '-';
+  const birth = new Date(birthDate);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
 };
 
 const getFullAddress = () => {
@@ -117,6 +204,14 @@ watch(() => props.visible, (newVal) => {
   dialogVisible.value = newVal;
   if (newVal) {
     fetchOrganizationDetail();
+    fetchElderlyList();
+  }
+});
+
+// 监听activeTab变化，当切换到人员档案tab时加载数据
+watch(activeTab, (newTab) => {
+  if (newTab === 'elderly' && props.visible) {
+    fetchElderlyList();
   }
 });
 
@@ -124,6 +219,9 @@ watch(() => props.visible, (newVal) => {
 onMounted(() => {
   if (props.visible) {
     fetchOrganizationDetail();
+    if (activeTab.value === 'elderly') {
+      fetchElderlyList();
+    }
   }
 });
 </script>
@@ -131,5 +229,34 @@ onMounted(() => {
 <style scoped>
 .dialog-footer {
   text-align: right;
+}
+
+.elderly-list-container {
+  padding: 10px 0;
+}
+
+.elderly-list-header h4 {
+  margin: 0;
+  color: #303133;
+  font-weight: 600;
+}
+
+.el-table {
+  margin-top: 10px;
+}
+
+.el-table .el-table__cell {
+  padding: 8px 0;
+}
+
+/* 表格行悬停效果 */
+.el-table .el-table__row:hover {
+  background-color: #f5f7fa;
+}
+
+/* 空数据状态样式 */
+.el-table .el-table__empty-text {
+  color: #909399;
+  font-size: 14px;
 }
 </style> 

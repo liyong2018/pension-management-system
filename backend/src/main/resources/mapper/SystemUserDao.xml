@@ -161,4 +161,43 @@
         SELECT COUNT(*) FROM system_user WHERE organization_id = #{organizationId}
     </select>
 
+    <!-- 查询所有机构负责人 -->
+    <select id="findDirectorsByRole" resultType="com.example.pension.dto.DirectorDTO">
+        SELECT 
+            u.id as userId,
+            u.username,
+            u.full_name as directorName,
+            u.phone as directorContact,
+            u.email,
+            u.organization_id as organizationId,
+            o.name as organizationName
+        FROM system_user u
+        INNER JOIN user_role ur ON u.id = ur.user_id
+        INNER JOIN role r ON ur.role_id = r.id
+        LEFT JOIN organization o ON u.organization_id = o.id
+        WHERE r.role_key = 'ORG_DIRECTOR' 
+          AND u.is_active = TRUE
+        ORDER BY u.organization_id, u.full_name
+    </select>
+
+    <!-- 根据机构ID查询机构负责人 -->
+    <select id="findDirectorsByOrganization" resultType="com.example.pension.dto.DirectorDTO">
+        SELECT 
+            u.id as userId,
+            u.username,
+            u.full_name as directorName,
+            u.phone as directorContact,
+            u.email,
+            u.organization_id as organizationId,
+            o.name as organizationName
+        FROM system_user u
+        INNER JOIN user_role ur ON u.id = ur.user_id
+        INNER JOIN role r ON ur.role_id = r.id
+        LEFT JOIN organization o ON u.organization_id = o.id
+        WHERE r.role_key = 'ORG_DIRECTOR' 
+          AND u.is_active = TRUE
+          AND (#{organizationId} IS NULL OR u.organization_id = #{organizationId})
+        ORDER BY u.full_name
+    </select>
+
 </mapper> 

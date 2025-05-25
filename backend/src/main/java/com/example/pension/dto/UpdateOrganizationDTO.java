@@ -4,11 +4,22 @@ import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class UpdateOrganizationDTO {
+    @JsonIgnore
+    private Long id;
+
+    @JsonIgnore
+    private LocalDateTime createTime;
+
+    @JsonIgnore
+    private LocalDateTime updateTime;
+
     @Size(max = 255, message = "机构名称长度不能超过255个字符")
     private String name;
 
@@ -50,6 +61,9 @@ public class UpdateOrganizationDTO {
 
     @Size(max = 100, message = "面积长度不能超过100个字符")
     private String area;
+
+    @JsonIgnore
+    private Long directorUserId;
 
     @Size(max = 50, message = "负责人姓名长度不能超过50个字符")
     private String directorName;

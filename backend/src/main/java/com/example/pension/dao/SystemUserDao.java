@@ -1,6 +1,7 @@
 package com.example.pension.dao;
 
 import com.example.pension.model.SystemUser;
+import com.example.pension.dto.DirectorDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -42,4 +43,17 @@ public interface SystemUserDao {
     Long countAdminUsers();
 
     Long countByOrganizationId(@Param("organizationId") Long organizationId);
+
+    /**
+     * 查询所有机构负责人
+     * @return 机构负责人列表
+     */
+    List<DirectorDTO> findDirectorsByRole();
+
+    /**
+     * 根据机构ID查询机构负责人
+     * @param organizationId 机构ID
+     * @return 机构负责人列表
+     */
+    List<DirectorDTO> findDirectorsByOrganization(@Param("organizationId") Long organizationId);
 } 

@@ -40,6 +40,10 @@
         <el-form-item class="search-buttons-left">
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
+          <el-button type="success" @click="updateAllStats" :loading="updatingStats">
+            <el-icon><TrendCharts /></el-icon>
+            更新统计数据
+          </el-button>
         </el-form-item>
         <el-form-item class="add-button-right">
           <el-button type="primary" @click="showCreateDialog">
@@ -471,6 +475,7 @@ import VolunteerServiceRecordsDialog from './components/VolunteerServiceRecordsD
 
 // 响应式数据
 const loading = ref(false)
+const updatingStats = ref(false)
 const createLoading = ref(false)
 const editLoading = ref(false)
 const volunteers = ref([])
@@ -549,7 +554,7 @@ const createRules = {
 const loadVolunteers = async () => {
   loading.value = true
   try {
-    const response = await volunteerApi.getVolunteerList({
+    const response = await volunteerApi.getVolunteerListWithStats({
       ...searchForm,
       page: pagination.page,
       pageSize: pagination.pageSize
@@ -678,12 +683,47 @@ const handleAction = (command, volunteer) => {
       ElMessage.info('状态更新功能开发中')
       break
     case 'updateStats':
-      // TODO: 实现统计更新对话框
-      ElMessage.info('统计更新功能开发中')
+      updateSingleVolunteerStats(volunteer)
       break
     case 'delete':
       deleteVolunteer(volunteer)
       break
+  }
+}
+
+// 更新单个志愿者的统计数据
+const updateSingleVolunteerStats = async (volunteer) => {
+  try {
+    const response = await volunteerApi.updateVolunteerServiceStats(volunteer.id)
+    if (response.success) {
+      ElMessage.success(`${volunteer.name} 的统计数据更新成功`)
+      // 重新加载列表以显示最新数据
+      await loadVolunteers()
+    } else {
+      ElMessage.error(response.message || '统计数据更新失败')
+    }
+  } catch (error) {
+    ElMessage.error('统计数据更新失败')
+  }
+}
+
+// 更新所有志愿者的统计数据
+const updateAllStats = async () => {
+  updatingStats.value = true
+  try {
+    const response = await volunteerApi.updateAllVolunteersServiceStats()
+    if (response.success) {
+      ElMessage.success('所有志愿者统计数据更新成功')
+      // 重新加载列表以显示最新数据
+      await loadVolunteers()
+      await loadStats()
+    } else {
+      ElMessage.error(response.message || '统计数据更新失败')
+    }
+  } catch (error) {
+    ElMessage.error('统计数据更新失败')
+  } finally {
+    updatingStats.value = false
   }
 }
 
