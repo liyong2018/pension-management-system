@@ -706,50 +706,80 @@ html, body {
   display: none; /* 强制隐藏 */
 }
 
-/* 折叠时弹出的子菜单容器样式 (el-menu-popper) */
-.el-menu--vertical .el-menu--popup-container .el-menu-popper {
-    background-color: #2c3e50 !important; 
-    border-radius: 8px !important;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
-    padding: 6px 0 !important;
-    border: 1px solid #34495e !important; 
+/* 折叠时弹出的子菜单容器样式 (el-menu-popper) - 彻底重新定义 */
+div.el-popper.el-menu-popper[role^="menu"] { /* 更精确地定位菜单相关的Popper */
+  background-color: #2c3e50 !important;      /* 深色背景 */
+  border: 1px solid #34495e !important;       /* 边框颜色协调 */
+  border-radius: 8px !important;              /* 圆角与主菜单一致 */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35) !important; /* 更柔和自然的阴影 */
+  padding: 8px !important;                      /* 容器内边距，给内部菜单项留出空间 */
 }
 
-/* 折叠时弹出的子菜单项样式 - 重点统一 */
-.sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu .custom-sub-menu-item {
+/* 确保Popper内部的el-menu本身背景透明，无额外边框和内边距 */
+div.el-popper.el-menu-popper[role^="menu"] .el-menu {
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* 折叠时弹出的子菜单项样式 - 继承主菜单风格 */
+div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item {
   display: flex !important;
   align-items: center !important;
-  height: 48px !important; /* 与主菜单项高度一致 */
-  line-height: 48px !important;
-  padding: 0 16px !important; /* 与主菜单项内边距一致 */
-  margin: 4px 8px !important; /* 与主菜单项外边距一致 */
-  color: #ecf0f1 !important; /* 与主菜单项默认文字颜色一致 */
-  border-radius: 8px !important; /* 与主菜单项圆角一致 */
-  background-color: transparent !important; /* 确保背景透明，由hover/active控制 */
+  width: auto !important; /* 宽度自动，由内容和容器padding决定 */
+  height: 44px !important; /* 高度可略小于主菜单项，或保持48px */
+  line-height: 44px !important;
+  padding: 0 12px !important; /* 内部左右边距 */
+  margin: 2px 0 !important;   /* 上下外边距，控制项目间距 */
+  color: #ecf0f1 !important; /* 默认浅色文字 */
+  border-radius: 6px !important; /* 项目圆角 */
+  background-color: transparent !important; /* 项目默认背景透明 */
+  transition: background-color 0.2s ease, color 0.2s ease !important;
 }
 
-.sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu .custom-sub-menu-item .menu-icon {
-  margin-right: 10px !important; 
-  font-size: 18px !important; /* 与主菜单图标大小一致 */
+div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item .menu-icon {
+  color: #ecf0f1 !important; /* 图标颜色与文字一致 */
+  margin-right: 10px !important;
+  font-size: 16px !important; /* 图标大小 */
+  flex-shrink: 0;
 }
 
-.sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu .custom-sub-menu-item .menu-text {
-  display: inline !important; 
-  opacity: 1 !important;
-  max-width: 120px !important; /* 保持与展开时一致的最大宽度 */
-  font-size: 14px !important; /* 与主菜单文字大小一致 */
+div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item .menu-text {
+  font-size: 14px !important; /* 文字大小 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* 折叠时弹出的子菜单项的 hover 和 active 状态，确保与主菜单一致 */
-.sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu .custom-sub-menu-item:hover {
-  background-color: rgba(52, 152, 219, 0.15) !important;
-  color: #5dade2 !important;
+/* 弹出子菜单项的 hover 状态 */
+div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item:not(.is-disabled):hover {
+  background-color: rgba(52, 152, 219, 0.25) !important; /* 悬停背景色，更明显一些 */
+  color: #ffffff !important; /* 悬停文字颜色提亮 */
 }
 
-.sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu .custom-sub-menu-item.is-active {
-  background-color: #3498db !important;
-  color: #ffffff !important;
-  box-shadow: 0 3px 10px rgba(52, 152, 219, 0.4) !important; /* 与主菜单激活阴影一致 */
+div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item:not(.is-disabled):hover .menu-icon {
+  color: #ffffff !important; /* 悬停图标颜色随文字提亮 */
+}
+
+/* 弹出子菜单项的 active 状态 */
+div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item.is-active {
+  background-color: #3498db !important; /* 激活背景色 - 主题蓝 */
+  color: #ffffff !important;           /* 激活文字颜色 - 白色 */
+  font-weight: 500 !important;          /* 激活文字略加粗 */
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3) !important; /* 激活时细微阴影 */
+}
+
+div.el-popper.el-menu-popper[role^="menu"] .custom-sub-menu-item.is-active .menu-icon {
+  color: #ffffff !important; /* 激活图标颜色 - 白色 */
+}
+
+/* 如果Element Plus在popper的el-menu上使用is-light或类似的主题类，尝试覆盖 */
+div.el-popper.el-menu-popper.is-light {
+    background-color: #2c3e50 !important; 
+    border-color: #34495e !important;
+}
+div.el-popper.el-menu-popper.is-light .el-menu {
+    background-color: transparent !important;
 }
 
 /* 顶部头部样式 */
