@@ -1,7 +1,9 @@
 package com.example.pension.controller;
 
 import com.example.pension.dto.MenuPermissionDTO;
+import com.example.pension.dto.RoleDTO;
 import com.example.pension.service.MenuPermissionService;
+import com.example.pension.service.RoleService;
 import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,9 @@ public class MenuPermissionController {
 
     @Autowired
     private MenuPermissionService menuPermissionService;
+
+    @Autowired
+    private RoleService roleService;
 
     /**
      * 获取权限列表（分页）
@@ -142,6 +147,15 @@ public class MenuPermissionController {
     @GetMapping("/menu-tree")
     public ResponseEntity<List<MenuPermissionDTO>> getMenuPermissions() {
         List<MenuPermissionDTO> result = menuPermissionService.getMenuPermissions();
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * 根据权限ID获取拥有该权限的角色列表
+     */
+    @GetMapping("/{permissionId}/roles")
+    public ResponseEntity<List<RoleDTO>> getRolesByPermissionId(@PathVariable Long permissionId) {
+        List<RoleDTO> result = menuPermissionService.getRolesByPermissionId(permissionId);
         return ResponseEntity.ok(result);
     }
 

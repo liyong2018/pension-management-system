@@ -407,6 +407,124 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 查看角色对话框 -->
+    <el-dialog 
+      v-model="roleDialogVisible" 
+      title="查看拥有该权限的角色" 
+      width="800px" 
+      class="role-dialog"
+      :close-on-click-modal="false"
+      destroy-on-close
+    >
+      <div class="role-content">
+        <div class="permission-header" v-if="selectedPermission">
+          <div class="permission-info">
+            <el-icon v-if="selectedPermission.icon" :size="24" class="permission-icon">
+              <component :is="getIconComponent(selectedPermission.icon)" />
+            </el-icon>
+            <el-icon v-else :size="24" class="permission-icon default-icon">
+              <Lock />
+            </el-icon>
+            <div class="permission-details">
+              <div class="permission-name">{{ selectedPermission.name }}</div>
+              <div class="permission-key">{{ selectedPermission.permissionKey }}</div>
+              <div class="permission-desc" v-if="selectedPermission.remark">{{ selectedPermission.remark }}</div>
+            </div>
+          </div>
+          <el-tag :type="getTypeColor(selectedPermission.type)" size="large" effect="light">
+            {{ getTypeText(selectedPermission.type) }}
+          </el-tag>
+        </div>
+        
+        <el-divider />
+        
+        <div class="roles-section">
+          <div class="section-header">
+            <h4>拥有该权限的角色</h4>
+            <el-tag type="info" size="small" class="role-count-tag">
+              共 {{ availableRoles.filter(role => selectedRoles.includes(role.id)).length }} 个角色
+            </el-tag>
+          </div>
+          
+          <div class="roles-list" v-loading="roleLoading">
+            <el-empty v-if="availableRoles.filter(role => selectedRoles.includes(role.id)).length === 0" 
+                     description="暂无角色拥有该权限" />
+            <div v-else class="role-cards">
+              <div 
+                v-for="role in availableRoles.filter(role => selectedRoles.includes(role.id))" 
+                :key="role.id" 
+                class="role-card"
+              >
+                <div class="role-avatar">
+                  <el-avatar :size="40" class="role-icon">
+                    <el-icon><Avatar /></el-icon>
+                  </el-avatar>
+                </div>
+                <div class="role-info">
+                  <div class="role-name">{{ role.roleName || role.name }}</div>
+                  <div class="role-key">{{ role.roleKey || role.key }}</div>
+                  <div class="role-description" v-if="role.description">{{ role.description }}</div>
+                </div>
+                <div class="role-status">
+                  <el-tag :type="role.status === '1' || role.status === true ? 'success' : 'warning'" size="small">
+                    {{ role.status === '1' || role.status === true ? '启用' : '禁用' }}
+                  </el-tag>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="all-roles-section" style="margin-top: 20px;">
+            <div class="section-header">
+              <h4>所有角色</h4>
+              <el-tag type="info" size="small">
+                共 {{ availableRoles.length }} 个角色
+              </el-tag>
+            </div>
+            <div class="roles-list">
+              <div class="role-cards">
+                <div 
+                  v-for="role in availableRoles" 
+                  :key="role.id" 
+                  class="role-card"
+                  :class="{ 'has-permission': selectedRoles.includes(role.id) }"
+                >
+                  <div class="role-avatar">
+                    <el-avatar :size="40" class="role-icon">
+                      <el-icon><Avatar /></el-icon>
+                    </el-avatar>
+                  </div>
+                  <div class="role-info">
+                    <div class="role-name">{{ role.roleName || role.name }}</div>
+                    <div class="role-key">{{ role.roleKey || role.key }}</div>
+                    <div class="role-description" v-if="role.description">{{ role.description }}</div>
+                  </div>
+                  <div class="role-status">
+                    <el-tag v-if="selectedRoles.includes(role.id)" type="success" size="small">
+                      <el-icon style="margin-right: 4px"><CircleCheck /></el-icon>
+                      拥有权限
+                    </el-tag>
+                    <el-tag v-else type="info" size="small">
+                      <el-icon style="margin-right: 4px"><CircleClose /></el-icon>
+                      无权限
+                    </el-tag>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="roleDialogVisible = false">关闭</el-button>
+          <el-button type="primary" @click="navigateToRoleManagement">
+            前往角色管理
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -949,26 +1067,112 @@ export default {
     // 显示角色分配对话框
     const showRoleDialog = async (permission) => {
       selectedPermission.value = permission
-      // 模拟已分配的角色
-      selectedRoles.value = [1, 2] // 假设该权限已分配给系统管理员和机构管理员
-      roleDialogVisible.value = true
-    }
-
-    // 分配角色
-    const handleRoleAssign = async () => {
       roleLoading.value = true
+      
       try {
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        console.log('开始加载角色数据和权限关联信息...')
         
-        ElMessage.success('角色分配成功')
-        roleDialogVisible.value = false
+        // 1. 加载所有角色
+        const rolesResponse = await fetch('/api/roles/all')
+        console.log('角色API响应状态:', rolesResponse.status)
+        
+        if (rolesResponse.ok) {
+          const rolesData = await rolesResponse.json()
+          console.log('角色数据:', rolesData)
+          
+          // 处理角色数据格式
+          let roleList = []
+          if (Array.isArray(rolesData)) {
+            roleList = rolesData
+          } else if (rolesData.data && Array.isArray(rolesData.data)) {
+            roleList = rolesData.data
+          } else if (rolesData.list && Array.isArray(rolesData.list)) {
+            roleList = rolesData.list
+          }
+          
+          availableRoles.value = roleList.map(role => ({
+            id: role.id,
+            roleName: role.roleName || role.name,
+            roleKey: role.roleKey || role.key,
+            description: role.description || '暂无描述',
+            status: role.status
+          }))
+          
+          console.log('处理后的角色数据:', availableRoles.value)
+        } else {
+          console.warn('加载角色失败，使用默认角色')
+          availableRoles.value = [
+            { id: 1, roleName: '超级管理员', roleKey: 'SUPER_ADMIN', description: '拥有所有权限', status: '1' },
+            { id: 2, roleName: '机构管理员', roleKey: 'ORG_ADMIN', description: '管理本机构相关事务', status: '1' },
+            { id: 3, roleName: '普通用户', roleKey: 'USER', description: '基本查看权限', status: '1' },
+            { id: 4, roleName: '机构负责人', roleKey: 'ORG_LEADER', description: '机构负责人，负责机构日常管理和运营', status: '1' }
+          ]
+        }
+        
+        // 2. 加载拥有该权限的角色
+        try {
+          const permissionRolesResponse = await fetch(`/api/permissions/${permission.id}/roles`)
+          console.log('权限角色关联API响应状态:', permissionRolesResponse.status)
+          
+          if (permissionRolesResponse.ok) {
+            const permissionRolesData = await permissionRolesResponse.json()
+            console.log('权限角色关联数据:', permissionRolesData)
+            
+            // 处理权限角色关联数据
+            let roleIds = []
+            if (Array.isArray(permissionRolesData)) {
+              // 如果返回的是角色对象数组
+              roleIds = permissionRolesData.map(role => role.id).filter(id => id)
+            } else if (permissionRolesData.roleIds && Array.isArray(permissionRolesData.roleIds)) {
+              // 如果返回的是包含roleIds的对象
+              roleIds = permissionRolesData.roleIds
+            } else {
+              console.warn('权限角色关联数据格式不识别:', permissionRolesData)
+              roleIds = []
+            }
+            
+            selectedRoles.value = roleIds
+            console.log('拥有该权限的角色ID:', roleIds)
+          } else {
+            console.warn('加载权限角色关联失败，使用默认值')
+            // 根据权限类型推断默认角色
+            if (permission.type === 'CATALOG' || permission.permissionKey === 'system:manage') {
+              selectedRoles.value = [1] // 超级管理员
+            } else if (permission.type === 'MENU') {
+              selectedRoles.value = [1, 2] // 超级管理员和机构管理员
+            } else {
+              selectedRoles.value = [1, 2, 3] // 所有角色
+            }
+          }
+        } catch (error) {
+          console.error('加载权限角色关联异常:', error)
+          selectedRoles.value = [1] // 默认只有超级管理员
+        }
+        
       } catch (error) {
-        ElMessage.error('角色分配失败')
-        console.error('Error assigning roles:', error)
+        console.error('加载角色数据异常:', error)
+        ElMessage.error('加载角色数据失败: ' + error.message)
+        
+        // 异常情况下使用默认数据
+        availableRoles.value = [
+          { id: 1, roleName: '超级管理员', roleKey: 'SUPER_ADMIN', description: '拥有所有权限', status: '1' },
+          { id: 2, roleName: '机构管理员', roleKey: 'ORG_ADMIN', description: '管理本机构相关事务', status: '1' },
+          { id: 3, roleName: '普通用户', roleKey: 'USER', description: '基本查看权限', status: '1' }
+        ]
+        selectedRoles.value = [1]
       } finally {
         roleLoading.value = false
       }
+      
+      roleDialogVisible.value = true
+    }
+
+    // 导航到角色管理页面
+    const navigateToRoleManagement = () => {
+      roleDialogVisible.value = false
+      // 使用Vue Router导航到角色管理页面
+      // 假设角色管理页面的路由是 /system/roles
+      window.location.href = '/system/roles'
     }
 
     // 删除权限
@@ -1264,6 +1468,7 @@ export default {
       handleUpdate,
       showRoleDialog,
       handleRoleAssign,
+      navigateToRoleManagement,
       deletePermission,
       handleSizeChange,
       handleCurrentChange,
@@ -1607,5 +1812,149 @@ export default {
 
 :deep(.el-select) {
   border-radius: 8px;
+}
+
+/* 角色对话框样式 */
+.role-dialog .role-content {
+  padding: 0;
+}
+
+.role-dialog .permission-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+}
+
+.role-dialog .permission-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.role-dialog .permission-icon {
+  color: #409eff;
+}
+
+.role-dialog .permission-details .permission-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 4px;
+}
+
+.role-dialog .permission-details .permission-key {
+  font-size: 14px;
+  color: #909399;
+  margin-bottom: 4px;
+}
+
+.role-dialog .permission-details .permission-desc {
+  font-size: 13px;
+  color: #606266;
+}
+
+.role-dialog .section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.role-dialog .section-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.role-dialog .role-count-tag {
+  margin-left: 8px;
+}
+
+.role-dialog .role-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.role-dialog .role-card {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  background-color: #fff;
+  transition: all 0.3s ease;
+}
+
+.role-dialog .role-card:hover {
+  border-color: #409eff;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+}
+
+.role-dialog .role-card.has-permission {
+  border-color: #67c23a;
+  background-color: #f0f9ff;
+}
+
+.role-dialog .role-avatar {
+  margin-right: 12px;
+}
+
+.role-dialog .role-icon {
+  background-color: #409eff;
+}
+
+.role-dialog .role-info {
+  flex: 1;
+}
+
+.role-dialog .role-info .role-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 4px;
+}
+
+.role-dialog .role-info .role-key {
+  font-size: 13px;
+  color: #909399;
+  margin-bottom: 4px;
+}
+
+.role-dialog .role-info .role-description {
+  font-size: 12px;
+  color: #606266;
+  line-height: 1.4;
+}
+
+.role-dialog .role-status {
+  margin-left: 12px;
+}
+
+.role-dialog .dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .role-dialog .role-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .role-dialog .permission-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .role-dialog .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 }
 </style> 

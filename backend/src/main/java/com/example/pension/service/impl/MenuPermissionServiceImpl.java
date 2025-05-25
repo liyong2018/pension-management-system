@@ -1,10 +1,14 @@
 package com.example.pension.service.impl;
 
 import com.example.pension.dao.MenuPermissionDao;
+import com.example.pension.dao.RoleDao;
 import com.example.pension.dto.MenuPermissionDTO;
+import com.example.pension.dto.RoleDTO;
 import com.example.pension.mapper.MenuPermissionDTOMapper;
+import com.example.pension.mapper.RoleDTOMapper;
 import com.example.pension.mapper.RolePermissionMapper;
 import com.example.pension.model.MenuPermission;
+import com.example.pension.model.Role;
 import com.example.pension.service.MenuPermissionService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -23,6 +27,9 @@ public class MenuPermissionServiceImpl implements MenuPermissionService {
 
     @Autowired
     private MenuPermissionDao menuPermissionDao;
+
+    @Autowired
+    private RoleDao roleDao;
 
     @Autowired
     private RolePermissionMapper rolePermissionMapper;
@@ -242,5 +249,32 @@ public class MenuPermissionServiceImpl implements MenuPermissionService {
                 setChildren(child, groupedByParent);
             }
         }
+    }
+
+    @Override
+    public List<RoleDTO> getRolesByPermissionId(Long permissionId) {
+        // 验证权限是否存在
+        MenuPermission permission = menuPermissionDao.findById(permissionId);
+        if (permission == null) {
+            throw new RuntimeException("权限不存在，ID：" + permissionId);
+        }
+        
+        // 获取拥有该权限的角色ID列表
+        List<Long> roleIds = rolePermissionMapper.findRoleIdsByPermissionId(permissionId);
+        
+        if (roleIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // 根据角色ID列表获取角色信息
+        List<Role> roles = new ArrayList<>();
+        for (Long roleId : roleIds) {
+            Role role = roleDao.findById(roleId);
+            if (role != null) {
+                roles.add(role);
+            }
+        }
+        
+        return RoleDTOMapper.INSTANCE.toDTO(roles);
     }
 } 

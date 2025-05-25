@@ -1,6 +1,7 @@
 package com.example.pension.service;
 
 import com.example.pension.dto.MenuPermissionDTO;
+import com.example.pension.dto.RoleDTO;
 import com.github.pagehelper.PageInfo;
 
 import java.util.List;
@@ -39,6 +40,9 @@ public interface MenuPermissionService {
     List<MenuPermissionDTO> getPermissionsByUserId(Long userId);
 
     List<MenuPermissionDTO> getMenuPermissions();
+
+    // 根据权限ID获取拥有该权限的角色列表
+    List<RoleDTO> getRolesByPermissionId(Long permissionId);
 
     // 验证方法
     boolean existsByPermissionKey(String permissionKey);
