@@ -54,12 +54,15 @@
             :index="menu.routePath || menu.permissionKey"
             :disabled="!menu.status"
             class="custom-sub-menu"
+            ref="subMenuRef"
           >
             <template #title>
-              <el-icon class="menu-icon">
-                <component :is="getIconComponent(menu.icon)" />
-              </el-icon>
-              <span class="menu-text">{{ menu.name }}</span>
+              <div class="sub-menu-title-content" @click.stop="handleSubMenuClick(menu)">
+                <el-icon class="menu-icon">
+                  <component :is="getIconComponent(menu.icon)" />
+                </el-icon>
+                <span class="menu-text">{{ menu.name }}</span>
+              </div>
             </template>
             
             <!-- 递归渲染子菜单 -->
@@ -485,6 +488,15 @@ window.refreshTopMenu = () => {
   loadMenuData();
 };
 
+// 处理子菜单点击事件
+const handleSubMenuClick = (menu) => {
+  // 在移动端或小屏幕时，点击子菜单项后自动收起
+  if (window.innerWidth <= 768) {
+    isCollapsed.value = true;
+    showMask.value = false;
+  }
+};
+
 </script>
 
 <style>
@@ -577,9 +589,14 @@ html, body {
 .sidebar-menu {
   border-right: none;
   height: calc(100vh - 80px);
-  overflow-y: auto;
+  overflow: hidden; /* 隐藏滚动条 */
   transition: all 0.3s ease;
   background-color: transparent;
+}
+
+/* 隐藏Element Plus默认的箭头图标 */
+.sidebar-menu .el-sub-menu__icon-arrow {
+  display: none !important;
 }
 
 /* 自定义菜单项样式 */
@@ -603,6 +620,7 @@ html, body {
   box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
 }
 
+/* 主菜单项样式 */
 .custom-sub-menu .el-sub-menu__title {
   height: 48px !important;
   line-height: 48px !important;
@@ -610,6 +628,8 @@ html, body {
   border-radius: 8px;
   transition: all 0.3s ease;
   color: #ecf0f1 !important;
+  cursor: pointer;
+  padding: 0 !important;
 }
 
 .custom-sub-menu .el-sub-menu__title:hover {
@@ -617,23 +637,42 @@ html, body {
   color: #3498db !important;
 }
 
+/* 子菜单标题内容样式 */
+.sub-menu-title-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0 16px;
+  cursor: pointer;
+}
+
+/* 子菜单容器样式 */
+.custom-sub-menu .el-menu {
+  background-color: transparent !important;
+  border: none !important;
+}
+
+/* 子菜单项样式 - 与主菜单保持一致 */
 .custom-sub-menu-item {
-  height: 40px !important;
-  line-height: 40px !important;
-  margin: 2px 16px;
-  border-radius: 6px;
-  background-color: rgba(52, 73, 94, 0.3);
+  height: 48px !important;
+  line-height: 48px !important;
+  margin: 4px 16px !important;
+  border-radius: 8px !important;
+  background-color: rgba(52, 73, 94, 0.2) !important;
   transition: all 0.3s ease;
+  padding-left: 16px !important;
 }
 
 .custom-sub-menu-item:hover {
-  background-color: rgba(52, 152, 219, 0.2) !important;
+  background-color: rgba(52, 152, 219, 0.1) !important;
   color: #3498db !important;
 }
 
 .custom-sub-menu-item.is-active {
   background-color: #3498db !important;
   color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
 }
 
 /* 菜单图标和文字样式 */
@@ -679,6 +718,16 @@ html, body {
 
 .sidebar-menu.el-menu--collapse .el-sub-menu__icon-arrow {
   display: none;
+}
+
+/* 完全隐藏滚动条 */
+.sidebar-menu::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebar-menu {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
 /* 顶部头部样式 */
@@ -759,24 +808,6 @@ html, body {
 /* Element Plus 组件的某些全局覆盖 */
 .el-card__header {
     font-weight: bold;
-}
-
-/* 滚动条样式优化 */
-.sidebar-menu::-webkit-scrollbar {
-  width: 4px;
-}
-
-.sidebar-menu::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sidebar-menu::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
-}
-
-.sidebar-menu::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
 }
 
 /* 响应式设计 */
