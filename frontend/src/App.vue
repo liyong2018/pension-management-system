@@ -521,18 +521,21 @@ html, body {
   transition: width 0.3s ease;
   position: relative;
   z-index: 1001;
+  overflow: hidden !important; /* 强制隐藏侧边栏本身的滚动条 */
 }
 
 /* 系统标题区域样式 */
 .logo-section {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 16px;
-  border-bottom: 1px solid #34495e;
-  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-  transition: all 0.3s ease;
-  position: relative;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  height: 60px !important; /* 固定高度 */
+  padding: 0 16px !important; /* 调整内边距以适应固定高度 */
+  box-sizing: border-box !important; /* 重要：确保padding和border不增加总高度 */
+  border-bottom: 1px solid #34495e !important;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
 }
 
 /* 系统标题样式 */
@@ -587,14 +590,13 @@ html, body {
 
 /* 侧边菜单样式 */
 .sidebar-menu {
-  border-right: none;
-  height: calc(100vh - 80px); /* 减去标题高度 */
-  overflow-y: hidden !important; /* 强制隐藏垂直滚动条 */
-  transition: all 0.3s ease;
-  background-color: transparent;
-  /* 隐藏滚动条 - 保留之前的兼容性代码 */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* IE 10+ */
+  border-right: none !important;
+  height: calc(100vh - 60px) !important; /* 匹配 logo-section 的固定高度 */
+  overflow-y: hidden !important; /* 强制隐藏菜单内部的垂直滚动条 */
+  transition: all 0.3s ease !important;
+  background-color: transparent !important;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important;  /* IE 10+ */
 }
 
 .sidebar-menu::-webkit-scrollbar {
@@ -604,34 +606,37 @@ html, body {
 /* 自定义菜单项样式（主菜单和子菜单通用）*/
 .custom-menu-item,
 .custom-sub-menu .el-sub-menu__title {
+  padding: 0 16px !important; 
+  color: #ecf0f1 !important; 
   height: 48px !important;
   line-height: 48px !important;
-  margin: 4px 8px !important; /* 统一外边距 */
-  border-radius: 8px !important; /* 统一圆角 */
+  margin: 4px 8px !important;
+  border-radius: 8px !important;
   transition: all 0.3s ease !important;
   position: relative !important;
   display: flex !important;
   align-items: center !important;
-  padding: 0 16px !important; /* 统一内边距 */
-  color: #ecf0f1 !important; /* 默认文字颜色 */
 }
 
-/* 子菜单项继承大部分主菜单样式，但有细微调整 */
-.custom-sub-menu-item {
-  height: 44px !important; /* 子菜单项略小一点 */
+.custom-sub-menu-item { /* 展开状态下的子菜单项 */
+  height: 44px !important; 
   line-height: 44px !important;
-  margin: 2px 8px 2px 24px !important; /* 子菜单增加左缩进 */
+  margin: 2px 8px 2px 24px !important; 
   border-radius: 6px !important;
-  padding: 0 12px !important;
-  color: #bdc3c7 !important; /* 子菜单文字颜色稍浅 */
-  background-color: transparent !important; /* 默认透明背景 */
+  padding: 0 16px !important; /* 与主菜单项的文字区域padding一致 */
+  color: #bdc3c7 !important; 
+  background-color: transparent !important; 
+  display: flex !important;
+  align-items: center !important;
+  position: relative !important;
+  transition: all 0.3s ease !important;
 }
 
 .custom-menu-item:hover,
 .custom-sub-menu .el-sub-menu__title:hover,
 .custom-sub-menu-item:hover {
   background-color: rgba(52, 152, 219, 0.15) !important;
-  color: #5dade2 !important; /* 悬停时文字颜色变亮 */
+  color: #5dade2 !important; 
 }
 
 .custom-menu-item.is-active,
@@ -641,17 +646,15 @@ html, body {
   box-shadow: 0 3px 10px rgba(52, 152, 219, 0.4) !important;
 }
 
-/* 子菜单项激活状态 */
 .custom-sub-menu-item.is-active {
-  background-color: rgba(52, 152, 219, 0.25) !important;
-  color: #ffffff !important; /* 子菜单激活时文字也用白色，以示强调 */
+  background-color: #3498db !important; /* 子菜单激活时也用主色 */
+  color: #ffffff !important; 
   box-shadow: none !important;
 }
 
-/* 特定于有子菜单的 sub-menu title 的激活（展开）样式 */
 .custom-sub-menu.is-opened .el-sub-menu__title {
-  background-color: rgba(52, 152, 219, 0.1) !important; /* 展开时父菜单背景色 */
-  color: #5dade2 !important; /* 展开时父菜单文字颜色 */
+  background-color: rgba(52, 152, 219, 0.1) !important; 
+  color: #5dade2 !important; 
 }
 
 
@@ -703,8 +706,8 @@ html, body {
   display: none; /* 强制隐藏 */
 }
 
-/* 折叠时弹出的子菜单容器样式 */
-.el-menu--vertical.el-menu--popup-container {
+/* 折叠时弹出的子菜单容器样式 (el-menu-popper) */
+.el-menu--vertical .el-menu--popup-container .el-menu-popper {
     background-color: #2c3e50 !important; 
     border-radius: 8px !important;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
@@ -712,30 +715,32 @@ html, body {
     border: 1px solid #34495e !important; 
 }
 
-/* 折叠时弹出的子菜单项样式 */
+/* 折叠时弹出的子菜单项样式 - 重点统一 */
 .sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu .custom-sub-menu-item {
   display: flex !important;
   align-items: center !important;
-  padding: 0 12px !important;
-  margin: 2px 6px !important;
-  color: #bdc3c7 !important;
-  border-radius: 6px !important;
-  height: 40px !important;
-  line-height: 40px !important;
+  height: 48px !important; /* 与主菜单项高度一致 */
+  line-height: 48px !important;
+  padding: 0 16px !important; /* 与主菜单项内边距一致 */
+  margin: 4px 8px !important; /* 与主菜单项外边距一致 */
+  color: #ecf0f1 !important; /* 与主菜单项默认文字颜色一致 */
+  border-radius: 8px !important; /* 与主菜单项圆角一致 */
+  background-color: transparent !important; /* 确保背景透明，由hover/active控制 */
 }
 
 .sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu .custom-sub-menu-item .menu-icon {
-  margin-right: 10px !important; /* 弹出子菜单图标右边距 */
-  font-size: 16px !important;
+  margin-right: 10px !important; 
+  font-size: 18px !important; /* 与主菜单图标大小一致 */
 }
 
 .sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu .custom-sub-menu-item .menu-text {
-  display: inline !important; /* 确保文字可见 */
+  display: inline !important; 
   opacity: 1 !important;
-  max-width: 100px !important; /* 调整弹出子菜单文字最大宽度 */
-  font-size: 13px !important;
+  max-width: 120px !important; /* 保持与展开时一致的最大宽度 */
+  font-size: 14px !important; /* 与主菜单文字大小一致 */
 }
 
+/* 折叠时弹出的子菜单项的 hover 和 active 状态，确保与主菜单一致 */
 .sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu .custom-sub-menu-item:hover {
   background-color: rgba(52, 152, 219, 0.15) !important;
   color: #5dade2 !important;
@@ -744,7 +749,7 @@ html, body {
 .sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu .custom-sub-menu-item.is-active {
   background-color: #3498db !important;
   color: #ffffff !important;
-  box-shadow: none !important;
+  box-shadow: 0 3px 10px rgba(52, 152, 219, 0.4) !important; /* 与主菜单激活阴影一致 */
 }
 
 /* 顶部头部样式 */
