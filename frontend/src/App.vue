@@ -2,24 +2,31 @@
   <el-container id="app-container" style="height: 100vh;">
     <!-- 左侧边栏 -->
     <el-aside class="app-aside" :width="isCollapsed ? '64px' : '250px'">
-      <!-- 折叠按钮 -->
-      <div class="collapse-trigger" @click="toggleCollapse">
-        <el-icon :size="20">
-          <Expand v-if="isCollapsed" />
-          <Fold v-else />
-        </el-icon>
+      <!-- 系统标题区域 -->
+      <div class="logo-section">
+        <div class="logo-title" v-show="!isCollapsed">
+          <div class="logo-icon">🏥</div>
+          <div class="title-text">养老信息管理系统</div>
+        </div>
+        <div class="logo-collapsed" v-show="isCollapsed">
+          <div class="logo-icon-small">🏥</div>
+        </div>
+        <!-- 折叠按钮 -->
+        <div class="collapse-trigger" @click="toggleCollapse">
+          <el-icon :size="16">
+            <ArrowRight v-if="isCollapsed" />
+            <ArrowLeft v-else />
+          </el-icon>
+        </div>
       </div>
-      
-      <!-- 系统标题 -->
-      <div class="logo-title" v-show="!isCollapsed">养老信息管理系统</div>
       
       <!-- 侧边菜单 -->
       <el-menu
         :default-active="activeIndex"
         router
-        background-color="#2c3e50"
+        background-color="transparent"
         text-color="#ecf0f1"
-        active-text-color="#3498db"
+        active-text-color="#ffffff"
         v-loading="menuLoading"
         class="sidebar-menu"
         :collapse="isCollapsed"
@@ -33,11 +40,12 @@
             v-if="menu.type === 'MENU' && (!menu.children || menu.children.length === 0)"
             :index="menu.routePath"
             :disabled="!menu.status"
+            class="custom-menu-item"
           >
-            <el-icon v-if="menu.icon" style="margin-right: 8px;">
+            <el-icon class="menu-icon">
               <component :is="getIconComponent(menu.icon)" />
             </el-icon>
-            <span>{{ menu.name }}</span>
+            <span class="menu-text">{{ menu.name }}</span>
           </el-menu-item>
           
           <!-- 子菜单（手风琴样式） -->
@@ -45,12 +53,13 @@
             v-else-if="menu.type === 'CATALOG' && menu.children && menu.children.length > 0"
             :index="menu.routePath || menu.permissionKey"
             :disabled="!menu.status"
+            class="custom-sub-menu"
           >
             <template #title>
-              <el-icon v-if="menu.icon" style="margin-right: 8px;">
+              <el-icon class="menu-icon">
                 <component :is="getIconComponent(menu.icon)" />
               </el-icon>
-              <span>{{ menu.name }}</span>
+              <span class="menu-text">{{ menu.name }}</span>
             </template>
             
             <!-- 递归渲染子菜单 -->
@@ -59,11 +68,12 @@
                 v-if="child.isVisible && child.status && child.type === 'MENU'"
                 :index="child.routePath"
                 :disabled="!child.status"
+                class="custom-sub-menu-item"
               >
-                <el-icon v-if="child.icon" style="margin-right: 8px;">
+                <el-icon class="menu-icon">
                   <component :is="getIconComponent(child.icon)" />
                 </el-icon>
-                <span>{{ child.name }}</span>
+                <span class="menu-text">{{ child.name }}</span>
               </el-menu-item>
             </template>
           </el-sub-menu>
@@ -73,15 +83,30 @@
     
     <!-- 主内容区域 -->
     <el-container>
-      <!-- 顶部头部（可选，用于放置用户信息等） -->
+      <!-- 顶部头部 -->
       <el-header class="app-header" height="60px">
         <div class="header-content">
           <div class="header-left">
-            <!-- 可以放置面包屑导航等 -->
+            <div class="breadcrumb">
+              <el-icon><Location /></el-icon>
+              <span>当前位置</span>
+            </div>
           </div>
           <div class="header-right">
-            <!-- 可以放置用户头像、退出按钮等 -->
-            <el-avatar :size="32" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
+            <el-dropdown>
+              <div class="user-info">
+                <el-avatar :size="32" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
+                <span class="username">管理员</span>
+                <el-icon><ArrowDown /></el-icon>
+              </div>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item>个人中心</el-dropdown-item>
+                  <el-dropdown-item>修改密码</el-dropdown-item>
+                  <el-dropdown-item divided>退出登录</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </div>
         </div>
       </el-header>
@@ -107,7 +132,8 @@ import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { 
   House, OfficeBuilding, User, Monitor, Warning, Avatar, 
-  Setting, Key, Collection, Document, Menu, Expand, Fold 
+  Setting, Key, Collection, Document, Menu, ArrowRight, ArrowLeft,
+  Location, ArrowDown
 } from '@element-plus/icons-vue';
 
 const route = useRoute();
@@ -485,129 +511,174 @@ html, body {
   z-index: 1001;
 }
 
-/* 折叠按钮样式 */
-.collapse-trigger {
-  position: absolute;
-  top: 20px;
-  right: -12px;
-  width: 24px;
-  height: 24px;
-  background-color: #3498db;
-  border-radius: 50%;
+/* 系统标题区域样式 */
+.logo-section {
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  justify-content: space-between;
+  padding: 20px 16px;
+  border-bottom: 1px solid #34495e;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
   transition: all 0.3s ease;
-  z-index: 1002;
-}
-
-.collapse-trigger:hover {
-  background-color: #2980b9;
-  transform: scale(1.1);
+  position: relative;
 }
 
 /* 系统标题样式 */
 .logo-title {
   color: #ecf0f1;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
-  padding: 20px 16px;
-  text-align: center;
-  border-bottom: 1px solid #34495e;
-  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   white-space: nowrap;
   overflow: hidden;
+}
+
+.logo-icon {
+  font-size: 24px;
+}
+
+.title-text {
+  font-size: 14px;
+}
+
+.logo-collapsed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.logo-icon-small {
+  font-size: 28px;
+}
+
+/* 折叠按钮样式 */
+.collapse-trigger {
+  width: 20px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #ecf0f1;
+  transition: all 0.3s ease;
+}
+
+.collapse-trigger:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
 }
 
 /* 侧边菜单样式 */
 .sidebar-menu {
   border-right: none;
-  height: calc(100vh - 80px); /* 减去标题高度 */
+  height: calc(100vh - 80px);
   overflow-y: auto;
+  transition: all 0.3s ease;
+  background-color: transparent;
+}
+
+/* 自定义菜单项样式 */
+.custom-menu-item {
+  height: 48px !important;
+  line-height: 48px !important;
+  margin: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.custom-menu-item:hover {
+  background-color: rgba(52, 152, 219, 0.1) !important;
+  color: #3498db !important;
+}
+
+.custom-menu-item.is-active {
+  background-color: #3498db !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.custom-sub-menu .el-sub-menu__title {
+  height: 48px !important;
+  line-height: 48px !important;
+  margin: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  color: #ecf0f1 !important;
+}
+
+.custom-sub-menu .el-sub-menu__title:hover {
+  background-color: rgba(52, 152, 219, 0.1) !important;
+  color: #3498db !important;
+}
+
+.custom-sub-menu-item {
+  height: 40px !important;
+  line-height: 40px !important;
+  margin: 2px 16px;
+  border-radius: 6px;
+  background-color: rgba(52, 73, 94, 0.3);
   transition: all 0.3s ease;
 }
 
-/* 折叠状态下的菜单样式 */
+.custom-sub-menu-item:hover {
+  background-color: rgba(52, 152, 219, 0.2) !important;
+  color: #3498db !important;
+}
+
+.custom-sub-menu-item.is-active {
+  background-color: #3498db !important;
+  color: #ffffff !important;
+}
+
+/* 菜单图标和文字样式 */
+.menu-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.menu-text {
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+/* 折叠状态下的样式 */
 .sidebar-menu.el-menu--collapse {
   width: 64px;
 }
 
-.sidebar-menu.el-menu--collapse .el-menu-item,
-.sidebar-menu.el-menu--collapse .el-sub-menu__title {
+.sidebar-menu.el-menu--collapse .custom-menu-item,
+.sidebar-menu.el-menu--collapse .custom-sub-menu .el-sub-menu__title {
+  margin: 4px 8px;
   padding: 0 !important;
   text-align: center;
+  justify-content: center;
 }
 
-.sidebar-menu.el-menu--collapse .el-menu-item span,
-.sidebar-menu.el-menu--collapse .el-sub-menu__title span {
+.sidebar-menu.el-menu--collapse .menu-icon {
+  margin-right: 0;
+  font-size: 20px;
+}
+
+.sidebar-menu.el-menu--collapse .menu-text {
   display: none;
 }
 
-.sidebar-menu.el-menu--collapse .el-sub-menu .el-menu-item {
+.sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu-item {
   display: none;
 }
 
-.sidebar-menu .el-menu-item {
-  height: 50px;
-  line-height: 50px;
-  padding-left: 20px !important;
-  transition: all 0.3s ease;
-}
-
-.sidebar-menu .el-menu-item:hover {
-  background-color: #34495e !important;
-  color: #3498db !important;
-}
-
-.sidebar-menu .el-menu-item.is-active {
-  background-color: #3498db !important;
-  color: #ffffff !important;
-  border-right: 3px solid #2980b9;
-}
-
-.sidebar-menu .el-sub-menu__title {
-  height: 50px;
-  line-height: 50px;
-  padding-left: 20px !important;
-  color: #ecf0f1 !important;
-  transition: all 0.3s ease;
-}
-
-.sidebar-menu .el-sub-menu__title:hover {
-  background-color: #34495e !important;
-  color: #3498db !important;
-}
-
-.sidebar-menu .el-sub-menu .el-menu-item {
-  padding-left: 40px !important;
-  background-color: #34495e;
-  height: 45px;
-  line-height: 45px;
-}
-
-.sidebar-menu .el-sub-menu .el-menu-item:hover {
-  background-color: #4a6741 !important;
-}
-
-.sidebar-menu .el-sub-menu .el-menu-item.is-active {
-  background-color: #3498db !important;
-  color: #ffffff !important;
-}
-
-/* 遮罩层样式 */
-.sidebar-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-  transition: opacity 0.3s ease;
+.sidebar-menu.el-menu--collapse .el-sub-menu__icon-arrow {
+  display: none;
 }
 
 /* 顶部头部样式 */
@@ -623,11 +694,19 @@ html, body {
   align-items: center;
   justify-content: space-between;
   height: 100%;
-  padding: 0 20px;
+  padding: 0 24px;
 }
 
 .header-left {
   flex: 1;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-size: 14px;
 }
 
 .header-right {
@@ -636,36 +715,68 @@ html, body {
   gap: 16px;
 }
 
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.user-info:hover {
+  background-color: #f5f5f5;
+}
+
+.username {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
 /* 主内容区域样式 */
 .app-main {
-  padding: 20px;
-  background-color: #f4f5f7;
-  height: calc(100vh - 60px); /* 减去header的高度 */
+  padding: 24px;
+  background-color: #f8f9fa;
+  height: calc(100vh - 60px);
   overflow-y: auto;
   transition: margin-left 0.3s ease;
 }
 
-/* Element Plus 组件的某些全局覆盖 (谨慎使用) */
+/* 遮罩层样式 */
+.sidebar-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  transition: opacity 0.3s ease;
+}
+
+/* Element Plus 组件的某些全局覆盖 */
 .el-card__header {
     font-weight: bold;
 }
 
 /* 滚动条样式优化 */
 .sidebar-menu::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .sidebar-menu::-webkit-scrollbar-track {
-  background: #2c3e50;
+  background: transparent;
 }
 
 .sidebar-menu::-webkit-scrollbar-thumb {
-  background: #34495e;
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
 }
 
 .sidebar-menu::-webkit-scrollbar-thumb:hover {
-  background: #4a6741;
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* 响应式设计 */
@@ -682,8 +793,12 @@ html, body {
     margin-left: 0 !important;
   }
   
-  .collapse-trigger {
-    right: -16px;
+  .header-content {
+    padding: 0 16px;
+  }
+  
+  .username {
+    display: none;
   }
 }
 </style> 
