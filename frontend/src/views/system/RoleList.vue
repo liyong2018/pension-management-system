@@ -340,8 +340,10 @@
     >
       <div class="users-content">
         <div class="users-header">
-          <span class="role-name">{{ selectedRole?.roleName }}</span>
-          <span class="role-desc">{{ selectedRole?.description }}</span>
+          <div class="role-info">
+            <div class="role-name">{{ selectedRole?.roleName }}</div>
+            <div class="role-desc">{{ selectedRole?.description }}</div>
+          </div>
           <el-tag type="info" size="small" class="user-count-tag">
             共 {{ roleUsers.length }} 个用户
           </el-tag>
@@ -1638,79 +1640,201 @@ export default {
     border-radius: 16px;
     overflow: visible;
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
   }
   
   :deep(.el-dialog__header) {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 24px 32px;
+    margin: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  :deep(.el-dialog__header)::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+    pointer-events: none;
+  }
+  
+  :deep(.el-dialog__title) {
+    color: white;
+    font-size: 20px;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  :deep(.el-dialog__headerbtn) {
+    top: 24px;
+    right: 32px;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+  }
+
+  :deep(.el-dialog__headerbtn):hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+  
+  :deep(.el-dialog__headerbtn .el-dialog__close) {
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  :deep(.el-dialog__body) {
+    padding: 32px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 200px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  :deep(.el-dialog__footer) {
+    background: white;
+    padding: 20px 32px;
+    border-top: 1px solid #ebeef5;
+    flex-shrink: 0;
   }
 }
 
 .users-content {
   background: white;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .users-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 24px;
-  padding-bottom: 16px;
+  padding-bottom: 20px;
   border-bottom: 2px solid #f0f2f5;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 32px;
+}
+
+.users-header .role-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .users-header .role-name {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   color: #2c3e50;
-  margin-right: 16px;
+  margin: 0;
 }
 
 .users-header .role-desc {
   font-size: 14px;
-  color: #666;
+  color: #6c757d;
+  margin: 0;
 }
 
 .users-header .user-count-tag {
-  margin-left: auto;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .users-list {
-  max-height: 400px;
+  max-height: 450px;
   overflow-y: auto;
+  padding-right: 8px;
+}
+
+.users-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.users-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.users-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3px;
+}
+
+.users-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
 }
 
 .user-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
 }
 
 .user-card {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border: 1px solid #dee2e6;
+  padding: 20px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 2px solid #e9ecef;
   transition: all 0.3s ease;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
 }
 
 .user-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-color: #409eff;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: #667eea;
+}
+
+.user-card:hover::before {
+  transform: scaleX(1);
 }
 
 .user-avatar {
   flex-shrink: 0;
+  position: relative;
 }
 
 .user-avatar .el-avatar {
-  background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 3px solid white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .user-info {
@@ -1720,24 +1844,25 @@ export default {
 
 .user-name {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   color: #2c3e50;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .user-username {
-  font-size: 14px;
-  color: #6c757d;
-  margin-bottom: 2px;
+  font-size: 13px;
+  color: #667eea;
+  margin-bottom: 4px;
+  font-weight: 600;
 }
 
 .user-email {
   font-size: 12px;
-  color: #868e96;
-  margin-bottom: 2px;
+  color: #6c757d;
+  margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1746,14 +1871,77 @@ export default {
 .user-org {
   font-size: 12px;
   color: #495057;
-  font-weight: 500;
+  font-weight: 600;
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+  padding: 2px 8px;
+  border-radius: 12px;
+  display: inline-block;
 }
 
 .user-status {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   align-items: flex-end;
   flex-shrink: 0;
+}
+
+.user-status .el-tag {
+  border-radius: 12px;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-status .el-tag--success {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  color: white;
+}
+
+.user-status .el-tag--danger {
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  color: white;
+}
+
+.user-status .el-tag--warning {
+  background: linear-gradient(135deg, #faad14 0%, #ffc53d 100%);
+  color: white;
+}
+
+/* 空状态优化 */
+.users-list .el-empty {
+  padding: 60px 20px;
+}
+
+.users-list .el-empty__image {
+  width: 120px;
+  height: 120px;
+}
+
+.users-list .el-empty__description {
+  color: #6c757d;
+  font-size: 16px;
+  margin-top: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .user-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .users-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .user-card {
+    padding: 16px;
+  }
+  
+  .users-content {
+    padding: 20px;
+  }
 }
 </style> 

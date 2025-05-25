@@ -1467,7 +1467,6 @@ export default {
       showEditDialog,
       handleUpdate,
       showRoleDialog,
-      handleRoleAssign,
       navigateToRoleManagement,
       deletePermission,
       handleSizeChange,

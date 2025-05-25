@@ -110,12 +110,12 @@
             </el-dropdown>
           </div>
         </div>
-      </el-header>
+    </el-header>
       
       <!-- 主内容 -->
       <el-main class="app-main" @click="handleMainClick">
-        <router-view />
-      </el-main>
+      <router-view />
+    </el-main>
     </el-container>
     
     <!-- 遮罩层，用于点击外部区域收起菜单 -->
