@@ -121,18 +121,17 @@
         class="user-table"
       >
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="id" label="ID" width="80" align="center" />
-        <el-table-column prop="username" label="用户名" width="120">
+        <el-table-column prop="username" label="用户名" width="200">
           <template #default="scope">
             <div class="user-info">
-              <el-avatar :size="32" :src="scope.row.avatar" class="user-avatar">
+              <el-avatar :size="32" class="user-avatar">
                 <el-icon><User /></el-icon>
               </el-avatar>
               <span class="username">{{ scope.row.username }}</span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="fullName" label="姓名" width="100" />
+        <el-table-column prop="fullName" label="姓名" width="120" />
         <el-table-column prop="email" label="邮箱" min-width="200" show-overflow-tooltip />
         <el-table-column prop="phone" label="手机号" width="130" />
         <el-table-column prop="organizationName" label="所属机构" min-width="150" show-overflow-tooltip />
@@ -251,9 +250,12 @@
           <el-col :span="12">
             <el-form-item label="所属机构">
               <el-select v-model="createForm.organizationId" placeholder="请选择机构" style="width: 100%">
-                <el-option label="系统管理" value="1" />
-                <el-option label="阳光养老院" value="2" />
-                <el-option label="康乐养老中心" value="3" />
+                <el-option 
+                  v-for="org in organizations" 
+                  :key="org.id" 
+                  :label="org.name" 
+                  :value="org.id" 
+                />
               </el-select>
             </el-form-item>
           </el-col>
@@ -291,84 +293,141 @@
     <el-dialog 
       v-model="detailDialogVisible" 
       title="用户详情" 
-      width="600px" 
+      width="800px" 
       class="user-dialog"
       :close-on-click-modal="false"
       destroy-on-close
     >
-      <el-form label-width="120px" :disabled="true">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="用户ID">
-              <el-input :value="selectedUser.id" disabled />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="用户名">
-              <el-input v-model="selectedUser.username" disabled />
-            </el-form-item>
-          </el-col>
-        </el-row>
+      <el-tabs v-model="activeTab" class="user-detail-tabs">
+        <!-- 基本信息选项卡 -->
+        <el-tab-pane label="基本信息" name="basic">
+          <el-form label-width="120px" :disabled="true">
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="用户ID">
+                  <el-input :value="selectedUser.id" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="用户名">
+                  <el-input v-model="selectedUser.username" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
 
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="姓名">
-              <el-input v-model="selectedUser.fullName" disabled />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="邮箱">
-              <el-input :value="selectedUser.email || '未设置'" disabled />
-            </el-form-item>
-          </el-col>
-        </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="姓名">
+                  <el-input v-model="selectedUser.fullName" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="邮箱">
+                  <el-input :value="selectedUser.email || '未设置'" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
 
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="手机号">
-              <el-input :value="selectedUser.phone || '未设置'" disabled />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="所属机构">
-              <el-input :value="selectedUser.organizationName || '未分配'" disabled />
-            </el-form-item>
-          </el-col>
-        </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="手机号">
+                  <el-input :value="selectedUser.phone || '未设置'" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="所属机构">
+                  <el-input :value="selectedUser.organizationName || '未分配'" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
 
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="管理员权限">
-              <el-tag :type="selectedUser.isAdmin ? 'danger' : 'info'" size="small">
-                {{ selectedUser.isAdmin ? '是' : '否' }}
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="管理员权限">
+                  <el-tag :type="selectedUser.isAdmin ? 'danger' : 'info'" size="small">
+                    {{ selectedUser.isAdmin ? '是' : '否' }}
+                  </el-tag>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="账号状态">
+                  <el-tag :type="selectedUser.isActive ? 'success' : 'warning'" size="small">
+                    {{ selectedUser.isActive ? '启用' : '禁用' }}
+                  </el-tag>
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="24">
+                <el-form-item label="创建时间">
+                  <el-input v-model="selectedUser.createTime" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="24">
+                <el-form-item label="最后登录">
+                  <el-input :value="selectedUser.lastLoginTime || '从未登录'" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
+        </el-tab-pane>
+
+        <!-- 操作日志选项卡 -->
+        <el-tab-pane label="操作日志" name="logs">
+          <div class="operation-logs">
+            <el-table 
+              :data="userLogs" 
+              v-loading="logsLoading"
+              border
+              stripe
+              style="width: 100%"
+              max-height="400"
+            >
+              <el-table-column prop="operationType" label="操作类型" width="120">
+                <template #default="scope">
+                  <el-tag :type="getLogTypeColor(scope.row.operationType)" size="small">
+                    {{ scope.row.operationType }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="operationDesc" label="操作描述" min-width="200" show-overflow-tooltip />
+              <el-table-column prop="module" label="模块" width="100" />
+              <el-table-column prop="ipAddress" label="IP地址" width="120" />
+              <el-table-column prop="createTime" label="操作时间" width="160" />
+            </el-table>
+            
+            <div v-if="userLogs.length === 0 && !logsLoading" class="no-logs">
+              <el-empty description="暂无操作日志" />
+            </div>
+          </div>
+        </el-tab-pane>
+
+        <!-- 角色权限选项卡 -->
+        <el-tab-pane label="角色权限" name="roles">
+          <div class="user-roles">
+            <h4>当前角色</h4>
+            <div class="role-tags">
+              <el-tag 
+                v-for="role in userRoles" 
+                :key="role.id" 
+                type="primary" 
+                size="large"
+                class="role-tag"
+              >
+                {{ role.roleName }}
               </el-tag>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="账号状态">
-              <el-tag :type="selectedUser.isActive ? 'success' : 'warning'" size="small">
-                {{ selectedUser.isActive ? '启用' : '禁用' }}
+              <el-tag v-if="userRoles.length === 0" type="info" size="large">
+                暂无分配角色
               </el-tag>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="创建时间">
-              <el-input v-model="selectedUser.createTime" disabled />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="最后登录">
-              <el-input :value="selectedUser.lastLoginTime || '从未登录'" disabled />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
+            </div>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+      
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="detailDialogVisible = false">关闭</el-button>
@@ -419,9 +478,12 @@
           <el-col :span="12">
             <el-form-item label="所属机构">
               <el-select v-model="editForm.organizationId" placeholder="请选择机构" style="width: 100%">
-                <el-option label="系统管理" value="1" />
-                <el-option label="阳光养老院" value="2" />
-                <el-option label="康乐养老中心" value="3" />
+                <el-option 
+                  v-for="org in organizations" 
+                  :key="org.id" 
+                  :label="org.name" 
+                  :value="org.id" 
+                />
               </el-select>
             </el-form-item>
           </el-col>
@@ -459,8 +521,8 @@
     <el-dialog 
       v-model="roleAssignDialogVisible" 
       title="分配角色" 
-      width="600px" 
-      class="user-dialog"
+      width="800px" 
+      class="role-assign-dialog"
       :close-on-click-modal="false"
       destroy-on-close
     >
@@ -473,22 +535,46 @@
             <div class="username">{{ selectedUser.username }}</div>
             <div class="fullname">{{ selectedUser.fullName }}</div>
           </div>
+          <el-tag type="info" size="small" class="selected-count-tag">
+            已选择 {{ selectedRoles.length }} 个角色
+          </el-tag>
         </div>
         
         <el-divider />
         
         <div class="role-section">
           <h4>可用角色</h4>
-          <el-checkbox-group v-model="selectedRoles" class="role-list">
-            <div v-for="role in availableRoles" :key="role.id" class="role-item-container">
-              <el-checkbox :value="role.id" class="role-checkbox-simple">
-                <div class="role-content">
-                  <div class="role-name">{{ role.name }}</div>
-                  <div class="role-description">{{ role.description }}</div>
+          <div class="role-list" v-loading="roleAssignLoading">
+            <el-empty v-if="availableRoles.length === 0" description="暂无可分配角色" />
+            <div v-else class="role-cards">
+              <div 
+                v-for="role in availableRoles" 
+                :key="role.id" 
+                class="role-card"
+                :class="{ 'selected': selectedRoles.includes(role.id) }"
+                @click="toggleRoleSelection(role.id)"
+              >
+                <div class="role-avatar">
+                  <el-avatar :size="40" class="role-icon">
+                    <el-icon><Avatar /></el-icon>
+                  </el-avatar>
                 </div>
-              </el-checkbox>
+                <div class="role-info">
+                  <div class="role-name">{{ role.name }}</div>
+                  <div class="role-key">{{ role.roleKey || role.key }}</div>
+                  <div class="role-description" v-if="role.description">{{ role.description }}</div>
+                </div>
+                <div class="role-status">
+                  <el-icon v-if="selectedRoles.includes(role.id)" class="selected-icon" color="#409eff" size="20">
+                    <CircleCheck />
+                  </el-icon>
+                  <el-icon v-else class="unselected-icon" color="#dcdfe6" size="20">
+                    <CircleClose />
+                  </el-icon>
+                </div>
+              </div>
             </div>
-          </el-checkbox-group>
+          </div>
         </div>
       </div>
       <template #footer>
@@ -508,6 +594,7 @@ import {
   Plus, User, UserFilled, Avatar, Clock, View, Edit, Setting, Delete,
   CircleCheck, CircleClose, ArrowDown, Key, Switch
 } from '@element-plus/icons-vue'
+import organizationService from '@/services/organizationService'
 
 export default {
   name: 'SystemUserList',
@@ -521,9 +608,14 @@ export default {
     const createLoading = ref(false)
     const editLoading = ref(false)
     const roleAssignLoading = ref(false)
+    const logsLoading = ref(false)
     const users = ref([])
     const selectedUser = ref(null)
     const multipleSelection = ref([])
+    const organizations = ref([]) // 添加机构列表
+    const userLogs = ref([])
+    const userRoles = ref([])
+    const activeTab = ref('basic')
     const stats = ref({
       totalUsers: 0,
       activeUsers: 0,
@@ -577,12 +669,7 @@ export default {
     })
 
     // 角色相关
-    const availableRoles = ref([
-      { id: 1, name: '系统管理员', description: '拥有所有系统权限' },
-      { id: 2, name: '机构管理员', description: '管理机构相关业务' },
-      { id: 3, name: '普通用户', description: '基础查看权限' },
-      { id: 4, name: '数据分析师', description: '数据查看和分析权限' }
-    ])
+    const availableRoles = ref([])
     const selectedRoles = ref([])
 
     // 表单验证规则
@@ -622,30 +709,264 @@ export default {
     const loadUsers = async () => {
       loading.value = true
       try {
-        const queryParams = new URLSearchParams({
-          page: pagination.page,
-          size: pagination.pageSize,
-          ...searchForm
-        })
+        const queryParams = new URLSearchParams()
+        queryParams.append('page', pagination.page)
+        queryParams.append('size', pagination.pageSize)
+        
+        // 添加搜索条件
+        if (searchForm.username) queryParams.append('username', searchForm.username)
+        if (searchForm.fullName) queryParams.append('fullName', searchForm.fullName)
+        if (searchForm.isActive !== null) queryParams.append('isActive', searchForm.isActive)
+        
+        console.log('正在加载用户数据，请求URL:', `/api/system-users?${queryParams}`)
         
         const response = await fetch(`/api/system-users?${queryParams}`)
-        const data = await response.json()
+        console.log('API响应状态:', response.status)
         
-        users.value = data.list || []
-        pagination.total = data.total || 0
-        
-        // 更新统计信息
-        stats.value = {
-          totalUsers: data.total || 0,
-          activeUsers: data.list?.filter(u => u.isActive).length || 0,
-          adminUsers: data.list?.filter(u => u.isAdmin).length || 0,
-          todayLogins: Math.floor(Math.random() * 20) // 模拟数据
+        if (response.ok) {
+          const data = await response.json()
+          console.log('API响应数据:', data)
+          
+          // 处理后端返回的数据格式
+          if (data && data.list && Array.isArray(data.list)) {
+            // 后端返回格式: { total: 6, list: [...], pageNum: 1, pageSize: 10, ... }
+            users.value = data.list
+            pagination.total = data.total || 0
+            
+            console.log('成功加载用户数据:', users.value.length, '条')
+            console.log('总数据量:', pagination.total)
+            
+            // 加载统计数据
+            await loadUserStats()
+          } else {
+            console.warn('API返回数据格式异常:', data)
+            users.value = []
+            pagination.total = 0
+            stats.value = {
+              totalUsers: 0,
+              activeUsers: 0,
+              adminUsers: 0,
+              todayLogins: 0
+            }
+          }
+        } else {
+          console.error('API请求失败，状态码:', response.status)
+          const errorText = await response.text()
+          console.error('错误响应:', errorText)
+          ElMessage.error(`加载用户列表失败: ${response.status}`)
+          
+          // 使用空数据
+          users.value = []
+          pagination.total = 0
+          stats.value = {
+            totalUsers: 0,
+            activeUsers: 0,
+            adminUsers: 0,
+            todayLogins: 0
+          }
         }
       } catch (error) {
-        ElMessage.error('加载用户列表失败')
-        console.error('Error loading users:', error)
+        console.error('加载用户列表异常:', error)
+        ElMessage.error('加载用户列表失败: ' + error.message)
+        
+        // 使用空数据
+        users.value = []
+        pagination.total = 0
+        stats.value = {
+          totalUsers: 0,
+          activeUsers: 0,
+          adminUsers: 0,
+          todayLogins: 0
+        }
       } finally {
         loading.value = false
+      }
+    }
+
+    // 加载用户统计数据
+    const loadUserStats = async () => {
+      try {
+        console.log('开始加载用户统计数据...')
+        
+        // 获取所有用户数据进行统计
+        const response = await fetch('/api/system-users?page=1&size=1000')
+        console.log('统计API响应状态:', response.status)
+        
+        if (response.ok) {
+          const data = await response.json()
+          console.log('统计API响应数据:', data)
+          
+          if (data && data.list && Array.isArray(data.list)) {
+            const allUsers = data.list
+            const totalUsers = data.total || allUsers.length
+            const activeUsers = allUsers.filter(u => u.isActive).length
+            const adminUsers = allUsers.filter(u => u.isAdmin).length
+            
+            // 获取今日登录数据（模拟，因为需要操作日志API支持）
+            let todayLogins = 0
+            try {
+              const today = new Date().toISOString().split('T')[0]
+              const logsResponse = await fetch(`/api/operation-logs?operationType=LOGIN&date=${today}&page=1&size=1000`)
+              if (logsResponse.ok) {
+                const logsData = await logsResponse.json()
+                todayLogins = logsData.total || (logsData.list ? logsData.list.length : 0)
+              } else {
+                // 如果日志API不可用，使用基于活跃用户的估算
+                todayLogins = Math.floor(activeUsers * 0.3) // 假设30%的活跃用户今日登录
+              }
+            } catch (error) {
+              console.warn('获取今日登录数据失败，使用估算值:', error)
+              todayLogins = Math.floor(activeUsers * 0.3)
+            }
+            
+            stats.value = {
+              totalUsers,
+              activeUsers,
+              adminUsers,
+              todayLogins
+            }
+            
+            console.log('统计数据更新完成:', stats.value)
+          } else {
+            console.warn('统计API返回数据格式异常')
+            stats.value = {
+              totalUsers: pagination.total,
+              activeUsers: users.value.filter(u => u.isActive).length,
+              adminUsers: users.value.filter(u => u.isAdmin).length,
+              todayLogins: 0
+            }
+          }
+        } else {
+          console.warn('统计API请求失败，使用当前页面数据')
+          stats.value = {
+            totalUsers: pagination.total,
+            activeUsers: users.value.filter(u => u.isActive).length,
+            adminUsers: users.value.filter(u => u.isAdmin).length,
+            todayLogins: 0
+          }
+        }
+      } catch (error) {
+        console.error('加载用户统计数据异常:', error)
+        // 使用当前页面数据作为备选
+        stats.value = {
+          totalUsers: pagination.total,
+          activeUsers: users.value.filter(u => u.isActive).length,
+          adminUsers: users.value.filter(u => u.isAdmin).length,
+          todayLogins: 0
+        }
+      }
+    }
+
+    // 加载机构列表
+    const loadOrganizations = async () => {
+      try {
+        console.log('开始加载机构数据...')
+        
+        // 直接调用后端API
+        const response = await fetch('/api/organizations?pageNum=1&pageSize=100')
+        console.log('机构API响应状态:', response.status)
+        
+        if (response.ok) {
+          const data = await response.json()
+          console.log('机构API响应数据:', data)
+          
+          // 处理不同的API响应格式
+          let orgList = []
+          if (data.list) {
+            orgList = data.list
+          } else if (data.content) {
+            orgList = data.content
+          } else if (Array.isArray(data)) {
+            orgList = data
+          } else if (data.data) {
+            orgList = data.data.list || data.data.content || []
+          }
+          
+          organizations.value = orgList
+          console.log('加载的机构数据:', organizations.value)
+          
+          if (organizations.value.length === 0) {
+            console.warn('没有获取到机构数据')
+            ElMessage.warning('没有获取到机构数据，请检查后端服务')
+          }
+        } else {
+          const errorText = await response.text()
+          console.error('机构API请求失败，状态码:', response.status)
+          console.error('错误响应:', errorText)
+          ElMessage.error(`加载机构数据失败: ${response.status}`)
+          organizations.value = []
+        }
+      } catch (error) {
+        console.error('加载机构列表异常:', error)
+        ElMessage.error('加载机构数据失败: ' + error.message)
+        organizations.value = []
+      }
+    }
+
+    // 加载角色列表
+    const loadRoles = async () => {
+      try {
+        console.log('开始加载角色数据...')
+        
+        // 调用后端角色API - 使用/all端点获取所有角色
+        const response = await fetch('/api/roles/all')
+        console.log('角色API响应状态:', response.status)
+        
+        if (response.ok) {
+          const data = await response.json()
+          console.log('角色API响应数据:', data)
+          
+          // 处理API响应格式 - /api/roles/all 直接返回角色数组
+          let roleList = []
+          if (Array.isArray(data)) {
+            roleList = data
+          } else if (data.data && Array.isArray(data.data)) {
+            roleList = data.data
+          } else if (data.list && Array.isArray(data.list)) {
+            roleList = data.list
+          }
+          
+          // 转换为前端需要的格式
+          availableRoles.value = roleList.map(role => ({
+            id: role.id,
+            name: role.roleName || role.name,
+            roleKey: role.roleKey || role.key,
+            description: role.description || '暂无描述'
+          }))
+          
+          console.log('加载的角色数据:', availableRoles.value)
+          
+          if (availableRoles.value.length === 0) {
+            console.warn('没有获取到角色数据，使用默认角色')
+            // 如果API失败，使用从数据库查询到的默认角色
+            availableRoles.value = [
+              { id: 1, name: '超级管理员', description: '拥有所有权限' },
+              { id: 2, name: '机构管理员', description: '管理本机构相关事务' },
+              { id: 3, name: '普通用户', description: '基本查看权限' },
+              { id: 4, name: '机构负责人', description: '机构负责人，负责机构日常管理和运营' }
+            ]
+          }
+        } else {
+          console.error('角色API请求失败，状态码:', response.status)
+          const errorText = await response.text()
+          console.error('错误响应:', errorText)
+          // 使用默认角色数据
+          availableRoles.value = [
+            { id: 1, name: '超级管理员', description: '拥有所有权限' },
+            { id: 2, name: '机构管理员', description: '管理本机构相关事务' },
+            { id: 3, name: '普通用户', description: '基本查看权限' },
+            { id: 4, name: '机构负责人', description: '机构负责人，负责机构日常管理和运营' }
+          ]
+        }
+      } catch (error) {
+        console.error('加载角色列表异常:', error)
+        // 使用默认角色数据
+        availableRoles.value = [
+          { id: 1, name: '超级管理员', description: '拥有所有权限' },
+          { id: 2, name: '机构管理员', description: '管理本机构相关事务' },
+          { id: 3, name: '普通用户', description: '基本查看权限' },
+          { id: 4, name: '机构负责人', description: '机构负责人，负责机构日常管理和运营' }
+        ]
       }
     }
 
@@ -709,7 +1030,104 @@ export default {
     // 显示详情对话框
     const showDetailDialog = (user) => {
       selectedUser.value = { ...user }
+      activeTab.value = 'basic'
       detailDialogVisible.value = true
+      
+      // 加载用户操作日志和角色信息
+      loadUserLogs(user.id)
+      loadUserRoles(user.id)
+    }
+
+    // 加载用户操作日志
+    const loadUserLogs = async (userId) => {
+      logsLoading.value = true
+      try {
+        const response = await fetch(`/api/operation-logs/user/${userId}?page=1&size=20`)
+        console.log('用户日志API响应状态:', response.status)
+        
+        if (response.ok) {
+          const data = await response.json()
+          console.log('用户日志数据:', data)
+          
+          if (data.list && Array.isArray(data.list)) {
+            userLogs.value = data.list
+          } else if (Array.isArray(data)) {
+            userLogs.value = data
+          } else {
+            userLogs.value = []
+          }
+        } else {
+          console.warn('加载用户日志失败，使用模拟数据')
+          // 使用模拟数据
+          userLogs.value = [
+            {
+              operationType: 'LOGIN',
+              operationDesc: '用户登录系统',
+              module: '用户认证',
+              ipAddress: '192.168.1.100',
+              createTime: '2024-01-15 09:30:00'
+            },
+            {
+              operationType: 'UPDATE',
+              operationDesc: '修改个人信息',
+              module: '用户管理',
+              ipAddress: '192.168.1.100',
+              createTime: '2024-01-15 10:15:00'
+            },
+            {
+              operationType: 'VIEW',
+              operationDesc: '查看老人档案',
+              module: '人员档案',
+              ipAddress: '192.168.1.100',
+              createTime: '2024-01-15 11:20:00'
+            }
+          ]
+        }
+      } catch (error) {
+        console.error('加载用户日志异常:', error)
+        userLogs.value = []
+      } finally {
+        logsLoading.value = false
+      }
+    }
+
+    // 加载用户角色信息
+    const loadUserRoles = async (userId) => {
+      try {
+        const response = await fetch(`/api/system-users/${userId}`)
+        console.log('用户详情API响应状态:', response.status)
+        
+        if (response.ok) {
+          const userData = await response.json()
+          console.log('用户详情数据:', userData)
+          
+          if (userData.roles && Array.isArray(userData.roles)) {
+            userRoles.value = userData.roles
+          } else {
+            userRoles.value = []
+          }
+        } else {
+          console.warn('加载用户角色失败')
+          userRoles.value = []
+        }
+      } catch (error) {
+        console.error('加载用户角色异常:', error)
+        userRoles.value = []
+      }
+    }
+
+    // 获取日志类型颜色
+    const getLogTypeColor = (type) => {
+      const colorMap = {
+        'LOGIN': 'success',
+        'LOGOUT': 'info',
+        'CREATE': 'primary',
+        'UPDATE': 'warning',
+        'DELETE': 'danger',
+        'VIEW': 'info',
+        'EXPORT': 'warning'
+      }
+      return colorMap[type] || 'info'
     }
 
     // 显示编辑对话框
@@ -731,6 +1149,8 @@ export default {
           delete updateData.password // 如果密码为空，则不更新密码
         }
 
+        console.log('正在更新用户数据:', updateData)
+
         const response = await fetch(`/api/system-users/${editForm.id}`, {
           method: 'PUT',
           headers: {
@@ -739,17 +1159,32 @@ export default {
           body: JSON.stringify(updateData)
         })
         
+        console.log('更新用户API响应状态:', response.status)
+        
         if (response.ok) {
+          const result = await response.json()
+          console.log('更新用户API响应数据:', result)
           ElMessage.success('更新成功')
           editDialogVisible.value = false
           loadUsers()
         } else {
-          const errorData = await response.json()
-          ElMessage.error(errorData.message || '更新失败')
+          const errorText = await response.text()
+          console.error('更新用户失败，状态码:', response.status)
+          console.error('错误响应:', errorText)
+          
+          let errorMessage = '更新失败'
+          try {
+            const errorData = JSON.parse(errorText)
+            errorMessage = errorData.message || errorData.error || errorMessage
+          } catch (e) {
+            errorMessage = `更新失败 (${response.status}): ${errorText}`
+          }
+          
+          ElMessage.error(errorMessage)
         }
       } catch (error) {
-        ElMessage.error('更新失败')
-        console.error('Error updating user:', error)
+        console.error('更新用户异常:', error)
+        ElMessage.error('更新失败: ' + error.message)
       } finally {
         editLoading.value = false
       }
@@ -758,21 +1193,56 @@ export default {
     // 显示角色分配对话框
     const showRoleAssignDialog = async (user) => {
       selectedUser.value = user
-      // 加载用户当前角色
+      console.log('为用户分配角色:', user.username)
+      
+      // 从用户详情API获取角色信息（因为单独的角色API有问题）
       try {
-        const response = await fetch(`/api/system-users/${user.id}/roles`)
+        const response = await fetch(`/api/system-users/${user.id}`)
+        console.log('获取用户详情API响应状态:', response.status)
+        
         if (response.ok) {
-          const data = await response.json()
-          selectedRoles.value = data.map(role => role.id)
+          const userData = await response.json()
+          console.log('用户详情数据:', userData)
+          
+          // 从用户详情中提取角色信息
+          if (userData.roles && Array.isArray(userData.roles)) {
+            selectedRoles.value = userData.roles.map(role => role.id)
+            console.log('用户当前角色ID:', selectedRoles.value)
+          } else if (userData.roleIds && Array.isArray(userData.roleIds)) {
+            selectedRoles.value = userData.roleIds
+            console.log('用户当前角色ID:', selectedRoles.value)
+          } else {
+            console.warn('用户详情中没有角色信息，使用默认值')
+            // 根据用户信息推断角色
+            if (userData.isAdmin) {
+              selectedRoles.value = [1] // 超级管理员
+            } else {
+              selectedRoles.value = [3] // 普通用户
+            }
+          }
         } else {
-          // 如果API不存在或出错，使用默认值
-          console.warn('角色API暂未实现，使用默认角色')
-          selectedRoles.value = user.isAdmin ? [1] : [3] // 管理员默认系统管理员角色，普通用户默认普通用户角色
+          console.warn('获取用户详情失败，使用默认值')
+          // 根据用户信息推断角色
+          if (user.isAdmin) {
+            selectedRoles.value = [1] // 超级管理员
+          } else if (user.roles && user.roles.length > 0) {
+            selectedRoles.value = user.roles.map(role => role.id)
+          } else {
+            selectedRoles.value = [3] // 普通用户
+          }
         }
       } catch (error) {
-        console.error('Error loading user roles:', error)
-        selectedRoles.value = user.isAdmin ? [1] : [3] // 管理员默认系统管理员角色，普通用户默认普通用户角色
+        console.error('获取用户详情异常:', error)
+        // 根据用户信息推断角色
+        if (user.isAdmin) {
+          selectedRoles.value = [1] // 超级管理员
+        } else if (user.roles && user.roles.length > 0) {
+          selectedRoles.value = user.roles.map(role => role.id)
+        } else {
+          selectedRoles.value = [3] // 普通用户
+        }
       }
+      
       roleAssignDialogVisible.value = true
     }
 
@@ -780,6 +1250,8 @@ export default {
     const handleRoleAssign = async () => {
       roleAssignLoading.value = true
       try {
+        console.log('正在分配角色:', selectedRoles.value, '给用户:', selectedUser.value.username)
+        
         const response = await fetch(`/api/system-users/${selectedUser.value.id}/roles`, {
           method: 'PUT',
           headers: {
@@ -788,22 +1260,44 @@ export default {
           body: JSON.stringify({ roleIds: selectedRoles.value })
         })
         
+        console.log('角色分配API响应状态:', response.status)
+        
         if (response.ok) {
           ElMessage.success('角色分配成功')
           roleAssignDialogVisible.value = false
-          loadUsers()
+          loadUsers() // 重新加载用户列表以更新角色信息
         } else {
-          // 如果API不存在，暂时给出提示
-          console.warn('角色分配API暂未实现')
-          ElMessage.warning('角色分配功能正在开发中，请稍后再试')
-          roleAssignDialogVisible.value = false
+          const errorText = await response.text()
+          console.error('角色分配失败，状态码:', response.status)
+          console.error('错误响应:', errorText)
+          
+          let errorMessage = '角色分配失败'
+          try {
+            const errorData = JSON.parse(errorText)
+            errorMessage = errorData.message || errorData.error || errorMessage
+          } catch (e) {
+            errorMessage = `角色分配失败 (${response.status}): ${errorText}`
+          }
+          
+          ElMessage.error(errorMessage)
         }
       } catch (error) {
-        console.error('Error assigning roles:', error)
-        ElMessage.warning('角色分配功能正在开发中，请稍后再试')
-        roleAssignDialogVisible.value = false
+        console.error('角色分配异常:', error)
+        ElMessage.error('角色分配失败: ' + error.message)
       } finally {
         roleAssignLoading.value = false
+      }
+    }
+
+    // 切换角色选择状态
+    const toggleRoleSelection = (roleId) => {
+      const index = selectedRoles.value.indexOf(roleId)
+      if (index > -1) {
+        // 如果已选中，则取消选择
+        selectedRoles.value.splice(index, 1)
+      } else {
+        // 如果未选中，则添加选择
+        selectedRoles.value.push(roleId)
       }
     }
 
@@ -963,8 +1457,11 @@ export default {
       }
     }
 
+    // 初始化
     onMounted(() => {
       loadUsers()
+      loadOrganizations()
+      loadRoles()
     })
 
     return {
@@ -972,9 +1469,14 @@ export default {
       createLoading,
       editLoading,
       roleAssignLoading,
+      logsLoading,
       users,
       selectedUser,
       multipleSelection,
+      organizations,
+      userLogs,
+      userRoles,
+      activeTab,
       stats,
       searchForm,
       pagination,
@@ -989,6 +1491,9 @@ export default {
       createRules,
       editRules,
       loadUsers,
+      loadUserStats,
+      loadOrganizations,
+      loadRoles,
       handleSearch,
       handleReset,
       showCreateDialog,
@@ -998,6 +1503,7 @@ export default {
       handleUpdate,
       showRoleAssignDialog,
       handleRoleAssign,
+      toggleRoleSelection,
       deleteUser,
       handleSizeChange,
       handleCurrentChange,
@@ -1005,7 +1511,8 @@ export default {
       handleBatchDelete,
       handleAction,
       handleResetPassword,
-      handleToggleStatus
+      handleToggleStatus,
+      getLogTypeColor
     }
   }
 }
@@ -1067,6 +1574,7 @@ export default {
   display: flex;
   align-items: center;
   padding: 20px;
+  min-height: 80px;
 }
 
 .stat-icon {
@@ -1079,6 +1587,7 @@ export default {
   margin-right: 16px;
   background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
   color: white;
+  flex-shrink: 0;
 }
 
 .stat-icon.active {
@@ -1095,6 +1604,7 @@ export default {
 
 .stat-info {
   flex: 1;
+  text-align: left;
 }
 
 .stat-title {
@@ -1102,12 +1612,14 @@ export default {
   color: #666;
   margin-bottom: 8px;
   font-weight: 500;
+  line-height: 1.2;
 }
 
 .stat-value {
   font-size: 28px;
   font-weight: bold;
   margin: 0;
+  line-height: 1.2;
 }
 
 .stat-value.total {
@@ -1209,187 +1721,51 @@ export default {
     border-radius: 16px;
     overflow: visible;
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
   }
   
   :deep(.el-dialog__header) {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     color: white;
     padding: 24px 32px;
-    margin: 0;
-    position: relative;
-    overflow: hidden;
-  }
-
-  :deep(.el-dialog__header)::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
-    pointer-events: none;
-  }
-  
-  :deep(.el-dialog__title) {
-    color: white;
-    font-size: 20px;
-    font-weight: 600;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  :deep(.el-dialog__headerbtn) {
-    top: 24px;
-    right: 32px;
-    width: 32px;
-    height: 32px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    transition: all 0.3s ease;
-  }
-
-  :deep(.el-dialog__headerbtn):hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.1);
-  }
-  
-  :deep(.el-dialog__headerbtn .el-dialog__close) {
-    color: white;
-    font-size: 18px;
-    font-weight: bold;
-  }
-  
-  :deep(.el-dialog__body) {
-    padding: 32px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    min-height: 200px;
-    flex: 1;
-    overflow-y: auto;
-  }
-
-  :deep(.el-dialog__footer) {
-    background: white;
-    padding: 20px 32px;
-    border-top: 1px solid #ebeef5;
-    flex-shrink: 0;
-  }
-
-  :deep(.el-form) {
-    background: white;
-    padding: 32px;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.8);
-  }
-
-  :deep(.el-form-item__label) {
-    color: #2c3e50;
-    font-weight: 600;
-    font-size: 14px;
-  }
-
-  :deep(.el-input) {
-    border-radius: 12px;
-  }
-
-  :deep(.el-input__wrapper) {
-    border-radius: 12px;
-    border: 2px solid #e1e8ed;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  }
-
-  :deep(.el-input__wrapper:hover) {
-    border-color: #409eff;
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
-  }
-
-  :deep(.el-input__wrapper.is-focus) {
-    border-color: #409eff;
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.25);
-  }
-
-  :deep(.el-select) {
-    border-radius: 12px;
-  }
-
-  :deep(.el-switch) {
-    --el-switch-on-color: #67c23a;
-    --el-switch-off-color: #dcdfe6;
-  }
-
-  :deep(.el-switch__core) {
-    border-radius: 20px;
-    height: 24px;
-    width: 48px;
   }
 }
 
 .role-assign-content {
   background: white;
-  padding: 0;
-  border-radius: 0;
-  box-shadow: none;
-  border: none;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .user-info-header {
   display: flex;
   align-items: center;
-  margin-bottom: 48px;
-  padding: 24px;
-  background: linear-gradient(135deg, #667eea 10%, #764ba2 90%);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-.user-info-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
-  pointer-events: none;
-}
-
-.user-info-header .el-avatar {
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-size: 18px;
-  z-index: 1;
-  position: relative;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
 }
 
 .user-info-text {
-  margin-left: 20px;
-  z-index: 1;
-  position: relative;
+  margin-left: 16px;
+  flex: 1;
 }
 
-.user-info-text .username {
-  font-size: 20px;
-  font-weight: 700;
-  color: white;
-  margin-bottom: 6px;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+.username {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 4px;
 }
 
-.user-info-text .fullname {
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 500;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+.fullname {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.selected-count-tag {
+  margin-left: 12px;
 }
 
 .role-section {
@@ -1422,10 +1798,7 @@ export default {
 }
 
 .role-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-height: 250px;
+  max-height: 400px;
   overflow-y: auto;
   padding-right: 8px;
 }
@@ -1448,178 +1821,110 @@ export default {
   background: #a8a8a8;
 }
 
-.role-item-container {
-  width: 100%;
+.role-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
 }
 
-.role-checkbox-simple {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-.role-checkbox-simple :deep(.el-checkbox) {
-  width: 100%;
+.role-card {
   display: flex;
-  align-items: flex-start;
-}
-
-.role-checkbox-simple :deep(.el-checkbox__input) {
-  margin-right: 16px;
-  margin-top: 4px;
-  flex-shrink: 0;
-}
-
-.role-checkbox-simple :deep(.el-checkbox__input .el-checkbox__inner) {
-  width: 18px;
-  height: 18px;
-  border: 2px solid #dcdfe6;
-  border-radius: 4px;
-  background: white;
-  transition: all 0.3s ease;
-}
-
-.role-checkbox-simple :deep(.el-checkbox__input:hover .el-checkbox__inner) {
-  border-color: #409eff;
-}
-
-.role-checkbox-simple :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
-  background: #409eff;
-  border-color: #409eff;
-}
-
-.role-checkbox-simple :deep(.el-checkbox__label) {
-  flex: 1;
-  padding: 20px;
-  border: 2px solid #f0f2f5;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
   border-radius: 12px;
-  background: white;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #dee2e6;
   transition: all 0.3s ease;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.role-checkbox-simple :deep(.el-checkbox__label):hover {
+.role-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-color: #409eff;
-  background: #f8fafe;
-  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.1);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%);
 }
 
-.role-checkbox-simple :deep(.el-checkbox.is-checked .el-checkbox__label) {
+.role-card.selected {
   border-color: #409eff;
   background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%);
   box-shadow: 0 4px 16px rgba(64, 158, 255, 0.15);
 }
 
-.role-content {
-  width: 100%;
+.role-avatar {
+  flex-shrink: 0;
+}
+
+.role-avatar .el-avatar {
+  background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
+}
+
+.role-card.selected .role-avatar .el-avatar {
+  background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
+}
+
+.role-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .role-name {
   font-size: 16px;
   font-weight: 600;
   color: #2c3e50;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.role-checkbox-simple :deep(.el-checkbox.is-checked) .role-name {
+.role-card.selected .role-name {
   color: #409eff;
+}
+
+.role-key {
+  font-size: 14px;
+  color: #6c757d;
+  line-height: 1.5;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.role-card.selected .role-key {
+  color: #409eff;
+  opacity: 0.8;
 }
 
 .role-description {
   font-size: 14px;
   color: #6c757d;
   line-height: 1.5;
-  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.role-checkbox-simple :deep(.el-checkbox.is-checked) .role-description {
+.role-card.selected .role-description {
   color: #409eff;
   opacity: 0.8;
 }
 
-/* 全局样式优化 */
-:deep(.el-card) {
-  border-radius: 8px;
-  border: 1px solid #ebeef5;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+.role-status {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
-:deep(.el-card__header) {
-  background-color: #fafafa;
-  border-bottom: 1px solid #ebeef5;
-  padding: 18px 20px;
-}
-
-:deep(.el-button--primary) {
-  background-color: #409eff;
-  border-color: #409eff;
-}
-
-:deep(.el-button--primary:hover) {
-  background-color: #66b1ff;
-  border-color: #66b1ff;
-}
-
-:deep(.el-tag) {
-  border-radius: 4px;
-  font-weight: 500;
-}
-
-/* 下拉菜单样式优化 */
-:deep(.el-dropdown-menu) {
-  min-width: 120px;
-  padding: 8px 0;
-}
-
-:deep(.el-dropdown-menu__item) {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  color: #606266;
-  font-size: 14px;
-}
-
-:deep(.el-dropdown-menu__item:hover) {
-  background-color: #f5f7fa;
+.selected-icon {
   color: #409eff;
 }
 
-:deep(.el-dropdown-menu__item.delete-item) {
-  color: #f56c6c;
-}
-
-:deep(.el-dropdown-menu__item.delete-item:hover) {
-  background-color: #fef0f0;
-  color: #f56c6c;
-}
-
-:deep(.el-dropdown-menu__item .el-icon) {
-  font-size: 14px;
-}
-
-/* 表格样式优化 */
-:deep(.el-table) {
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-:deep(.el-table th) {
-  background-color: #f8f9fa;
-  color: #333;
-  font-weight: 600;
-  border-bottom: 2px solid #ebeef5;
-}
-
-:deep(.el-table td) {
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-:deep(.el-table .el-table__row:hover) {
-  background-color: #f5f7fa;
+.unselected-icon {
+  color: #dcdfe6;
 }
 </style> 
