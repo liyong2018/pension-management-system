@@ -589,83 +589,90 @@ html, body {
 .sidebar-menu {
   border-right: none;
   height: calc(100vh - 80px); /* 减去标题高度 */
-  overflow-y: auto;
+  overflow-y: hidden !important; /* 强制隐藏垂直滚动条 */
   transition: all 0.3s ease;
   background-color: transparent;
-  /* 隐藏滚动条 */
+  /* 隐藏滚动条 - 保留之前的兼容性代码 */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none;  /* IE 10+ */
 }
 
 .sidebar-menu::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera*/
+  display: none !important; /* Chrome, Safari, Opera - 强制隐藏 */
 }
 
 /* 自定义菜单项样式（主菜单和子菜单通用）*/
 .custom-menu-item,
-.custom-sub-menu .el-sub-menu__title,
-.custom-sub-menu-item {
+.custom-sub-menu .el-sub-menu__title {
   height: 48px !important;
   line-height: 48px !important;
-  margin: 4px 8px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  position: relative;
-  display: flex;
-  align-items: center;
+  margin: 4px 8px !important; /* 统一外边距 */
+  border-radius: 8px !important; /* 统一圆角 */
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 16px !important; /* 统一内边距 */
+  color: #ecf0f1 !important; /* 默认文字颜色 */
+}
+
+/* 子菜单项继承大部分主菜单样式，但有细微调整 */
+.custom-sub-menu-item {
+  height: 44px !important; /* 子菜单项略小一点 */
+  line-height: 44px !important;
+  margin: 2px 8px 2px 24px !important; /* 子菜单增加左缩进 */
+  border-radius: 6px !important;
+  padding: 0 12px !important;
+  color: #bdc3c7 !important; /* 子菜单文字颜色稍浅 */
+  background-color: transparent !important; /* 默认透明背景 */
 }
 
 .custom-menu-item:hover,
 .custom-sub-menu .el-sub-menu__title:hover,
 .custom-sub-menu-item:hover {
-  background-color: rgba(52, 152, 219, 0.1) !important;
-  color: #3498db !important;
+  background-color: rgba(52, 152, 219, 0.15) !important;
+  color: #5dade2 !important; /* 悬停时文字颜色变亮 */
 }
 
 .custom-menu-item.is-active,
-.custom-sub-menu-item.is-active {
+.custom-sub-menu.is-active .el-sub-menu__title {
   background-color: #3498db !important;
   color: #ffffff !important;
-  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 3px 10px rgba(52, 152, 219, 0.4) !important;
 }
 
-/* 特定于有子菜单的 sub-menu title 的激活样式 */
-.custom-sub-menu.is-active .el-sub-menu__title {
-  color: #3498db !important;
-}
-
-/* 子菜单项的特殊处理 */
-.custom-sub-menu-item {
-  margin-left: 16px; /* 子菜单缩进 */
-  background-color: transparent; /* 子菜单背景默认透明 */
-}
-
-.custom-sub-menu-item:hover {
-  background-color: rgba(52, 152, 219, 0.1) !important;
-}
-
+/* 子菜单项激活状态 */
 .custom-sub-menu-item.is-active {
-   background-color: rgba(52, 152, 219, 0.2) !important;
-   color: #3498db !important;
-   box-shadow: none;
+  background-color: rgba(52, 152, 219, 0.25) !important;
+  color: #ffffff !important; /* 子菜单激活时文字也用白色，以示强调 */
+  box-shadow: none !important;
 }
+
+/* 特定于有子菜单的 sub-menu title 的激活（展开）样式 */
+.custom-sub-menu.is-opened .el-sub-menu__title {
+  background-color: rgba(52, 152, 219, 0.1) !important; /* 展开时父菜单背景色 */
+  color: #5dade2 !important; /* 展开时父菜单文字颜色 */
+}
+
 
 /* 菜单图标和文字样式 */
 .menu-icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-  margin-right: 12px;
-  flex-shrink: 0;
+  font-size: 18px !important;
+  width: 20px !important; /* 图标容器宽度 */
+  text-align: center !important; /* 图标居中 */
+  margin-right: 10px !important;
+  flex-shrink: 0 !important;
 }
 
 .menu-text {
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  white-space: nowrap; /* 防止文字换行 */
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  transition: opacity 0.3s ease, max-width 0.3s ease !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  opacity: 1;
+  max-width: 120px; /* 根据需要调整，确保不换行 */
 }
 
 /* 隐藏Element Plus自带的展开/收起箭头 */
@@ -675,49 +682,69 @@ html, body {
 
 /* 折叠状态下的样式 */
 .sidebar-menu.el-menu--collapse {
-  width: 64px;
+  width: 64px !important;
 }
 
 .sidebar-menu.el-menu--collapse .custom-menu-item,
 .sidebar-menu.el-menu--collapse .custom-sub-menu .el-sub-menu__title {
-  margin: 4px 8px;
+  margin: 4px 8px !important;
   padding: 0 !important;
-  text-align: center;
-  justify-content: center;
+  justify-content: center !important;
 }
 
 .sidebar-menu.el-menu--collapse .menu-icon {
-  margin-right: 0;
-  font-size: 20px;
+  margin-right: 0 !important;
+  font-size: 20px !important;
 }
 
 .sidebar-menu.el-menu--collapse .menu-text {
-  display: none;
+  opacity: 0;
+  max-width: 0;
+  display: none; /* 强制隐藏 */
 }
 
-.sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu {
-  /* 在折叠状态下，确保子菜单弹出的样式 */
-  background-color: #2c3e50 !important; /* 与侧边栏背景一致 */
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  padding: 4px 0;
+/* 折叠时弹出的子菜单容器样式 */
+.el-menu--vertical.el-menu--popup-container {
+    background-color: #2c3e50 !important; 
+    border-radius: 8px !important;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
+    padding: 6px 0 !important;
+    border: 1px solid #34495e !important; 
 }
 
+/* 折叠时弹出的子菜单项样式 */
 .sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu .custom-sub-menu-item {
-  display: block !important; /* 确保子菜单项可见 */
-  padding-left: 16px !important; /* 子菜单项左边距 */
-  color: #ecf0f1 !important;
-  margin: 2px 4px;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 12px !important;
+  margin: 2px 6px !important;
+  color: #bdc3c7 !important;
+  border-radius: 6px !important;
+  height: 40px !important;
+  line-height: 40px !important;
+}
+
+.sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu .custom-sub-menu-item .menu-icon {
+  margin-right: 10px !important; /* 弹出子菜单图标右边距 */
+  font-size: 16px !important;
+}
+
+.sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu .custom-sub-menu-item .menu-text {
+  display: inline !important; /* 确保文字可见 */
+  opacity: 1 !important;
+  max-width: 100px !important; /* 调整弹出子菜单文字最大宽度 */
+  font-size: 13px !important;
 }
 
 .sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu .custom-sub-menu-item:hover {
-  background-color: rgba(52, 152, 219, 0.1) !important;
-  color: #3498db !important;
+  background-color: rgba(52, 152, 219, 0.15) !important;
+  color: #5dade2 !important;
 }
 
 .sidebar-menu.el-menu--collapse .custom-sub-menu .el-menu .custom-sub-menu-item.is-active {
   background-color: #3498db !important;
   color: #ffffff !important;
+  box-shadow: none !important;
 }
 
 /* 顶部头部样式 */
