@@ -2,10 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router';
 // 尝试查找 HomeView.vue，如果不存在，则需要创建一个简单的占位组件或实际的首页组件
 // import HomeView from '../views/HomeView.vue'; 
 
-// 占位组件，如果 HomeView 不存在
-const HomeView = {
-  template: '<div><h1>首页</h1><p>欢迎来到养老信息管理系统。</p></div>'
-};
+// 导入首页组件
+const HomeView = () => import('../views/Dashboard.vue');
 
 const routes = [
   {
@@ -101,7 +99,7 @@ const routes = [
   {
     path: '/system/dictionaries',
     name: 'SystemDictionaries',
-    component: () => import('@/views/system/DictionaryManagementSimple.vue'),
+    component: () => import('@/views/system/DictionaryManagement.vue'),
     meta: { title: '字典管理', requiresAuth: true }
   },
   {

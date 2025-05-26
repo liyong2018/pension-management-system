@@ -34,6 +34,10 @@ public class ElderlyProfileDTO {
     
     private String pensionType;
     
+    private String elderlyType;
+    
+    private String elderlyTypeLabel;
+    
     private String medicalHistory;
     
     private String allergyHistory;

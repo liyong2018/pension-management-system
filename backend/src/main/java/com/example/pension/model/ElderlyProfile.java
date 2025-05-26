@@ -30,6 +30,8 @@ public class ElderlyProfile {
     
     private String pensionType;
     
+    private String elderlyType;
+    
     private String medicalHistory;
     
     private String allergyHistory;

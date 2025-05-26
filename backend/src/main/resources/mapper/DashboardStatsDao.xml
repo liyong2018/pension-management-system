@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pension.dao.DashboardStatsDao">
+
+    <!-- ===== 老龄人口统计 ===== -->
+    
+    <!-- 获取老人总数 -->
+    <select id="countTotalElderly" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM elderly_profile
+    </select>
+    
+    <!-- 获取80岁以上老人数量 -->
+    <select id="countElderlyOver80" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM elderly_profile 
+        WHERE birth_date IS NOT NULL 
+        AND TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) >= 80
+    </select>
+    
+    <!-- 获取独居老人数量 -->
+    <select id="countLivingAloneElderly" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM elderly_profile 
+        WHERE pension_type LIKE '%独居%' 
+        OR ability_assessment LIKE '%独居%'
+        OR remarks LIKE '%独居%'
+    </select>
+    
+    <!-- 获取失能老人数量 -->
+    <select id="countDisabledElderly" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM elderly_profile 
+        WHERE ability_assessment IN ('轻度失能', '中度失能', '重度失能')
+    </select>
+    
+    <!-- 获取低收入老人数量 -->
+    <select id="countLowIncomeElderly" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM elderly_profile 
+        WHERE elderly_type = 'low_income' 
+        OR remarks LIKE '%低收入%' 
+        OR remarks LIKE '%贫困%'
+        OR remarks LIKE '%困难%'
+    </select>
+    
+    <!-- 根据老人类型统计数量 -->
+    <select id="countElderlyByType" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM elderly_profile 
+        WHERE elderly_type = #{elderlyType}
+    </select>
+    
+    <!-- 获取所有老人类型的统计数据 -->
+    <select id="getElderlyTypeStatistics" resultType="java.util.Map">
+        SELECT 
+            ep.elderly_type as elderlyType,
+            d.dict_label as elderlyTypeLabel,
+            COUNT(*) as count
+        FROM elderly_profile ep
+        LEFT JOIN dictionary d ON ep.elderly_type = d.dict_code AND d.dict_type = 'elderly_type'
+        WHERE ep.elderly_type IS NOT NULL
+        GROUP BY ep.elderly_type, d.dict_label
+        ORDER BY d.sort_order ASC
+    </select>
+
+    <!-- ===== 机构统计 ===== -->
+    
+    <!-- 获取机构总数 -->
+    <select id="countTotalOrganizations" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM organization
+    </select>
+    
+    <!-- 根据机构类型统计数量 -->
+    <select id="countOrganizationsByType" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM organization 
+        WHERE type = #{type}
+    </select>
+
+    <!-- ===== 从业人员统计 ===== -->
+    
+    <!-- 获取从业人员总数 -->
+    <select id="countTotalStaff" resultType="java.lang.Long">
+        SELECT COALESCE(SUM(employee_count), 0) FROM organization 
+        WHERE employee_count IS NOT NULL
+    </select>
+    
+    <!-- 获取护理人员总数 -->
+    <select id="countTotalNurses" resultType="java.lang.Long">
+        SELECT COALESCE(SUM(professional_nurse_count), 0) FROM organization 
+        WHERE professional_nurse_count IS NOT NULL
+    </select>
+    
+    <!-- 获取医生数量（从系统用户中估算） -->
+    <select id="countDoctors" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM system_user 
+        WHERE full_name LIKE '%医生%' 
+        OR full_name LIKE '%医师%'
+        OR username LIKE '%doctor%'
+        OR username LIKE '%dr%'
+    </select>
+    
+    <!-- 获取社工数量（从总员工数中估算） -->
+    <select id="countSocialWorkers" resultType="java.lang.Long">
+        SELECT COALESCE(
+            (SELECT SUM(employee_count) FROM organization WHERE employee_count IS NOT NULL) - 
+            (SELECT SUM(professional_nurse_count) FROM organization WHERE professional_nurse_count IS NOT NULL),
+            0
+        )
+    </select>
+
+    <!-- ===== 老人类型统计 ===== -->
+    
+    <!-- 根据能力评估统计老人数量 -->
+    <select id="countElderlyByAbilityAssessment" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM elderly_profile 
+        WHERE ability_assessment = #{assessment}
+    </select>
+    
+    <!-- 根据养老类型统计老人数量 -->
+    <select id="countElderlyByPensionType" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM elderly_profile 
+        WHERE pension_type = #{pensionType}
+    </select>
+
+    <!-- ===== 年龄分布统计 ===== -->
+    
+    <!-- 统计各年龄段老人数量 -->
+    <select id="countElderlyByAgeRange" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM elderly_profile 
+        WHERE birth_date IS NOT NULL 
+        <if test="maxAge != null">
+            AND TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) &lt;= #{maxAge}
+        </if>
+        <if test="minAge != null">
+            AND TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) >= #{minAge}
+        </if>
+    </select>
+
+    <!-- ===== 设备统计 ===== -->
+    
+    <!-- 根据设备类型统计数量 -->
+    <select id="countDevicesByType" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM smart_device 
+        WHERE device_type LIKE CONCAT('%', #{deviceType}, '%')
+        AND is_deleted = 0
+    </select>
+    
+    <!-- 根据设备状态统计数量 -->
+    <select id="countDevicesByStatus" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM smart_device 
+        WHERE device_status = #{deviceStatus}
+        AND is_deleted = 0
+    </select>
+    
+    <!-- 获取设备总数 -->
+    <select id="countTotalDevices" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM smart_device 
+        WHERE is_deleted = 0
+    </select>
+
+    <!-- ===== 告警统计 ===== -->
+    
+    <!-- 获取今日告警数量 -->
+    <select id="countTodayAlarms" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM device_alarm_record 
+        WHERE DATE(alarm_time) = CURDATE()
+    </select>
+    
+    <!-- 获取本周告警数量 -->
+    <select id="countWeekAlarms" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM device_alarm_record 
+        WHERE alarm_time >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)
+        AND alarm_time &lt; DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 7 DAY)
+    </select>
+    
+    <!-- 获取本月告警数量 -->
+    <select id="countMonthAlarms" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM device_alarm_record 
+        WHERE YEAR(alarm_time) = YEAR(CURDATE()) 
+        AND MONTH(alarm_time) = MONTH(CURDATE())
+    </select>
+    
+    <!-- 获取未处理告警数量 -->
+    <select id="countUnhandledAlarms" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM device_alarm_record 
+        WHERE process_status = '未处理'
+    </select>
+
+    <!-- ===== 地图数据 ===== -->
+    
+    <!-- 获取社区统计数据 -->
+    <select id="getCommunityStats" resultType="java.util.Map">
+        SELECT 
+            community as name,
+            COUNT(*) as elderlyCount,
+            116.4074 + (RAND() - 0.5) * 0.1 as longitude,
+            39.9042 + (RAND() - 0.5) * 0.1 as latitude,
+            CASE 
+                WHEN pension_type LIKE '%居家%' THEN '居家养老'
+                WHEN pension_type LIKE '%日照%' THEN '日照'
+                WHEN pension_type LIKE '%机构%' THEN '机构'
+                ELSE '居家养老'
+            END as type,
+            1 as facilityCount
+        FROM elderly_profile 
+        WHERE community IS NOT NULL 
+        GROUP BY community, 
+            CASE 
+                WHEN pension_type LIKE '%居家%' THEN '居家养老'
+                WHEN pension_type LIKE '%日照%' THEN '日照'
+                WHEN pension_type LIKE '%机构%' THEN '机构'
+                ELSE '居家养老'
+            END
+        ORDER BY elderlyCount DESC
+        LIMIT 10
+    </select>
+    
+    <!-- 获取最近告警数据 -->
+    <select id="getRecentAlarms" resultType="java.util.Map">
+        SELECT 
+            dar.alarm_type as type,
+            CONCAT(ep.community, ep.name) as location,
+            DATE_FORMAT(dar.alarm_time, '%Y-%m-%d %H:%i:%s') as time,
+            dar.alarm_level as level,
+            dar.process_status as status
+        FROM device_alarm_record dar
+        LEFT JOIN smart_device sd ON dar.device_id = sd.id
+        LEFT JOIN elderly_profile ep ON sd.elderly_id = ep.id
+        ORDER BY dar.alarm_time DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper> 

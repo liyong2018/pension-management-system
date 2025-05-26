@@ -333,42 +333,48 @@
     <el-dialog 
       v-model="usersDialogVisible" 
       title="查看角色用户" 
-      width="800px" 
+      width="900px" 
       class="users-dialog"
       :close-on-click-modal="false"
       destroy-on-close
     >
       <div class="users-content">
         <div class="users-header">
-          <div class="role-info">
-            <div class="role-name">{{ selectedRole?.roleName }}</div>
-            <div class="role-desc">{{ selectedRole?.description }}</div>
+          <div class="role-info-section">
+            <div class="role-title">{{ selectedRole?.roleName }}</div>
+            <div class="role-subtitle">{{ selectedRole?.description || '机构负责人，负责机构日常管理和运营' }}</div>
           </div>
-          <el-tag type="info" size="small" class="user-count-tag">
+          <el-tag type="primary" size="large" class="user-count-badge">
             共 {{ roleUsers.length }} 个用户
           </el-tag>
         </div>
+        
         <div class="users-list" v-loading="usersLoading">
           <el-empty v-if="roleUsers.length === 0" description="该角色暂无分配用户" />
-          <div v-else class="user-cards">
-            <div v-for="user in roleUsers" :key="user.id" class="user-card">
-              <div class="user-avatar">
-                <el-avatar :size="40">
-                  <el-icon><User /></el-icon>
+          <div v-else class="user-grid">
+            <div v-for="user in roleUsers" :key="user.id" class="user-item">
+              <div class="user-avatar-section">
+                <el-avatar :size="48" class="user-avatar">
+                  <el-icon size="24"><User /></el-icon>
                 </el-avatar>
               </div>
-              <div class="user-info">
-                <div class="user-name">{{ user.fullName || user.username }}</div>
-                <div class="user-username">@{{ user.username }}</div>
-                <div class="user-email" v-if="user.email">{{ user.email }}</div>
-                <div class="user-org" v-if="user.organizationName">{{ user.organizationName }}</div>
+              <div class="user-details">
+                <div class="user-name-line">
+                  <span class="user-display-name">{{ user.fullName || user.username }}</span>
+                  <span class="user-handle">@{{ user.username }}</span>
               </div>
-              <div class="user-status">
-                <el-tag :type="user.isActive ? 'success' : 'danger'" size="small">
+                <div class="user-org-line" v-if="user.organizationName">
+                  {{ user.organizationName }}
+                </div>
+              </div>
+              <div class="user-actions">
+                <el-tag 
+                  :type="user.isActive ? 'success' : 'danger'" 
+                  size="small" 
+                  effect="light"
+                  class="status-tag"
+                >
                   {{ user.isActive ? '活跃' : '禁用' }}
-                </el-tag>
-                <el-tag v-if="user.isAdmin" type="warning" size="small">
-                  管理员
                 </el-tag>
               </div>
             </div>
@@ -1637,85 +1643,66 @@ export default {
 
 .users-dialog {
   :deep(.el-dialog) {
-    border-radius: 16px;
-    overflow: visible;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e4e7ed;
     max-height: 85vh;
     display: flex;
     flex-direction: column;
   }
   
   :deep(.el-dialog__header) {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 24px 32px;
+    background: #ffffff;
+    color: #303133;
+    padding: 20px 24px;
     margin: 0;
-    position: relative;
-    overflow: hidden;
-  }
-
-  :deep(.el-dialog__header)::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
-    pointer-events: none;
+    border-bottom: 1px solid #ebeef5;
   }
   
   :deep(.el-dialog__title) {
-    color: white;
-    font-size: 20px;
+    color: #303133;
+    font-size: 18px;
     font-weight: 600;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
   :deep(.el-dialog__headerbtn) {
-    top: 24px;
-    right: 32px;
-    width: 32px;
-    height: 32px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    transition: all 0.3s ease;
+    top: 20px;
+    right: 24px;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border-radius: 4px;
+    transition: all 0.2s ease;
   }
 
   :deep(.el-dialog__headerbtn):hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.1);
+    background: #f5f7fa;
   }
   
   :deep(.el-dialog__headerbtn .el-dialog__close) {
-    color: white;
-    font-size: 18px;
-    font-weight: bold;
+    color: #909399;
+    font-size: 16px;
   }
   
   :deep(.el-dialog__body) {
-    padding: 32px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    min-height: 200px;
+    padding: 0;
+    background: #ffffff;
     flex: 1;
     overflow-y: auto;
   }
 
   :deep(.el-dialog__footer) {
-    background: white;
-    padding: 20px 32px;
+    background: #ffffff;
+    padding: 16px 24px;
     border-top: 1px solid #ebeef5;
     flex-shrink: 0;
   }
 }
 
 .users-content {
-  background: white;
-  padding: 32px;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: #ffffff;
+  padding: 24px;
 }
 
 .users-header {
@@ -1723,47 +1710,42 @@ export default {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #f0f2f5;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #ebeef5;
 }
 
-.users-header .role-info {
+.role-info-section {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.users-header .role-name {
-  font-size: 20px;
-  font-weight: 700;
-  color: #2c3e50;
+.role-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
   margin: 0;
 }
 
-.users-header .role-desc {
+.role-subtitle {
   font-size: 14px;
-  color: #6c757d;
+  color: #606266;
   margin: 0;
 }
 
-.users-header .user-count-tag {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.user-count-badge {
+  background: #409eff;
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 12px;
 }
 
 .users-list {
-  max-height: 450px;
+  max-height: 400px;
   overflow-y: auto;
-  padding-right: 8px;
 }
 
 .users-list::-webkit-scrollbar {
@@ -1771,141 +1753,94 @@ export default {
 }
 
 .users-list::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f5f7fa;
   border-radius: 3px;
 }
 
 .users-list::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #c0c4cc;
   border-radius: 3px;
 }
 
 .users-list::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  background: #909399;
 }
 
-.user-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
-}
-
-.user-card {
+.user-grid {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border: 2px solid #e9ecef;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  position: relative;
+  flex-direction: column;
+  gap: 1px;
+  background: #ebeef5;
+  border-radius: 6px;
   overflow: hidden;
 }
 
-.user-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  transform: scaleX(0);
-  transition: transform 0.3s ease;
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-.user-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  border-color: #667eea;
+.user-item:hover {
+  background: #f5f7fa;
 }
 
-.user-card:hover::before {
-  transform: scaleX(1);
+.user-avatar-section {
+  flex-shrink: 0;
 }
 
 .user-avatar {
-  flex-shrink: 0;
-  position: relative;
+  background: #409eff;
+  color: white;
 }
 
-.user-avatar .el-avatar {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: 3px solid white;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.user-info {
+.user-details {
   flex: 1;
   min-width: 0;
 }
 
-.user-name {
-  font-size: 16px;
-  font-weight: 700;
-  color: #2c3e50;
-  margin-bottom: 6px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-username {
-  font-size: 13px;
-  color: #667eea;
-  margin-bottom: 4px;
-  font-weight: 600;
-}
-
-.user-email {
-  font-size: 12px;
-  color: #6c757d;
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-org {
-  font-size: 12px;
-  color: #495057;
-  font-weight: 600;
-  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-  padding: 2px 8px;
-  border-radius: 12px;
-  display: inline-block;
-}
-
-.user-status {
+.user-name-line {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.user-display-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.user-handle {
+  font-size: 12px;
+  color: #909399;
+  white-space: nowrap;
+}
+
+.user-org-line {
+  font-size: 12px;
+  color: #606266;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-actions {
   flex-shrink: 0;
 }
 
-.user-status .el-tag {
-  border-radius: 12px;
-  font-weight: 600;
-  border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.user-status .el-tag--success {
-  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
-  color: white;
-}
-
-.user-status .el-tag--danger {
-  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
-  color: white;
-}
-
-.user-status .el-tag--warning {
-  background: linear-gradient(135deg, #faad14 0%, #ffc53d 100%);
-  color: white;
+.status-tag {
+  border-radius: 4px;
+  font-size: 12px;
 }
 
 /* 空状态优化 */
@@ -1926,22 +1861,22 @@ export default {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .user-cards {
-    grid-template-columns: 1fr;
-  }
-  
   .users-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
   
-  .user-card {
-    padding: 16px;
+  .user-item {
+    padding: 12px 16px;
   }
   
   .users-content {
-    padding: 20px;
+    padding: 16px;
+  }
+  
+  .user-display-name {
+    max-width: 100px;
   }
 }
 </style> 

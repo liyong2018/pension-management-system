@@ -46,6 +46,23 @@
             @data-change="handleDataChange"
           />
         </el-tab-pane>
+
+        <!-- 老人类型 Tab -->
+        <el-tab-pane name="elderlyType">
+          <template #label>
+            <span class="tab-label">
+              <el-icon><User /></el-icon>
+              老人类型
+              <el-badge :value="elderlyTypeCount" :hidden="elderlyTypeCount === 0" />
+            </span>
+          </template>
+          <DictionaryTab 
+            dict-type="elderly_type"
+            dict-type-name="老人类型"
+            :key="'elderly_type'"
+            @data-change="handleDataChange"
+          />
+        </el-tab-pane>
       </el-tabs>
     </el-card>
 
@@ -64,6 +81,7 @@
         <ul>
           <li><strong>所属社区：</strong>用于管理老人档案中的社区选项，可以添加、编辑、删除社区信息</li>
           <li><strong>养老类型：</strong>用于管理老人档案中的养老类型选项，如居家养老、机构养老等</li>
+          <li><strong>老人类型：</strong>用于管理老人档案中的老人类型选项，如普通老人、空巢老人、独居老人等</li>
           <li><strong>字典编码：</strong>用于程序内部识别，建议使用英文大写字母和下划线，如：COMMUNITY_001</li>
           <li><strong>字典标签：</strong>显示给用户看的名称，如：朝阳公园社区</li>
           <li><strong>字典值：</strong>实际存储的数据值，通常与标签相同</li>
@@ -76,7 +94,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Location, House, Close } from '@element-plus/icons-vue'
+import { Location, House, User, Close } from '@element-plus/icons-vue'
 import DictionaryTab from './components/DictionaryTab.vue'
 import { dictionaryApi } from '@/api/dictionary'
 import { DICT_TYPES } from '@/constants/dictionary'
@@ -85,19 +103,22 @@ const activeTab = ref('community')
 const showHelp = ref(true)
 const communityCount = ref(0)
 const pensionTypeCount = ref(0)
+const elderlyTypeCount = ref(0)
 const totalCount = ref(0)
 
 // 获取统计数据
 const fetchStatistics = async () => {
   try {
-    const [communityResult, pensionTypeResult] = await Promise.all([
+    const [communityResult, pensionTypeResult, elderlyTypeResult] = await Promise.all([
       dictionaryApi.countByType(DICT_TYPES.COMMUNITY),
-      dictionaryApi.countByType(DICT_TYPES.PENSION_TYPE)
+      dictionaryApi.countByType(DICT_TYPES.PENSION_TYPE),
+      dictionaryApi.countByType(DICT_TYPES.ELDERLY_TYPE)
     ])
     
     communityCount.value = communityResult || 0
     pensionTypeCount.value = pensionTypeResult || 0
-    totalCount.value = communityCount.value + pensionTypeCount.value
+    elderlyTypeCount.value = elderlyTypeResult || 0
+    totalCount.value = communityCount.value + pensionTypeCount.value + elderlyTypeCount.value
   } catch (error) {
     console.error('获取统计数据失败:', error)
   }

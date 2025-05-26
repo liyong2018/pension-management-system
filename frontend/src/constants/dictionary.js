@@ -1,13 +1,15 @@
 // 字典类型常量
 export const DICT_TYPES = {
   COMMUNITY: 'community',
-  PENSION_TYPE: 'pensionType'
+  PENSION_TYPE: 'pensionType',
+  ELDERLY_TYPE: 'elderly_type'
 }
 
 // 字典类型名称映射
 export const DICT_TYPE_NAMES = {
   [DICT_TYPES.COMMUNITY]: '所属社区',
-  [DICT_TYPES.PENSION_TYPE]: '养老类型'
+  [DICT_TYPES.PENSION_TYPE]: '养老类型',
+  [DICT_TYPES.ELDERLY_TYPE]: '老人类型'
 }
 
 // 字典状态常量

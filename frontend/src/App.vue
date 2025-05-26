@@ -90,7 +90,19 @@
           <div class="header-left">
             <div class="breadcrumb">
               <el-icon><Location /></el-icon>
-              <span>{{ currentRouteName }}</span>
+              <template v-for="(item, index) in breadcrumbItems" :key="index">
+                <span 
+                  v-if="index < breadcrumbItems.length - 1" 
+                  class="breadcrumb-item clickable"
+                  @click="navigateTo(item.path)"
+                >
+                  {{ item.name }}
+                </span>
+                <span v-else class="breadcrumb-item current">{{ item.name }}</span>
+                <el-icon v-if="index < breadcrumbItems.length - 1" class="breadcrumb-separator">
+                  <ArrowRight />
+                </el-icon>
+              </template>
             </div>
           </div>
           <div class="header-right">
@@ -145,7 +157,56 @@ const menuData = ref([]);
 const isCollapsed = ref(true); // 默认收起状态
 const showMask = ref(false);
 
-// 计算当前路由名称用于面包屑
+// 计算面包屑导航路径
+const breadcrumbItems = computed(() => {
+  const path = route.path;
+  const items = [];
+  
+  // 根据路由路径生成面包屑
+  if (path === '/') {
+    items.push({ name: '首页', path: '/' });
+  } else if (path.startsWith('/system')) {
+    items.push({ name: '首页', path: '/' });
+    items.push({ name: '系统管理', path: '/system' });
+    
+    // 根据具体的系统管理子页面添加对应的面包屑
+    if (path === '/system/users') {
+      items.push({ name: '用户管理', path: '/system/users' });
+    } else if (path === '/system/roles') {
+      items.push({ name: '角色管理', path: '/system/roles' });
+    } else if (path === '/system/permissions') {
+      items.push({ name: '权限管理', path: '/system/permissions' });
+    } else if (path === '/system/menus') {
+      items.push({ name: '菜单管理', path: '/system/menus' });
+    } else if (path === '/system/logs') {
+      items.push({ name: '日志管理', path: '/system/logs' });
+    } else if (path === '/system/dictionaries') {
+      items.push({ name: '字典管理', path: '/system/dictionaries' });
+    } else if (path === '/system/dictionary-test') {
+      items.push({ name: '字典管理测试', path: '/system/dictionary-test' });
+    } else if (path === '/system/dictionary-diagnosis') {
+      items.push({ name: '字典问题诊断', path: '/system/dictionary-diagnosis' });
+    }
+  } else if (path.startsWith('/smart-device') || path === '/smart-devices' || path === '/device-alarms') {
+    items.push({ name: '首页', path: '/' });
+    items.push({ name: '智能设备', path: '#' });
+    
+    if (path === '/smart-devices') {
+      items.push({ name: '设备管理', path: '/smart-devices' });
+    } else if (path === '/device-alarms') {
+      items.push({ name: '告警管理', path: '/device-alarms' });
+    }
+  } else {
+    // 其他单级页面
+    items.push({ name: '首页', path: '/' });
+    const title = route.meta.title || route.name || '未知页面';
+    items.push({ name: title, path: path });
+  }
+  
+  return items;
+});
+
+// 计算当前路由名称用于面包屑（保持兼容性）
 const currentRouteName = computed(() => {
   return route.meta.title || route.name || '首页';
 });
@@ -153,6 +214,13 @@ const currentRouteName = computed(() => {
 // 点击Logo返回首页
 const goHome = () => {
   router.push('/');
+};
+
+// 导航方法
+const navigateTo = (path) => {
+  if (path && path !== '#') {
+    router.push(path);
+  }
 };
 
 // 图标映射
@@ -811,6 +879,31 @@ html, body {
   gap: 8px;
   color: #666;
   font-size: 14px;
+}
+
+.breadcrumb-item {
+  color: #666;
+  transition: color 0.2s ease;
+}
+
+.breadcrumb-item.clickable {
+  cursor: pointer;
+  color: #409eff;
+}
+
+.breadcrumb-item.clickable:hover {
+  color: #66b1ff;
+}
+
+.breadcrumb-item.current {
+  color: #303133;
+  font-weight: 500;
+}
+
+.breadcrumb-separator {
+  color: #c0c4cc;
+  font-size: 12px;
+  margin: 0 4px;
 }
 
 .header-right {

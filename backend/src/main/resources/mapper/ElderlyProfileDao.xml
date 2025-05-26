@@ -13,6 +13,7 @@
         <result property="addressDetail" column="address_detail" />
         <result property="community" column="community" />
         <result property="pensionType" column="pension_type" />
+        <result property="elderlyType" column="elderly_type" />
         <result property="medicalHistory" column="medical_history" />
         <result property="allergyHistory" column="allergy_history" />
         <result property="physicalExamReport" column="physical_exam_report" />
@@ -35,7 +36,7 @@
 
     <sql id="selectElderlyProfileColumns">
         ep.id, ep.name, ep.gender, ep.birth_date, ep.id_card_number, ep.phone, ep.photo_url, ep.address_detail,
-        ep.community, ep.pension_type, ep.medical_history, ep.allergy_history, ep.physical_exam_report,
+        ep.community, ep.pension_type, ep.elderly_type, ep.medical_history, ep.allergy_history, ep.physical_exam_report,
         ep.current_health_status, ep.care_level, ep.ability_assessment, ep.living_habits, ep.hobbies,
         ep.religious_belief, ep.remarks, ep.create_time, ep.update_time,
         o.id as org_id, o.name as org_name <!-- 其他需要的 Organization 字段 -->
@@ -90,11 +91,11 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO elderly_profile (name, gender, birth_date, id_card_number, phone, photo_url, address_detail,
-                                   community, pension_type, medical_history, allergy_history, physical_exam_report,
+                                   community, pension_type, elderly_type, medical_history, allergy_history, physical_exam_report,
                                    current_health_status, care_level, ability_assessment, living_habits, hobbies,
                                    religious_belief, remarks, organization_id)
         VALUES (#{name}, #{gender}, #{birthDate}, #{idCardNumber}, #{phone}, #{photoUrl}, #{addressDetail},
-                #{community}, #{pensionType}, #{medicalHistory}, #{allergyHistory}, #{physicalExamReport},
+                #{community}, #{pensionType}, #{elderlyType}, #{medicalHistory}, #{allergyHistory}, #{physicalExamReport},
                 #{currentHealthStatus}, #{careLevel}, #{abilityAssessment}, #{livingHabits}, #{hobbies},
                 #{religiousBelief}, #{remarks}, #{organization.id})
     </insert>
@@ -111,6 +112,7 @@
             <if test="addressDetail != null">address_detail = #{addressDetail},</if>
             <if test="community != null">community = #{community},</if>
             <if test="pensionType != null">pension_type = #{pensionType},</if>
+            <if test="elderlyType != null">elderly_type = #{elderlyType},</if>
             <if test="medicalHistory != null">medical_history = #{medicalHistory},</if>
             <if test="allergyHistory != null">allergy_history = #{allergyHistory},</if>
             <if test="physicalExamReport != null">physical_exam_report = #{physicalExamReport},</if>

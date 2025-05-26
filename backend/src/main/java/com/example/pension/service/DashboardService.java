@@ -1,0 +1,282 @@
+package com.example.pension.service;
+
+import com.example.pension.dao.DashboardStatsDao;
+import com.example.pension.dto.DashboardStatsDTO;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 首页数据服务
+ */
+@Service
+public class DashboardService {
+    
+    @Autowired
+    private DashboardStatsDao dashboardStatsDao;
+    
+    /**
+     * 获取首页统计数据
+     */
+    public DashboardStatsDTO getDashboardStats() {
+        DashboardStatsDTO stats = new DashboardStatsDTO();
+        
+        try {
+            // 老龄人口统计
+            Long totalElderly = dashboardStatsDao.countTotalElderly();
+            Long over80Count = dashboardStatsDao.countElderlyOver80();
+            Long livingAloneCount = dashboardStatsDao.countLivingAloneElderly();
+            Long disabledCount = dashboardStatsDao.countDisabledElderly();
+            Long lowIncomeCount = dashboardStatsDao.countLowIncomeElderly();
+            
+            stats.setElderlyStats(new DashboardStatsDTO.ElderlyStatsDTO(
+                totalElderly != null ? totalElderly : 0L,
+                over80Count != null ? over80Count : 0L,
+                livingAloneCount != null ? livingAloneCount : 0L,
+                disabledCount != null ? disabledCount : 0L,
+                lowIncomeCount != null ? lowIncomeCount : 0L
+            ));
+            
+            // 养老机构及设施统计
+            Long totalOrgs = dashboardStatsDao.countTotalOrganizations();
+            Long homeCareCount = dashboardStatsDao.countOrganizationsByType("居家养老单位");
+            Long dayCareCount = dashboardStatsDao.countOrganizationsByType("社区养老单位（日照）");
+            Long institutionCount = dashboardStatsDao.countOrganizationsByType("机构养老单位（养老院）");
+            
+            stats.setFacilityStats(new DashboardStatsDTO.FacilityStatsDTO(
+                totalOrgs != null ? totalOrgs : 0L,
+                homeCareCount != null ? homeCareCount : 0L,
+                dayCareCount != null ? dayCareCount : 0L,
+                institutionCount != null ? institutionCount : 0L
+            ));
+            
+            // 从业人员统计
+            Long totalStaff = dashboardStatsDao.countTotalStaff();
+            Long nurseCount = dashboardStatsDao.countTotalNurses();
+            Long doctorCount = dashboardStatsDao.countDoctors();
+            Long socialWorkerCount = dashboardStatsDao.countSocialWorkers();
+            
+            stats.setStaffStats(new DashboardStatsDTO.StaffStatsDTO(
+                totalStaff != null ? totalStaff : 0L,
+                nurseCount != null ? nurseCount : 0L,
+                doctorCount != null ? doctorCount : 0L,
+                socialWorkerCount != null ? socialWorkerCount : 0L
+            ));
+            
+            // 发放补贴统计（暂时使用模拟数据，因为数据库中没有相关表）
+            stats.setSubsidyStats(new DashboardStatsDTO.SubsidyStatsDTO(
+                2580000.0,  // 总金额
+                totalElderly != null ? (long)(totalElderly * 0.7) : 0L,  // 受益人数（70%的老人）
+                320000.0     // 本月发放
+            ));
+            
+            // 老人类型统计 - 使用真实的字典数据
+            Long normalCount = dashboardStatsDao.countElderlyByType("normal");
+            Long emptyNestCount = dashboardStatsDao.countElderlyByType("empty_nest");
+            Long livingAloneTypeCount = dashboardStatsDao.countElderlyByType("living_alone");
+            Long disabledTypeCount = dashboardStatsDao.countElderlyByType("disabled");
+            Long elderlyTypeCount = dashboardStatsDao.countElderlyByType("elderly");
+            
+            stats.setElderlyTypeStats(new DashboardStatsDTO.ElderlyTypeStatsDTO(
+                normalCount != null ? normalCount : 0L,
+                emptyNestCount != null ? emptyNestCount : 0L,
+                livingAloneTypeCount != null ? livingAloneTypeCount : 0L,
+                disabledTypeCount != null ? disabledTypeCount : 0L,
+                elderlyTypeCount != null ? elderlyTypeCount : 0L
+            ));
+            
+            // 能力评估统计
+            Long fullAbilityCount = dashboardStatsDao.countElderlyByAbilityAssessment("能力完好");
+            Long mildDisabilityCount = dashboardStatsDao.countElderlyByAbilityAssessment("轻度失能");
+            Long moderateDisabilityCount = dashboardStatsDao.countElderlyByAbilityAssessment("中度失能");
+            Long severeDisabilityCount = dashboardStatsDao.countElderlyByAbilityAssessment("重度失能");
+            Long notAssessedCount = totalElderly != null ? totalElderly - 
+                (fullAbilityCount != null ? fullAbilityCount : 0L) -
+                (mildDisabilityCount != null ? mildDisabilityCount : 0L) -
+                (moderateDisabilityCount != null ? moderateDisabilityCount : 0L) -
+                (severeDisabilityCount != null ? severeDisabilityCount : 0L) : 0L;
+            
+            stats.setAbilityStats(new DashboardStatsDTO.AbilityAssessmentStatsDTO(
+                fullAbilityCount != null ? fullAbilityCount : 0L,
+                mildDisabilityCount != null ? mildDisabilityCount : 0L,
+                moderateDisabilityCount != null ? moderateDisabilityCount : 0L,
+                severeDisabilityCount != null ? severeDisabilityCount : 0L,
+                notAssessedCount > 0 ? notAssessedCount : 0L
+            ));
+            
+            // 年龄分布统计
+            Long age60to69Count = dashboardStatsDao.countElderlyByAgeRange(60, 69);
+            Long age70to79Count = dashboardStatsDao.countElderlyByAgeRange(70, 79);
+            Long age80to89Count = dashboardStatsDao.countElderlyByAgeRange(80, 89);
+            Long age90PlusCount = dashboardStatsDao.countElderlyByAgeRange(90, null);
+            
+            stats.setAgeDistribution(new DashboardStatsDTO.AgeDistributionStatsDTO(
+                age60to69Count != null ? age60to69Count : 0L,
+                age70to79Count != null ? age70to79Count : 0L,
+                age80to89Count != null ? age80to89Count : 0L,
+                age90PlusCount != null ? age90PlusCount : 0L
+            ));
+            
+            // 设备统计
+            Long sosDeviceCount = dashboardStatsDao.countDevicesByType("SOS");
+            Long smokeDetectorCount = dashboardStatsDao.countDevicesByType("烟感");
+            Long waterLeakCount = dashboardStatsDao.countDevicesByType("水浸");
+            Long fallDetectorCount = dashboardStatsDao.countDevicesByType("跌倒");
+            Long gasLeakCount = dashboardStatsDao.countDevicesByType("燃气");
+            Long onlineCount = dashboardStatsDao.countDevicesByStatus("在线");
+            Long offlineCount = dashboardStatsDao.countDevicesByStatus("离线");
+            Long faultCount = dashboardStatsDao.countDevicesByStatus("故障");
+            
+            stats.setDeviceStats(new DashboardStatsDTO.DeviceStatsDTO(
+                sosDeviceCount != null ? sosDeviceCount : 0L,
+                smokeDetectorCount != null ? smokeDetectorCount : 0L,
+                waterLeakCount != null ? waterLeakCount : 0L,
+                fallDetectorCount != null ? fallDetectorCount : 0L,
+                gasLeakCount != null ? gasLeakCount : 0L,
+                onlineCount != null ? onlineCount : 0L,
+                offlineCount != null ? offlineCount : 0L,
+                faultCount != null ? faultCount : 0L
+            ));
+            
+            // 告警统计
+            Long todayAlarmCount = dashboardStatsDao.countTodayAlarms();
+            Long weekAlarmCount = dashboardStatsDao.countWeekAlarms();
+            Long monthAlarmCount = dashboardStatsDao.countMonthAlarms();
+            Long unhandledCount = dashboardStatsDao.countUnhandledAlarms();
+            
+            stats.setAlarmStats(new DashboardStatsDTO.AlarmStatsDTO(
+                todayAlarmCount != null ? todayAlarmCount : 0L,
+                weekAlarmCount != null ? weekAlarmCount : 0L,
+                monthAlarmCount != null ? monthAlarmCount : 0L,
+                unhandledCount != null ? unhandledCount : 0L
+            ));
+            
+            // 地图数据
+            List<Map<String, Object>> communityData = dashboardStatsDao.getCommunityStats();
+            List<DashboardStatsDTO.MapDataDTO.CommunityDataDTO> communities = new ArrayList<>();
+            
+            if (communityData != null) {
+                for (Map<String, Object> data : communityData) {
+                    String name = (String) data.get("name");
+                    Double longitude = (Double) data.get("longitude");
+                    Double latitude = (Double) data.get("latitude");
+                    Long elderlyCount = ((Number) data.get("elderlyCount")).longValue();
+                    Long facilityCount = ((Number) data.get("facilityCount")).longValue();
+                    String type = (String) data.get("type");
+                    
+                    communities.add(new DashboardStatsDTO.MapDataDTO.CommunityDataDTO(
+                        name, longitude, latitude, elderlyCount, facilityCount, type
+                    ));
+                }
+            }
+            
+            // 如果没有社区数据，使用默认数据
+            if (communities.isEmpty()) {
+                communities.add(new DashboardStatsDTO.MapDataDTO.CommunityDataDTO("朝阳公园社区", 116.4074, 39.9042, 1L, 1L, "居家养老"));
+                communities.add(new DashboardStatsDTO.MapDataDTO.CommunityDataDTO("中关村社区", 116.3668, 39.9097, 1L, 1L, "日照"));
+                communities.add(new DashboardStatsDTO.MapDataDTO.CommunityDataDTO("西单社区", 116.4432, 39.9211, 1L, 1L, "机构"));
+            }
+            
+            DashboardStatsDTO.MapDataDTO mapData = new DashboardStatsDTO.MapDataDTO();
+            mapData.setCommunities(communities);
+            stats.setMapData(mapData);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 如果数据库查询失败，返回默认值
+            return getDefaultStats();
+        }
+        
+        return stats;
+    }
+    
+    /**
+     * 获取默认统计数据（当数据库查询失败时使用）
+     */
+    private DashboardStatsDTO getDefaultStats() {
+        DashboardStatsDTO stats = new DashboardStatsDTO();
+        
+        stats.setElderlyStats(new DashboardStatsDTO.ElderlyStatsDTO(0L, 0L, 0L, 0L, 0L));
+        stats.setFacilityStats(new DashboardStatsDTO.FacilityStatsDTO(0L, 0L, 0L, 0L));
+        stats.setStaffStats(new DashboardStatsDTO.StaffStatsDTO(0L, 0L, 0L, 0L));
+        stats.setSubsidyStats(new DashboardStatsDTO.SubsidyStatsDTO(0.0, 0L, 0.0));
+        stats.setElderlyTypeStats(new DashboardStatsDTO.ElderlyTypeStatsDTO(0L, 0L, 0L, 0L, 0L));
+        stats.setAbilityStats(new DashboardStatsDTO.AbilityAssessmentStatsDTO(0L, 0L, 0L, 0L, 0L));
+        stats.setAgeDistribution(new DashboardStatsDTO.AgeDistributionStatsDTO(0L, 0L, 0L, 0L));
+        stats.setDeviceStats(new DashboardStatsDTO.DeviceStatsDTO(0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L));
+        stats.setAlarmStats(new DashboardStatsDTO.AlarmStatsDTO(0L, 0L, 0L, 0L));
+        
+        DashboardStatsDTO.MapDataDTO mapData = new DashboardStatsDTO.MapDataDTO();
+        mapData.setCommunities(new ArrayList<>());
+        stats.setMapData(mapData);
+        
+        return stats;
+    }
+    
+    /**
+     * 获取实时告警数据
+     */
+    public List<AlarmDataDTO> getRecentAlarms() {
+        try {
+            List<Map<String, Object>> alarmData = dashboardStatsDao.getRecentAlarms(10);
+            List<AlarmDataDTO> alarms = new ArrayList<>();
+            
+            if (alarmData != null) {
+                for (Map<String, Object> data : alarmData) {
+                    String type = (String) data.get("type");
+                    String location = (String) data.get("location");
+                    String time = (String) data.get("time");
+                    String level = (String) data.get("level");
+                    String status = (String) data.get("status");
+                    
+                    alarms.add(new AlarmDataDTO(type, location, time, level, status));
+                }
+            }
+            
+            // 如果没有告警数据，返回空列表
+            return alarms;
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 如果数据库查询失败，返回空列表
+            return new ArrayList<>();
+        }
+    }
+    
+    /**
+     * 告警数据DTO
+     */
+    public static class AlarmDataDTO {
+        private String type;        // 告警类型
+        private String location;    // 位置信息
+        private String time;        // 告警时间
+        private String level;       // 告警级别
+        private String status;      // 处理状态
+        
+        public AlarmDataDTO(String type, String location, String time, String level, String status) {
+            this.type = type;
+            this.location = location;
+            this.time = time;
+            this.level = level;
+            this.status = status;
+        }
+        
+        // Getters and Setters
+        public String getType() { return type; }
+        public void setType(String type) { this.type = type; }
+        
+        public String getLocation() { return location; }
+        public void setLocation(String location) { this.location = location; }
+        
+        public String getTime() { return time; }
+        public void setTime(String time) { this.time = time; }
+        
+        public String getLevel() { return level; }
+        public void setLevel(String level) { this.level = level; }
+        
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+    }
+} 
