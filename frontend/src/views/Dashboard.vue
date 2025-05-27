@@ -22,7 +22,7 @@
     </div>
 
     <!-- 顶部数据统计卡片 -->
-    <div class="top-stats">
+    <div class="top-stats" ref="topStatsRef">
       <div class="stat-card blue">
         <div class="stat-icon">👥</div>
         <div class="stat-content">
@@ -54,7 +54,7 @@
     </div>
 
     <!-- 左侧面板 -->
-    <div class="left-panel">
+    <div class="left-panel" ref="leftPanelRef">
       <!-- 老人类型统计 -->
       <div class="dashboard-card">
         <div class="card-header">
@@ -106,7 +106,7 @@
     </div>
 
     <!-- 右侧面板 -->
-    <div class="right-panel">
+    <div class="right-panel" ref="rightPanelRef">
       <!-- SOS报警设备 -->
       <div class="dashboard-card">
         <div class="card-header">
@@ -225,6 +225,10 @@ const mapLayers = ref({
   // elderly: null, // 移除老人图层
   alarms: null
 });
+
+const topStatsRef = ref(null);
+const leftPanelRef = ref(null);
+const rightPanelRef = ref(null);
 
 // 图表引用
 const elderlyTypeChart = ref(null);
@@ -434,7 +438,9 @@ const loadMockData = () => {
       smokeDetectorCount: 189,
       waterLeakCount: 145,
       fallDetectorCount: 98,
-      gasLeakCount: 67
+      gasLeakCount: 67,
+      onlineCount: 230,
+      faultCount: 12
     },
     abilityStats: {
       fullAbilityCount: 8567,
@@ -505,6 +511,82 @@ const loadMockData = () => {
           elderlyCount: 2345,
           facilityCount: 2,
           type: '机构'
+        }
+      ],
+      organizations: [
+        {
+          name: '朝阳区养老院',
+          latitude: 39.9389,
+          longitude: 116.4303,
+          type: '机构养老单位（养老院）',
+          bedCount: 120,
+          staffCount: 35,
+          serviceCount: 8
+        },
+        {
+          name: '中关村日间照料中心',
+          latitude: 39.9931,
+          longitude: 116.3245,
+          type: '社区养老单位（日照）',
+          bedCount: 0,
+          staffCount: 12,
+          serviceCount: 5
+        },
+        {
+          name: '东直门居家养老服务中心',
+          latitude: 39.9534,
+          longitude: 116.4317,
+          type: '居家养老单位',
+          bedCount: 0,
+          staffCount: 8,
+          serviceCount: 6
+        },
+        {
+          name: '海淀区颐养中心',
+          latitude: 39.9690,
+          longitude: 116.3082,
+          type: '机构养老单位（养老院）',
+          bedCount: 200,
+          staffCount: 55,
+          serviceCount: 12
+        }
+      ],
+      alarms: [
+        {
+          alarmType: 'SOS紧急求救',
+          location: '朝阳公园社区3号楼201室',
+          latitude: 39.9189,
+          longitude: 116.4103,
+          alarmTime: '2025-01-26T15:30:22',
+          processStatus: '未处理',
+          alarmLevel: '紧急'
+        },
+        {
+          alarmType: '烟感报警',
+          location: '中关村社区12号楼305室',
+          latitude: 39.9731,
+          longitude: 116.3045,
+          alarmTime: '2025-01-26T14:45:15',
+          processStatus: '处理中',
+          alarmLevel: '高'
+        },
+        {
+          alarmType: '跌倒检测报警',
+          location: '东直门社区7号楼102室',
+          latitude: 39.9334,
+          longitude: 116.4117,
+          alarmTime: '2025-01-26T13:20:08',
+          processStatus: '未处理',
+          alarmLevel: '中'
+        },
+        {
+          alarmType: '设备离线',
+          location: '海淀社区智能设备监控中心',
+          latitude: 39.9490,
+          longitude: 116.2882,
+          alarmTime: '2025-01-26T12:15:33',
+          processStatus: '已处理',
+          alarmLevel: '低'
         }
       ]
     }
@@ -637,6 +719,68 @@ const initMap = () => {
   addOrganizationMarkers();
   // addElderlyMarkers(); // 移除老人标记
   addAlarmMarkers();
+
+  mapInstance.value.on('popupopen', (e) => {
+    const popup = e.popup;
+    const mapContainerElement = mapInstance.value.getContainer(); // Renamed to avoid conflict
+    const popupElement = popup.getElement();
+
+    if (!popupElement || !topStatsRef.value || !leftPanelRef.value || !rightPanelRef.value || !mapContainerElement) {
+      return;
+    }
+
+    // 等待DOM更新，确保获取到正确的尺寸
+    nextTick(() => {
+      const mapRect = mapContainerElement.getBoundingClientRect();
+      const popupRect = popupElement.getBoundingClientRect();
+      
+      const topStatsRect = topStatsRef.value.getBoundingClientRect();
+      const leftPanelRect = leftPanelRef.value.getBoundingClientRect();
+      const rightPanelRect = rightPanelRef.value.getBoundingClientRect();
+
+      const safetyMargin = 20; // 20px的安全边距
+
+      let panX = 0;
+      let panY = 0;
+
+      // 检查顶部遮挡
+      // 计算 topStats 面板底部相对于地图容器顶部的 Y 坐标
+      const topStatsBottomRelativeToMap = topStatsRect.bottom - mapRect.top;
+      // 计算弹出框顶部相对于地图容器顶部的 Y 坐标
+      const popupTopRelativeToMap = popupRect.top - mapRect.top;
+      if (popupTopRelativeToMap < topStatsBottomRelativeToMap + safetyMargin) {
+        panY = (topStatsBottomRelativeToMap + safetyMargin) - popupTopRelativeToMap;
+      }
+
+      // 检查左侧遮挡
+      // 计算 leftPanel 面板右侧相对于地图容器左侧的 X 坐标
+      const leftPanelRightRelativeToMap = leftPanelRect.right - mapRect.left;
+      // 计算弹出框左侧相对于地图容器左侧的 X 坐标
+      const popupLeftRelativeToMap = popupRect.left - mapRect.left;
+      if (popupLeftRelativeToMap < leftPanelRightRelativeToMap + safetyMargin) {
+        panX = (leftPanelRightRelativeToMap + safetyMargin) - popupLeftRelativeToMap;
+      }
+
+      // 检查右侧遮挡
+      // 计算 rightPanel 面板左侧相对于地图容器左侧的 X 坐标
+      const rightPanelLeftRelativeToMap = rightPanelRect.left - mapRect.left;
+      // 计算弹出框右侧相对于地图容器左侧的 X 坐标
+      const popupRightRelativeToMap = popupRect.right - mapRect.left;
+      if (popupRightRelativeToMap > rightPanelLeftRelativeToMap - safetyMargin) {
+        // 如果 panX 已经因为左侧面板有了值，我们优先处理左侧的遮挡，避免冲突
+        // 这里简单处理，如果左侧已经需要向右移动，就不再因为右侧遮挡而向左移动
+        // 更完善的逻辑可能需要判断哪边遮挡更多，或者是否同时遮挡
+        if (panX <= 0) { 
+          panX = - (popupRightRelativeToMap - (rightPanelLeftRelativeToMap - safetyMargin));
+        }
+      }
+      
+      // 如果有需要平移的量
+      if (panX !== 0 || panY !== 0) {
+        mapInstance.value.panBy([panX, panY], { animate: true });
+      }
+    });
+  });
 };
 
 // 添加社区标记
@@ -678,7 +822,9 @@ const addCommunityMarkers = () => {
         </div>
       `, {
         maxWidth: 350,
-        className: 'custom-popup-wrapper'
+        className: 'custom-popup-wrapper',
+        offset: [10, 10],
+        autoPan: false
       });
 
     mapLayers.value.communities.addLayer(marker);
@@ -747,7 +893,9 @@ const addOrganizationMarkers = () => {
         </div>
       `, {
         maxWidth: 380,
-        className: 'custom-popup-wrapper'
+        className: 'custom-popup-wrapper',
+        offset: [10, 10],
+        autoPan: false
       });
 
     mapLayers.value.organizations.addLayer(marker);
@@ -812,7 +960,12 @@ const addElderlyMarkers = () => {
           <p style="margin: 4px 0 0 0; font-size: 12px;">老人类型: ${getElderlyTypeLabel(elderly.elderlyType)}</p>
           <p style="margin: 4px 0 0 0; font-size: 12px;">能力评估: ${elderly.abilityAssessment || '未评估'}</p>
         </div>
-      `);
+      `, {
+        maxWidth: 320,
+        className: 'custom-popup-wrapper',
+        offset: [10, 10],
+        autoPan: false
+      });
 
     mapLayers.value.elderly.addLayer(marker);
   });
@@ -876,7 +1029,9 @@ const addAlarmMarkers = () => {
         </div>
       `, {
         maxWidth: 400,
-        className: 'custom-popup-wrapper alarm-popup-wrapper'
+        className: 'custom-popup-wrapper alarm-popup-wrapper',
+        offset: [10, 10],
+        autoPan: false
       });
 
     mapLayers.value.alarms.addLayer(marker);
@@ -2010,7 +2165,7 @@ const loadWeatherData = async () => {
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   border: 2px solid rgba(0, 212, 255, 0.3);
   backdrop-filter: blur(20px);
-  padding: 10px !important;
+  padding: 30px !important;
   overflow: hidden;
   min-width: 320px !important;
   width: auto !important;
@@ -2023,6 +2178,7 @@ const loadWeatherData = async () => {
   font-family: 'Microsoft YaHei', sans-serif;
   width: auto !important;
   color: white !important;
+  line-height: 2; /* 修改行高 */
 }
 
 :deep(.custom-popup-wrapper .leaflet-popup-content *) {
@@ -2161,7 +2317,7 @@ const loadWeatherData = async () => {
     0 8px 20px rgba(255, 71, 87, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   min-width: 350px !important;
-  padding: 10px !important;
+  padding: 20px !important;
   box-sizing: border-box !important;
 }
 
@@ -2174,6 +2330,7 @@ const loadWeatherData = async () => {
 :deep(.alarm-popup-wrapper .leaflet-popup-content) {
   color: white !important;
   margin: -10px !important;
+  line-height: 2; /* 修改行高 */
 }
 
 :deep(.alarm-popup-wrapper .leaflet-popup-content *) {
