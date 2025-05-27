@@ -1929,7 +1929,8 @@ const loadWeatherData = async () => {
   font-family: 'Microsoft YaHei', sans-serif;
 }
 
-:deep(.leaflet-popup-content-wrapper) {
+/* 注释掉通用的弹出框样式，使用自定义样式 */
+/* :deep(.leaflet-popup-content-wrapper) {
   background: rgba(0, 0, 0, 0.9);
   border-radius: 8px;
   border: 1px solid rgba(0, 212, 255, 0.3);
@@ -1938,7 +1939,7 @@ const loadWeatherData = async () => {
 :deep(.leaflet-popup-tip) {
   background: rgba(0, 0, 0, 0.9);
   border: 1px solid rgba(0, 212, 255, 0.3);
-}
+} */
 
 :deep(.leaflet-control-zoom a) {
   background: rgba(0, 0, 0, 0.8);
@@ -2021,6 +2022,11 @@ const loadWeatherData = async () => {
   padding: 0 !important;
   font-family: 'Microsoft YaHei', sans-serif;
   width: auto !important;
+  color: white !important;
+}
+
+:deep(.custom-popup-wrapper .leaflet-popup-content *) {
+  color: white !important;
 }
 
 :deep(.custom-popup-wrapper .leaflet-popup-tip) {
@@ -2035,7 +2041,16 @@ const loadWeatherData = async () => {
   font-family: 'Microsoft YaHei', sans-serif;
 }
 
-.custom-popup * {
+.custom-popup *,
+.custom-popup h1,
+.custom-popup h2,
+.custom-popup h3,
+.custom-popup h4,
+.custom-popup h5,
+.custom-popup h6,
+.custom-popup p,
+.custom-popup span,
+.custom-popup div {
   color: white !important;
 }
 
@@ -2155,6 +2170,14 @@ const loadWeatherData = async () => {
   box-shadow: 0 4px 12px rgba(255, 71, 87, 0.2);
 }
 
+:deep(.alarm-popup-wrapper .leaflet-popup-content) {
+  color: white !important;
+}
+
+:deep(.alarm-popup-wrapper .leaflet-popup-content *) {
+  color: white !important;
+}
+
 .alarm-popup .popup-header {
   background: linear-gradient(135deg, rgba(255, 71, 87, 0.2) 0%, rgba(255, 107, 53, 0.15) 100%);
   border-bottom: 1px solid rgba(255, 71, 87, 0.3);
@@ -2168,7 +2191,16 @@ const loadWeatherData = async () => {
   color: white !important;
 }
 
-.alarm-popup * {
+.alarm-popup *,
+.alarm-popup h1,
+.alarm-popup h2,
+.alarm-popup h3,
+.alarm-popup h4,
+.alarm-popup h5,
+.alarm-popup h6,
+.alarm-popup p,
+.alarm-popup span,
+.alarm-popup div {
   color: white !important;
 }
 
