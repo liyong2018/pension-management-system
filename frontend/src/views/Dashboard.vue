@@ -148,7 +148,9 @@
                 </div>
                 <!-- 如果没有告警数据 -->
                 <div v-if="!alarmList.length && !alarmLoading" class="no-alarm">
+                  <div class="no-alarm-icon">✅</div>
                   <div class="no-alarm-text">暂无未处理告警</div>
+                  <div class="no-alarm-desc">系统运行正常</div>
                 </div>
               </div>
             </div>
@@ -675,7 +677,7 @@ const addCommunityMarkers = () => {
           </div>
         </div>
       `, {
-        maxWidth: 280,
+        maxWidth: 350,
         className: 'custom-popup-wrapper'
       });
 
@@ -744,7 +746,7 @@ const addOrganizationMarkers = () => {
           </div>
         </div>
       `, {
-        maxWidth: 300,
+        maxWidth: 380,
         className: 'custom-popup-wrapper'
       });
 
@@ -873,7 +875,7 @@ const addAlarmMarkers = () => {
           </div>
         </div>
       `, {
-        maxWidth: 320,
+        maxWidth: 400,
         className: 'custom-popup-wrapper alarm-popup-wrapper'
       });
 
@@ -1761,6 +1763,36 @@ const loadWeatherData = async () => {
   color: #2ed573;
 }
 
+/* 无告警状态样式 */
+.no-alarm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  height: 100%;
+  min-height: 200px;
+}
+
+.no-alarm-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.8;
+}
+
+.no-alarm-text {
+  font-size: 16px;
+  color: #2ed573;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.no-alarm-desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
 
 
 /* 响应式设计 */
@@ -1969,104 +2001,161 @@ const loadWeatherData = async () => {
 
 /* 自定义弹出框样式 */
 :deep(.custom-popup-wrapper .leaflet-popup-content-wrapper) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f1419 100%);
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 8px 20px rgba(0, 212, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(0, 212, 255, 0.3);
+  backdrop-filter: blur(20px);
   padding: 0;
   overflow: hidden;
+  min-width: 320px !important;
+  width: auto !important;
 }
 
 :deep(.custom-popup-wrapper .leaflet-popup-content) {
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
   font-family: 'Microsoft YaHei', sans-serif;
+  width: auto !important;
 }
 
 :deep(.custom-popup-wrapper .leaflet-popup-tip) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f1419 100%);
+  border: 2px solid rgba(0, 212, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .custom-popup {
   color: white;
-  min-width: 200px;
+  min-width: 320px;
+  font-family: 'Microsoft YaHei', sans-serif;
 }
 
 .popup-header {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 20px 24px 16px 24px;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(123, 104, 238, 0.1) 100%);
+  border-bottom: 1px solid rgba(0, 212, 255, 0.2);
   position: relative;
+  backdrop-filter: blur(10px);
+}
+
+.popup-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00d4ff, transparent);
 }
 
 .popup-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  margin-right: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  font-size: 18px;
+  margin-right: 16px;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .popup-title {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   flex: 1;
   color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
 }
 
 .popup-content {
-  padding: 12px 16px;
+  padding: 20px 24px 24px 24px;
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .popup-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
-  font-size: 13px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+
+.popup-item:hover {
+  background: rgba(0, 212, 255, 0.05);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 4px -12px 8px -12px;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.1);
 }
 
 .popup-item:last-child {
   margin-bottom: 0;
+  border-bottom: none;
 }
 
 .popup-label {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.7);
   font-weight: 500;
-  min-width: 60px;
+  min-width: 80px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .popup-value {
   color: white;
   font-weight: 600;
   text-align: right;
+  font-size: 14px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .popup-value.highlight {
   color: #00d4ff;
   font-weight: 700;
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
 }
 
 /* 告警弹出框特殊样式 */
 :deep(.alarm-popup-wrapper .leaflet-popup-content-wrapper) {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  background: linear-gradient(145deg, #2d1b1b 0%, #3d1a1a 50%, #4a1515 100%);
+  border: 2px solid rgba(255, 71, 87, 0.4);
+  box-shadow: 
+    0 20px 60px rgba(255, 71, 87, 0.2),
+    0 8px 20px rgba(255, 71, 87, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  min-width: 350px !important;
 }
 
 :deep(.alarm-popup-wrapper .leaflet-popup-tip) {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  background: linear-gradient(145deg, #2d1b1b 0%, #3d1a1a 50%, #4a1515 100%);
+  border: 2px solid rgba(255, 71, 87, 0.4);
+  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.2);
 }
 
 .alarm-popup .popup-header {
-  background: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, rgba(255, 71, 87, 0.2) 0%, rgba(255, 107, 53, 0.15) 100%);
+  border-bottom: 1px solid rgba(255, 71, 87, 0.3);
+}
+
+.alarm-popup .popup-header::before {
+  background: linear-gradient(90deg, transparent, #ff4757, transparent);
 }
 
 .alarm-level {
