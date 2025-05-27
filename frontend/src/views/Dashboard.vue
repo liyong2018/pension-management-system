@@ -1897,7 +1897,7 @@ const loadWeatherData = async () => {
     right: 10px;
     top: 350px;
     bottom: 5px;
-    width: calc(50% - 45px);
+    width: calc(60% - 45px);
   }
   
   .dashboard-card {
@@ -2013,6 +2013,7 @@ const loadWeatherData = async () => {
   overflow: hidden;
   min-width: 320px !important;
   width: auto !important;
+  margin: 10px !important;
 }
 
 :deep(.custom-popup-wrapper .leaflet-popup-content) {
@@ -2029,9 +2030,13 @@ const loadWeatherData = async () => {
 }
 
 .custom-popup {
-  color: white;
+  color: white !important;
   min-width: 320px;
   font-family: 'Microsoft YaHei', sans-serif;
+}
+
+.custom-popup * {
+  color: white !important;
 }
 
 .popup-header {
@@ -2075,7 +2080,7 @@ const loadWeatherData = async () => {
   font-size: 18px;
   font-weight: 700;
   flex: 1;
-  color: white;
+  color: white !important;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   letter-spacing: 0.5px;
 }
@@ -2110,7 +2115,7 @@ const loadWeatherData = async () => {
 }
 
 .popup-label {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.7) !important;
   font-weight: 500;
   min-width: 80px;
   font-size: 13px;
@@ -2119,7 +2124,7 @@ const loadWeatherData = async () => {
 }
 
 .popup-value {
-  color: white;
+  color: white !important;
   font-weight: 600;
   text-align: right;
   font-size: 14px;
@@ -2127,7 +2132,7 @@ const loadWeatherData = async () => {
 }
 
 .popup-value.highlight {
-  color: #00d4ff;
+  color: #00d4ff !important;
   font-weight: 700;
   text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
 }
@@ -2141,6 +2146,7 @@ const loadWeatherData = async () => {
     0 8px 20px rgba(255, 71, 87, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   min-width: 350px !important;
+  margin: 10px !important;
 }
 
 :deep(.alarm-popup-wrapper .leaflet-popup-tip) {
@@ -2156,6 +2162,14 @@ const loadWeatherData = async () => {
 
 .alarm-popup .popup-header::before {
   background: linear-gradient(90deg, transparent, #ff4757, transparent);
+}
+
+.alarm-popup {
+  color: white !important;
+}
+
+.alarm-popup * {
+  color: white !important;
 }
 
 .alarm-level {
