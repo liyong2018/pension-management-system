@@ -43,7 +43,7 @@ public class ElderlyProfileApiTest {
     @Test
     public void testGetAllElderlyProfiles() throws Exception {
         // 确保数据库中有数据
-        long count = elderlyProfileDao.countWithConditions(null, null, null, null);
+        long count = elderlyProfileDao.countWithConditions(null, null, null, null, null);
         if (count == 0) {
             // 如果没有数据，创建一条测试数据
             ElderlyProfile profile = new ElderlyProfile();
@@ -201,7 +201,7 @@ public class ElderlyProfileApiTest {
     @Test
     public void testGetStatistics() throws Exception {
         // 确保数据库中有不同类型的老人数据
-        if (elderlyProfileDao.countWithConditions(null,null,null,null) < 3) {
+        if (elderlyProfileDao.countWithConditions(null,null,null,null,null) < 3) {
             // 创建不同养老类型和能力评估的老人
             ElderlyProfile profile1 = new ElderlyProfile();
             profile1.setName("统计测试老人1");

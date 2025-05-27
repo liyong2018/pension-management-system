@@ -111,6 +111,8 @@ public class DashboardStatsDTO {
         private Long livingAloneCount;  // 独居老人
         private Long disabledCount;     // 残疾老人
         private Long elderlyCount;      // 高龄老人
+        private Long lowIncomeCount;    // 低收入老人
+        private Long specialCareCount;  // 特殊照护老人
     }
     
     @Data
@@ -146,6 +148,19 @@ public class DashboardStatsDTO {
         private Long onlineCount;           // 在线设备
         private Long offlineCount;          // 离线设备
         private Long faultCount;            // 故障设备
+        
+        // 设备运行状态详细信息
+        private java.util.List<DeviceStatusDetailDTO> deviceStatusDetails;
+    }
+    
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class DeviceStatusDetailDTO {
+        private String deviceName;          // 设备名称
+        private Long totalCount;            // 设备总数
+        private Long faultCount;            // 故障数量
+        private Long onlineCount;           // 在线数量
     }
     
     @Data
@@ -163,6 +178,9 @@ public class DashboardStatsDTO {
     @NoArgsConstructor
     public static class MapDataDTO {
         private java.util.List<CommunityDataDTO> communities;
+        private java.util.List<OrganizationDataDTO> organizations;
+        private java.util.List<ElderlyDataDTO> elderly;
+        private java.util.List<AlarmDataDTO> alarms;
         
         @Data
         @AllArgsConstructor
@@ -173,7 +191,48 @@ public class DashboardStatsDTO {
             private Double latitude;        // 纬度
             private Long elderlyCount;      // 老人数量
             private Long facilityCount;     // 机构数量
-            private String type;            // 类型：居家养老、日照、机构
+            private String type;            // 类型：community
+        }
+        
+        @Data
+        @AllArgsConstructor
+        @NoArgsConstructor
+        public static class OrganizationDataDTO {
+            private String name;            // 机构名称
+            private Double longitude;       // 经度
+            private Double latitude;        // 纬度
+            private String type;            // 机构类型
+            private Long bedCount;          // 床位数
+            private Long staffCount;        // 员工数
+            private Long serviceCount;      // 服务数
+        }
+        
+        @Data
+        @AllArgsConstructor
+        @NoArgsConstructor
+        public static class ElderlyDataDTO {
+            private String elderlyName;    // 老人姓名
+            private String community;      // 所属社区
+            private String address;        // 地址
+            private Double longitude;      // 经度
+            private Double latitude;       // 纬度
+            private String elderlyType;    // 老人类型
+            private String abilityAssessment; // 能力评估
+            private Integer age;           // 年龄
+            private String gender;         // 性别
+        }
+        
+        @Data
+        @AllArgsConstructor
+        @NoArgsConstructor
+        public static class AlarmDataDTO {
+            private String alarmType;      // 告警类型
+            private String alarmLevel;     // 告警级别
+            private String location;       // 位置信息
+            private String alarmTime;      // 告警时间
+            private String processStatus;  // 处理状态
+            private Double longitude;      // 经度
+            private Double latitude;       // 纬度
         }
     }
 } 

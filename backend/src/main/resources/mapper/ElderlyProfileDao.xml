@@ -63,6 +63,9 @@
             <if test="phone != null and phone != ''">
                 AND ep.phone = #{phone}
             </if>
+            <if test="elderlyType != null and elderlyType != ''">
+                AND ep.elderly_type = #{elderlyType}
+            </if>
             <if test="organizationId != null">
                 AND ep.organization_id = #{organizationId}
             </if>
@@ -82,6 +85,9 @@
             </if>
             <if test="phone != null and phone != ''">
                 AND ep.phone = #{phone}
+            </if>
+            <if test="elderlyType != null and elderlyType != ''">
+                AND ep.elderly_type = #{elderlyType}
             </if>
             <if test="organizationId != null">
                 AND ep.organization_id = #{organizationId}

@@ -141,7 +141,27 @@ public interface DashboardStatsDao {
     List<Map<String, Object>> getCommunityStats();
     
     /**
+     * 获取机构统计数据
+     */
+    List<Map<String, Object>> getOrganizationStats();
+    
+    /**
+     * 获取老人位置数据
+     */
+    List<Map<String, Object>> getElderlyLocationStats();
+    
+    /**
+     * 获取告警位置数据
+     */
+    List<Map<String, Object>> getAlarmLocationStats();
+    
+    /**
      * 获取最近告警数据
      */
     List<Map<String, Object>> getRecentAlarms(@Param("limit") Integer limit);
+    
+    /**
+     * 获取设备运行状态详细信息
+     */
+    List<Map<String, Object>> getDeviceStatusDetails();
 } 

@@ -14,6 +14,7 @@ public interface ElderlyProfileDao {
             @Param("name") String name,
             @Param("idCardNumber") String idCardNumber,
             @Param("phone") String phone,
+            @Param("elderlyType") String elderlyType,
             @Param("organizationId") Long organizationId,
             @Param("offset") int offset,
             @Param("limit") int limit);
@@ -22,6 +23,7 @@ public interface ElderlyProfileDao {
             @Param("name") String name,
             @Param("idCardNumber") String idCardNumber,
             @Param("phone") String phone,
+            @Param("elderlyType") String elderlyType,
             @Param("organizationId") Long organizationId);
 
     int insert(ElderlyProfile elderlyProfile);

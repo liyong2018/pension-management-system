@@ -121,6 +121,23 @@
                 </el-select>
               </el-form-item>
             </el-col>
+            <el-col :span="8">
+              <el-form-item label="老人类型" prop="elderlyType">
+                <el-select 
+                  v-model="form.elderlyType" 
+                  placeholder="请选择老人类型"
+                  :loading="elderlyTypeLoading"
+                  filterable
+                >
+                  <el-option
+                    v-for="item in elderlyTypeOptions"
+                    :key="item.dictCode"
+                    :label="item.dictLabel"
+                    :value="item.dictValue"
+                  ></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
             <el-col :span="8" v-if="form.pensionType === '机构养老（养老院）'">
               <el-form-item label="所属机构" prop="organizationId">
                 <el-select v-model="form.organizationId" placeholder="请选择所属机构">
@@ -397,6 +414,7 @@ const form = ref({
   addressDetail: '',
   community: '',
   pensionType: '',
+  elderlyType: '',
   organizationId: null,
   medicalHistory: '',
   allergyHistory: '',
@@ -432,8 +450,10 @@ const rules = {
 // 字典选项数据
 const communityOptions = ref([])
 const pensionTypeOptions = ref([])
+const elderlyTypeOptions = ref([])
 const communityLoading = ref(false)
 const pensionTypeLoading = ref(false)
+const elderlyTypeLoading = ref(false)
 
 // 机构选项
 const organizationOptions = ref([])
@@ -480,6 +500,22 @@ const fetchPensionTypeOptions = async () => {
     pensionTypeOptions.value = []
   } finally {
     pensionTypeLoading.value = false
+  }
+}
+
+// 获取老人类型字典数据
+const fetchElderlyTypeOptions = async () => {
+  elderlyTypeLoading.value = true
+  try {
+    const data = await dictionaryApi.getByType('elderly_type')
+    elderlyTypeOptions.value = data.filter(item => item.status === 'ACTIVE') || []
+    console.log('获取老人类型字典数据成功:', elderlyTypeOptions.value)
+  } catch (error) {
+    console.error('获取老人类型字典数据失败:', error)
+    ElMessage.error('获取老人类型选项失败')
+    elderlyTypeOptions.value = []
+  } finally {
+    elderlyTypeLoading.value = false
   }
 }
 
@@ -712,7 +748,8 @@ watch([() => props.modelValue, () => props.elderlyId], async ([newVisible, newEl
     await Promise.all([
       fetchOrganizations(),
       fetchCommunityOptions(),
-      fetchPensionTypeOptions()
+      fetchPensionTypeOptions(),
+      fetchElderlyTypeOptions()
     ]);
     
     if (props.mode !== 'add' && newElderlyId) {

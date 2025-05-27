@@ -18,6 +18,7 @@ public interface ElderlyProfileService {
             String name, 
             String idCardNumber, 
             String phone, 
+            String elderlyType,
             Long organizationId,
             int pageNum, 
             int pageSize);

@@ -24,6 +24,22 @@
         <el-form-item label="联系电话">
           <el-input v-model="searchForm.phone" placeholder="请输入联系电话" clearable></el-input>
         </el-form-item>
+        <el-form-item label="老人类型">
+          <el-select 
+            v-model="searchForm.elderlyType" 
+            placeholder="请选择老人类型" 
+            clearable
+            :loading="elderlyTypeLoading"
+            filterable
+          >
+            <el-option
+              v-for="item in elderlyTypeOptions"
+              :key="item.dictCode"
+              :label="item.dictLabel"
+              :value="item.dictValue"
+            ></el-option>
+          </el-select>
+        </el-form-item>
         <el-form-item class="search-buttons-left">
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
@@ -57,6 +73,14 @@
         <el-table-column prop="pensionType" label="养老类型" width="150">
           <template #default="{ row }">
             <el-tag :type="getPensionTypeTag(row.pensionType)">{{ row.pensionType }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="elderlyType" label="老人类型" width="120">
+          <template #default="{ row }">
+            <el-tag :type="getElderlyTypeTag(row.elderlyType)" v-if="row.elderlyTypeLabel">
+              {{ row.elderlyTypeLabel }}
+            </el-tag>
+            <span v-else class="text-gray-400">-</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
@@ -97,6 +121,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { elderlyProfileApi } from '@/api/elderlyProfile'
+import { dictionaryApi } from '@/api/dictionary'
 import ElderlyProfileDialog from './components/ElderlyProfileDialog.vue'
 
 // 数据列表
@@ -111,13 +136,18 @@ const selectedIds = ref([])
 const searchForm = ref({
   name: '',
   idCardNumber: '',
-  phone: ''
+  phone: '',
+  elderlyType: ''
 })
 
 // 对话框控制
 const dialogVisible = ref(false)
 const dialogMode = ref('view')
 const selectedElderlyId = ref(null)
+
+// 老人类型字典数据
+const elderlyTypeOptions = ref([])
+const elderlyTypeLoading = ref(false)
 
 // 获取数据列表
 const fetchData = async () => {
@@ -149,7 +179,8 @@ const handleReset = () => {
   searchForm.value = {
     name: '',
     idCardNumber: '',
-    phone: ''
+    phone: '',
+    elderlyType: ''
   }
   currentPage.value = 1
   fetchData()
@@ -177,6 +208,20 @@ const getPensionTypeTag = (type) => {
     '居家养老': '',
     '社区养老': 'success',
     '机构养老': 'warning'
+  }
+  return map[type] || 'info'
+}
+
+// 老人类型标签
+const getElderlyTypeTag = (type) => {
+  const map = {
+    'normal': '',
+    'empty_nest': 'warning',
+    'living_alone': 'danger',
+    'disabled': 'danger',
+    'elderly': 'warning',
+    'low_income': 'info',
+    'special_care': 'danger'
   }
   return map[type] || 'info'
 }
@@ -255,9 +300,26 @@ const handleDialogSuccess = () => {
   fetchData()
 }
 
+// 获取老人类型字典数据
+const fetchElderlyTypeOptions = async () => {
+  elderlyTypeLoading.value = true
+  try {
+    const data = await dictionaryApi.getByType('elderly_type')
+    elderlyTypeOptions.value = data.filter(item => item.status === 'ACTIVE') || []
+    console.log('获取老人类型字典数据成功:', elderlyTypeOptions.value)
+  } catch (error) {
+    console.error('获取老人类型字典数据失败:', error)
+    ElMessage.error('获取老人类型选项失败')
+    elderlyTypeOptions.value = []
+  } finally {
+    elderlyTypeLoading.value = false
+  }
+}
+
 // 初始化
 onMounted(() => {
   fetchData()
+  fetchElderlyTypeOptions()
 })
 </script>
 

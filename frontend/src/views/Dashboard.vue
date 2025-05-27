@@ -10,10 +10,15 @@
       </div>
       <div class="header-right">
         <div class="weather-info">
-          <span class="weather-icon">☀️</span>
-          <span class="weather-text">晴天</span>
+          <span class="weather-icon">{{ weatherData.icon }}</span>
+          <span class="weather-text">{{ weatherData.text }}</span>
         </div>
       </div>
+    </div>
+
+    <!-- 背景地图 -->
+    <div class="background-map">
+      <div ref="mapContainer" id="leafletMap" class="leaflet-map"></div>
     </div>
 
     <!-- 顶部数据统计卡片 -->
@@ -48,268 +53,142 @@
       </div>
     </div>
 
-    <!-- 主要内容区域 -->
-    <div class="main-dashboard">
-      <!-- 左侧面板 -->
-      <div class="left-panel">
-        <!-- 老人类型统计 -->
-        <div class="dashboard-card">
-          <div class="card-header">
-            <h3>老人类型分析</h3>
-          </div>
-          <div class="card-content">
-            <div ref="elderlyTypeChart" class="chart-container"></div>
-          </div>
+    <!-- 左侧面板 -->
+    <div class="left-panel">
+      <!-- 老人类型统计 -->
+      <div class="dashboard-card">
+        <div class="card-header">
+          <h3>老人类型分析</h3>
         </div>
+        <div class="card-content">
+          <div ref="elderlyTypeChart" class="chart-container"></div>
+        </div>
+      </div>
 
-        <!-- 能力评估统计 -->
-        <div class="dashboard-card">
-          <div class="card-header">
-            <h3>能力评估</h3>
-          </div>
-          <div class="card-content">
-            <div class="ability-stats">
-              <div class="ability-item">
-                <div class="ability-bar">
-                  <div class="bar-fill green" :style="{ width: getAbilityPercentage('能力完好') + '%' }"></div>
-                </div>
-                <div class="ability-label">能力完好</div>
-                <div class="ability-value">{{ getAbilityCount('能力完好') }}人 ({{ getAbilityPercentage('能力完好') }}%)</div>
+      <!-- 能力评估统计 -->
+      <div class="dashboard-card">
+        <div class="card-header">
+          <h3>能力评估</h3>
+        </div>
+        <div class="card-content">
+          <div class="ability-stats">
+            <div class="ability-item">
+              <div class="ability-bar">
+                <div class="bar-fill green" :style="{ width: getAbilityPercentage('能力完好') + '%' }"></div>
               </div>
-              <div class="ability-item">
-                <div class="ability-bar">
-                  <div class="bar-fill blue" :style="{ width: getAbilityPercentage('轻度失能') + '%' }"></div>
-                </div>
-                <div class="ability-label">轻度失能</div>
-                <div class="ability-value">{{ getAbilityCount('轻度失能') }}人 ({{ getAbilityPercentage('轻度失能') }}%)</div>
+              <div class="ability-label">能力完好</div>
+              <div class="ability-value">{{ getAbilityCount('能力完好') }}人</div>
+            </div>
+            <div class="ability-item">
+              <div class="ability-bar">
+                <div class="bar-fill blue" :style="{ width: getAbilityPercentage('轻度失能') + '%' }"></div>
               </div>
-              <div class="ability-item">
-                <div class="ability-bar">
-                  <div class="bar-fill orange" :style="{ width: getAbilityPercentage('中度失能') + '%' }"></div>
-                </div>
-                <div class="ability-label">中度失能</div>
-                <div class="ability-value">{{ getAbilityCount('中度失能') }}人 ({{ getAbilityPercentage('中度失能') }}%)</div>
+              <div class="ability-label">轻度失能</div>
+              <div class="ability-value">{{ getAbilityCount('轻度失能') }}人</div>
+            </div>
+            <div class="ability-item">
+              <div class="ability-bar">
+                <div class="bar-fill orange" :style="{ width: getAbilityPercentage('中度失能') + '%' }"></div>
               </div>
-              <div class="ability-item">
-                <div class="ability-bar">
-                  <div class="bar-fill red" :style="{ width: getAbilityPercentage('重度失能') + '%' }"></div>
-                </div>
-                <div class="ability-label">重度失能</div>
-                <div class="ability-value">{{ getAbilityCount('重度失能') }}人 ({{ getAbilityPercentage('重度失能') }}%)</div>
+              <div class="ability-label">中度失能</div>
+              <div class="ability-value">{{ getAbilityCount('中度失能') }}人</div>
+            </div>
+            <div class="ability-item">
+              <div class="ability-bar">
+                <div class="bar-fill red" :style="{ width: getAbilityPercentage('重度失能') + '%' }"></div>
               </div>
+              <div class="ability-label">重度失能</div>
+              <div class="ability-value">{{ getAbilityCount('重度失能') }}人</div>
             </div>
           </div>
         </div>
+      </div>
+    </div>
 
-        <!-- 年龄分布 -->
-        <div class="dashboard-card">
-          <div class="card-header">
-            <h3>长者年龄分布</h3>
-            <div class="gender-legend">
-              <span class="legend-item male">■ 男</span>
-              <span class="legend-item female">■ 女</span>
+    <!-- 右侧面板 -->
+    <div class="right-panel">
+      <!-- SOS报警设备 -->
+      <div class="dashboard-card">
+        <div class="card-header">
+          <h3>SOS设备</h3>
+          <div class="device-count">{{ formatNumber(dashboardData?.deviceStats?.sosDeviceCount) }}台</div>
+        </div>
+        <div class="card-content">
+          <div class="device-status-ring">
+            <div class="ring-chart">
+              <div class="ring-progress" :style="{ '--progress': getSosProgress() + '%' }"></div>
+              <div class="ring-center">
+                <div class="ring-value">{{ getSosProgress() }}%</div>
+                <div class="ring-label">在线率</div>
+              </div>
             </div>
-          </div>
-          <div class="card-content">
-            <div ref="ageChart" class="chart-container"></div>
           </div>
         </div>
       </div>
 
-              <!-- 中间地图区域 -->
-        <div class="center-panel">
-          <div class="dashboard-card map-card">
+                <!-- 未处理告警 -->
+          <div class="dashboard-card alarm-card-auto">
             <div class="card-header">
-              <h3>各社区养老机构分布</h3>
-              <div class="map-controls">
-                <div class="map-stats">
-                  <div class="map-stat-item">
-                    <span class="stat-dot blue"></span>
-                    <span>日间照料: {{ facilityStats.dayCareCount }}个</span>
-                  </div>
-                  <div class="map-stat-item">
-                    <span class="stat-dot orange"></span>
-                    <span>养老院: {{ facilityStats.nursingHomeCount }}个</span>
-                  </div>
-                  <div class="map-stat-item">
-                    <span class="stat-dot green"></span>
-                    <span>居家服务: {{ facilityStats.homeCareCount }}个</span>
-                  </div>
-                </div>
-                <div class="map-tools">
-                  <button class="map-tool-btn" @click="toggleLayer('facilities')" :class="{ active: showFacilities }">
-                    🏢 机构
-                  </button>
-                  <button class="map-tool-btn" @click="toggleLayer('elderly')" :class="{ active: showElderly }">
-                    👥 老人
-                  </button>
-                  <button class="map-tool-btn" @click="toggleLayer('alarms')" :class="{ active: showAlarms }">
-                    🚨 告警
-                  </button>
-                  <button class="map-tool-btn" @click="resetMapView">
-                    🎯 重置
-                  </button>
-                </div>
+              <h3>未处理告警</h3>
+              <div class="alarm-controls">
+                <span class="alarm-count">{{ formatNumber(dashboardData?.alarmStats?.unhandledCount) }}条</span>
+                <button class="control-btn" @click="loadAlarmData">🔄</button>
               </div>
             </div>
-            <div class="card-content">
-              <div class="map-container">
-                <div ref="mapContainer" id="leafletMap" class="leaflet-map"></div>
-                <div class="map-legend">
-                  <div class="legend-title">图例</div>
-                  <div class="legend-items">
-                    <div class="legend-item">
-                      <span class="legend-marker blue"></span>
-                      <span>日间照料中心</span>
-                    </div>
-                    <div class="legend-item">
-                      <span class="legend-marker orange"></span>
-                      <span>养老院</span>
-                    </div>
-                    <div class="legend-item">
-                      <span class="legend-marker green"></span>
-                      <span>居家服务点</span>
-                    </div>
-                    <div class="legend-item">
-                      <span class="legend-marker red"></span>
-                      <span>紧急告警</span>
-                    </div>
+            <div class="card-content alarm-card-content">
+              <div class="alarm-list alarm-list-auto" v-loading="alarmLoading">
+                <div v-for="alarm in alarmList" :key="alarm.time" class="alarm-item">
+                  <div class="alarm-type" :class="getAlarmLevelClass(alarm.level)">
+                    {{ alarm.type }}
                   </div>
+                  <div class="alarm-content">
+                    <div class="alarm-location">{{ alarm.location }}</div>
+                    <div class="alarm-time">{{ alarm.time }}</div>
+                  </div>
+                </div>
+                <!-- 如果没有告警数据 -->
+                <div v-if="!alarmList.length && !alarmLoading" class="no-alarm">
+                  <div class="no-alarm-text">暂无未处理告警</div>
                 </div>
               </div>
             </div>
           </div>
-
-        <!-- 底部信息提示 -->
-        <div class="info-panel">
-          <div class="info-item">
-            <div class="info-icon">📞</div>
-            <div class="info-content">
-              <div class="info-title">郭女士 (13577330798)</div>
-              <div class="info-desc">不在郭女士的电子围栏电子围栏内</div>
-              <div class="info-status emergency">【紧急报警】</div>
-              <div class="info-time">2022-09-27 18:30:22</div>
-            </div>
-          </div>
-          <div class="info-item">
-            <div class="info-icon">🆘</div>
-            <div class="info-content">
-              <div class="info-title">郭女士 (13577330798)</div>
-              <div class="info-desc">云南省红河哈尼族彝族自治州 蒙自市 丰泽街 靠近河滨作训学校</div>
-              <div class="info-status sos">【SOS报警】</div>
-              <div class="info-time">2022-09-27 17:32:39</div>
-            </div>
-          </div>
+    </div>
+    <!-- 图例面板 -->
+    <div class="legend-panel">
+      <div class="legend-title">图例</div>
+      <div class="legend-items">
+        <div class="legend-item">
+          <span class="legend-marker blue"></span>
+          <span>社区</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-marker orange"></span>
+          <span>机构</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-marker red"></span>
+          <span>告警</span>
         </div>
       </div>
-
-      <!-- 右侧面板 -->
-      <div class="right-panel">
-        <!-- SOS报警设备 -->
-        <div class="dashboard-card">
-          <div class="card-header">
-            <h3>SOS报警设备</h3>
-            <div class="device-count">{{ formatNumber(dashboardData?.deviceStats?.sosDeviceCount) }}/800(台数)</div>
-          </div>
-          <div class="card-content">
-            <div class="device-status-ring">
-              <div class="ring-chart">
-                <div class="ring-progress" :style="{ '--progress': getSosProgress() + '%' }"></div>
-                <div class="ring-center">
-                  <div class="ring-value">{{ getSosProgress() }}%</div>
-                  <div class="ring-label">在线率</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 烟感设备 -->
-        <div class="dashboard-card">
-          <div class="card-header">
-            <h3>烟感设备</h3>
-            <div class="device-count">良8.85</div>
-          </div>
-          <div class="card-content">
-            <div class="device-status-ring">
-              <div class="ring-chart">
-                <div class="ring-progress orange" :style="{ '--progress': '88%' }"></div>
-                <div class="ring-center">
-                  <div class="ring-value">88%</div>
-                  <div class="ring-label">正常率</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 设备运行状态 -->
-        <div class="dashboard-card">
-          <div class="card-header">
-            <h3>设备运行状态</h3>
-          </div>
-          <div class="card-content">
-            <div class="device-status-table">
-              <div class="status-row header">
-                <div class="status-col">设备名称</div>
-                <div class="status-col">设备数量</div>
-                <div class="status-col">设备故障数量</div>
-              </div>
-              <div class="status-row">
-                <div class="status-col">红外探测器</div>
-                <div class="status-col">2</div>
-                <div class="status-col">0</div>
-              </div>
-              <div class="status-row">
-                <div class="status-col">门磁传感器</div>
-                <div class="status-col">1</div>
-                <div class="status-col">0</div>
-              </div>
-              <div class="status-row">
-                <div class="status-col">水浸传感器</div>
-                <div class="status-col">2</div>
-                <div class="status-col">0</div>
-              </div>
-              <div class="status-row">
-                <div class="status-col">光照传感器</div>
-                <div class="status-col">0</div>
-                <div class="status-col">0</div>
-              </div>
-              <div class="status-row">
-                <div class="status-col">紧急按钮</div>
-                <div class="status-col">3</div>
-                <div class="status-col">2</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 未处理告警 -->
-        <div class="dashboard-card">
-          <div class="card-header">
-            <h3>未处理</h3>
-            <div class="alarm-controls">
-              <button class="control-btn">🔄</button>
-              <button class="control-btn">📋</button>
-            </div>
-          </div>
-          <div class="card-content">
-            <div class="alarm-list" v-loading="alarmLoading">
-              <div v-for="alarm in alarmList" :key="alarm.time" class="alarm-item">
-                <div class="alarm-type" :class="getAlarmLevelClass(alarm.level)">
-                  {{ alarm.type }}
-                </div>
-                <div class="alarm-content">
-                  <div class="alarm-location">{{ alarm.location }}</div>
-                  <div class="alarm-time">{{ alarm.time }}</div>
-                </div>
-                <div class="alarm-status" :class="getAlarmStatusClass(alarm.status)">
-                  {{ alarm.status }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    </div>
+    <!-- 底部控制栏 -->
+    <div class="bottom-controls">
+      
+      <!-- 地图控制按钮 -->
+      <div class="map-controls">
+        <button class="control-icon-btn" @click="toggleLayer('communities')" :class="{ active: showCommunities }" title="社区">
+          🏘️
+        </button>
+        <button class="control-icon-btn" @click="toggleLayer('organizations')" :class="{ active: showOrganizations }" title="机构">
+          🏢
+        </button>
+        <button class="control-icon-btn" @click="toggleLayer('alarms')" :class="{ active: showAlarms }" title="告警">
+          🚨
+        </button>
+        <button class="control-icon-btn" @click="resetMapView" title="重置">
+          🎯
+        </button>
       </div>
     </div>
   </div>
@@ -327,15 +206,21 @@ const alarmList = ref([]);
 const loading = ref(false);
 const alarmLoading = ref(false);
 const currentTime = ref('');
+const weatherData = ref({
+  icon: '☀️',
+  text: '晴天'
+});
 
 // 地图相关状态
-const showFacilities = ref(true);
-const showElderly = ref(false);
+const showCommunities = ref(true);
+const showOrganizations = ref(true);
+// const showElderly = ref(false); // 移除老人数据展示
 const showAlarms = ref(true);
 const mapInstance = ref(null);
 const mapLayers = ref({
-  facilities: null,
-  elderly: null,
+  communities: null,
+  organizations: null,
+  // elderly: null, // 移除老人图层
   alarms: null
 });
 
@@ -358,6 +243,33 @@ const facilityStats = computed(() => {
     homeCareCount: dashboardData.value.facilityStats.homeCareCount || 0
   };
 });
+
+// 获取地图数据数量
+const getMapDataCount = (type) => {
+  if (!dashboardData.value?.mapData) return 0;
+  const mapData = dashboardData.value.mapData;
+  switch (type) {
+    case 'communities': return mapData.communities?.length || 0;
+    case 'organizations': return mapData.organizations?.length || 0;
+    // case 'elderly': return mapData.elderly?.length || 0; // 移除老人数据计数
+    case 'alarms': return mapData.alarms?.length || 0;
+    default: return 0;
+  }
+};
+
+// 获取老人类型标签
+const getElderlyTypeLabel = (type) => {
+  const typeMap = {
+    'normal': '普通老人',
+    'empty_nest': '空巢老人',
+    'living_alone': '独居老人',
+    'disabled': '失能老人',
+    'elderly': '高龄老人',
+    'low_income': '低收入老人',
+    'special_care': '特殊照护'
+  };
+  return typeMap[type] || type || '未分类';
+};
 
 // 更新当前时间
 const updateTime = () => {
@@ -388,10 +300,10 @@ const getAbilityCount = (ability) => {
   if (!dashboardData.value?.abilityStats) return 0;
   const stats = dashboardData.value.abilityStats;
   switch (ability) {
-    case '能力完好': return stats.normalCount || 0;
-    case '轻度失能': return stats.mildCount || 0;
-    case '中度失能': return stats.moderateCount || 0;
-    case '重度失能': return stats.severeCount || 0;
+    case '能力完好': return stats.fullAbilityCount || 0;
+    case '轻度失能': return stats.mildDisabilityCount || 0;
+    case '中度失能': return stats.moderateDisabilityCount || 0;
+    case '重度失能': return stats.severeDisabilityCount || 0;
     default: return 0;
   }
 };
@@ -407,9 +319,31 @@ const getAbilityPercentage = (ability) => {
 // 获取SOS设备在线率
 const getSosProgress = () => {
   if (!dashboardData.value?.deviceStats) return 0;
-  const total = dashboardData.value.deviceStats.sosDeviceCount || 800;
-  const online = Math.floor(total * 0.85); // 假设85%在线率
-  return Math.round((online / total) * 100);
+  const total = dashboardData.value.deviceStats.sosDeviceCount || 0;
+  const online = dashboardData.value.deviceStats.onlineCount || 0;
+  if (total === 0) return 0;
+  // 计算SOS设备的在线率（假设SOS设备占总在线设备的一定比例）
+  const sosOnlineRate = Math.min(Math.round((online / Math.max(total, 1)) * 100), 100);
+  return sosOnlineRate;
+};
+
+// 获取烟感设备正常率
+const getSmokeProgress = () => {
+  if (!dashboardData.value?.deviceStats) return 0;
+  const total = dashboardData.value.deviceStats.smokeDetectorCount || 0;
+  const fault = dashboardData.value.deviceStats.faultCount || 0;
+  if (total === 0) return 0;
+  // 计算正常率（100% - 故障率）
+  const normalRate = Math.max(0, Math.round(((total - fault) / total) * 100));
+  return normalRate;
+};
+
+// 获取设备运行状态详细信息
+const getDeviceStatusDetails = () => {
+  if (!dashboardData.value?.deviceStats?.deviceStatusDetails) {
+    return [];
+  }
+  return dashboardData.value.deviceStats.deviceStatusDetails;
 };
 
 // 获取告警级别样式类
@@ -444,9 +378,10 @@ const loadDashboardData = async () => {
         dashboardData.value = result.data;
         console.log('首页数据加载成功:', dashboardData.value);
         
-        // 数据加载完成后初始化图表
+        // 数据加载完成后初始化图表和地图
         await nextTick();
         initCharts();
+        initMap();
       } else {
         console.error('加载首页数据失败:', result.message);
         // 使用模拟数据
@@ -500,10 +435,11 @@ const loadMockData = () => {
       gasLeakCount: 67
     },
     abilityStats: {
-      normalCount: 8567,
-      mildCount: 2341,
-      moderateCount: 1456,
-      severeCount: 576
+      fullAbilityCount: 8567,
+      mildDisabilityCount: 2341,
+      moderateDisabilityCount: 1456,
+      severeDisabilityCount: 576,
+      notAssessedCount: 500
     },
     elderlyTypeStats: {
       normalCount: 6789,
@@ -521,73 +457,53 @@ const loadMockData = () => {
     mapData: {
       communities: [
         {
-          id: 1,
           name: '朝阳公园社区',
-          lat: 39.9289,
-          lng: 116.4203,
+          latitude: 39.9289,
+          longitude: 116.4203,
           elderlyCount: 1245,
-          facilities: [
-            { type: 'daycare', name: '朝阳日间照料中心', lat: 39.9289, lng: 116.4203 },
-            { type: 'nursing', name: '朝阳养老院', lat: 39.9295, lng: 116.4210 }
-          ]
+          facilityCount: 2,
+          type: '居家养老'
         },
         {
-          id: 2,
           name: '中关村社区',
-          lat: 39.9831,
-          lng: 116.3145,
+          latitude: 39.9831,
+          longitude: 116.3145,
           elderlyCount: 2156,
-          facilities: [
-            { type: 'daycare', name: '中关村日间照料中心', lat: 39.9831, lng: 116.3145 },
-            { type: 'homecare', name: '中关村居家服务点', lat: 39.9825, lng: 116.3150 }
-          ]
+          facilityCount: 2,
+          type: '日照'
         },
         {
-          id: 3,
           name: '东直门社区',
-          lat: 39.9434,
-          lng: 116.4217,
+          latitude: 39.9434,
+          longitude: 116.4217,
           elderlyCount: 1876,
-          facilities: [
-            { type: 'daycare', name: '东直门日间照料中心', lat: 39.9434, lng: 116.4217 }
-          ]
+          facilityCount: 1,
+          type: '机构'
         },
         {
-          id: 4,
           name: '三里屯社区',
-          lat: 39.9364,
-          lng: 116.4472,
+          latitude: 39.9364,
+          longitude: 116.4472,
           elderlyCount: 987,
-          facilities: [
-            { type: 'homecare', name: '三里屯居家服务点', lat: 39.9364, lng: 116.4472 }
-          ]
+          facilityCount: 1,
+          type: '居家养老'
         },
         {
-          id: 5,
           name: '丰台社区',
-          lat: 39.8583,
-          lng: 116.2867,
+          latitude: 39.8583,
+          longitude: 116.2867,
           elderlyCount: 1654,
-          facilities: [
-            { type: 'daycare', name: '丰台日间照料中心', lat: 39.8583, lng: 116.2867 }
-          ]
+          facilityCount: 1,
+          type: '日照'
         },
         {
-          id: 6,
           name: '海淀社区',
-          lat: 39.9590,
-          lng: 116.2982,
+          latitude: 39.9590,
+          longitude: 116.2982,
           elderlyCount: 2345,
-          facilities: [
-            { type: 'daycare', name: '海淀日间照料中心', lat: 39.9590, lng: 116.2982 },
-            { type: 'nursing', name: '海淀养老院', lat: 39.9585, lng: 116.2975 }
-          ]
+          facilityCount: 2,
+          type: '机构'
         }
-      ],
-      alarms: [
-        { id: 1, type: 'sos', lat: 39.9289, lng: 116.4203, name: '张建国', time: '15:30:22' },
-        { id: 2, type: 'smoke', lat: 39.9831, lng: 116.3145, name: '李秀英', time: '14:45:15' },
-        { id: 3, type: 'fall', lat: 39.9434, lng: 116.4217, name: '王福寿', time: '13:20:08' }
       ]
     }
   };
@@ -696,95 +612,207 @@ const initMap = () => {
   if (!mapContainer.value || !dashboardData.value?.mapData) return;
 
   // 创建地图实例（以北京为中心）
-  mapInstance.value = L.map('leafletMap').setView([39.9042, 116.4074], 11);
+  mapInstance.value = L.map('leafletMap', {
+    zoomControl: true,
+    attributionControl: true
+  }).setView([39.9042, 116.4074], 11);
 
   // 添加OpenStreetMap瓦片图层
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
-    maxZoom: 18
+    maxZoom: 18,
+    opacity: 0.8
   }).addTo(mapInstance.value);
 
   // 创建图层组
-  mapLayers.value.facilities = L.layerGroup().addTo(mapInstance.value);
-  mapLayers.value.elderly = L.layerGroup();
+  mapLayers.value.communities = L.layerGroup().addTo(mapInstance.value);
+  mapLayers.value.organizations = L.layerGroup().addTo(mapInstance.value);
+  // mapLayers.value.elderly = L.layerGroup(); // 移除老人图层
   mapLayers.value.alarms = L.layerGroup().addTo(mapInstance.value);
 
-  // 添加养老机构标记
-  addFacilityMarkers();
-  
-  // 添加老人分布标记
-  addElderlyMarkers();
-  
-  // 添加告警标记
+  // 添加各类标记
+  addCommunityMarkers();
+  addOrganizationMarkers();
+  // addElderlyMarkers(); // 移除老人标记
   addAlarmMarkers();
 };
 
-// 添加养老机构标记
-const addFacilityMarkers = () => {
+// 添加社区标记
+const addCommunityMarkers = () => {
   if (!dashboardData.value?.mapData?.communities) return;
 
   dashboardData.value.mapData.communities.forEach(community => {
-    community.facilities.forEach(facility => {
-      let iconColor = '#00d4ff';
-      let iconHtml = '🏢';
-      
-      switch (facility.type) {
-        case 'daycare':
-          iconColor = '#00d4ff';
-          iconHtml = '🏢';
-          break;
-        case 'nursing':
-          iconColor = '#ff6b35';
-          iconHtml = '🏥';
-          break;
-        case 'homecare':
-          iconColor = '#2ed573';
-          iconHtml = '🏠';
-          break;
-      }
+    const iconColor = '#00d4ff';
+    const iconHtml = '🏘️';
 
-      const customIcon = L.divIcon({
-        html: `<div style="background: ${iconColor}; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">${iconHtml}</div>`,
-        className: 'custom-marker',
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
+    const customIcon = L.divIcon({
+      html: `<div style="background: ${iconColor}; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">${iconHtml}</div>`,
+      className: 'custom-marker',
+      iconSize: [30, 30],
+      iconAnchor: [15, 15]
+    });
+
+    const marker = L.marker([community.latitude, community.longitude], { icon: customIcon })
+      .bindPopup(`
+        <div class="custom-popup">
+          <div class="popup-header">
+            <div class="popup-icon" style="background: ${iconColor};">🏘️</div>
+            <h4 class="popup-title">${community.name}</h4>
+          </div>
+          <div class="popup-content">
+            <div class="popup-item">
+              <span class="popup-label">类型:</span>
+              <span class="popup-value">社区</span>
+            </div>
+            <div class="popup-item">
+              <span class="popup-label">老人数量:</span>
+              <span class="popup-value highlight">${community.elderlyCount}人</span>
+            </div>
+            <div class="popup-item">
+              <span class="popup-label">机构数量:</span>
+              <span class="popup-value highlight">${community.facilityCount}个</span>
+            </div>
+          </div>
+        </div>
+      `, {
+        maxWidth: 280,
+        className: 'custom-popup-wrapper'
       });
 
-      const marker = L.marker([facility.lat, facility.lng], { icon: customIcon })
-        .bindPopup(`
-          <div style="color: #333; font-family: 'Microsoft YaHei';">
-            <h4 style="margin: 0 0 8px 0; color: ${iconColor};">${facility.name}</h4>
-            <p style="margin: 0; font-size: 12px;">所属社区: ${community.name}</p>
-            <p style="margin: 4px 0 0 0; font-size: 12px;">老人数量: ${community.elderlyCount}人</p>
-          </div>
-        `);
+    mapLayers.value.communities.addLayer(marker);
+  });
+};
 
-      mapLayers.value.facilities.addLayer(marker);
+// 添加机构标记
+const addOrganizationMarkers = () => {
+  if (!dashboardData.value?.mapData?.organizations) return;
+
+  dashboardData.value.mapData.organizations.forEach(org => {
+    let iconColor = '#ff6b35';
+    let iconHtml = '🏢';
+    
+    switch (org.type) {
+      case '机构养老单位（养老院）':
+        iconColor = '#ff6b35';
+        iconHtml = '🏥';
+        break;
+      case '社区养老单位（日照）':
+        iconColor = '#00d4ff';
+        iconHtml = '🏢';
+        break;
+      case '居家养老单位':
+        iconColor = '#2ed573';
+        iconHtml = '🏠';
+        break;
+      default:
+        iconColor = '#ff6b35';
+        iconHtml = '🏢';
+        break;
+    }
+
+    const customIcon = L.divIcon({
+      html: `<div style="background: ${iconColor}; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">${iconHtml}</div>`,
+      className: 'custom-marker',
+      iconSize: [30, 30],
+      iconAnchor: [15, 15]
     });
+
+    const marker = L.marker([org.latitude, org.longitude], { icon: customIcon })
+      .bindPopup(`
+        <div class="custom-popup">
+          <div class="popup-header">
+            <div class="popup-icon" style="background: ${iconColor};">${iconHtml}</div>
+            <h4 class="popup-title">${org.name}</h4>
+          </div>
+          <div class="popup-content">
+            <div class="popup-item">
+              <span class="popup-label">类型:</span>
+              <span class="popup-value">${org.type}</span>
+            </div>
+            <div class="popup-item">
+              <span class="popup-label">床位数:</span>
+              <span class="popup-value highlight">${org.bedCount || 0}张</span>
+            </div>
+            <div class="popup-item">
+              <span class="popup-label">员工数:</span>
+              <span class="popup-value highlight">${org.staffCount || 0}人</span>
+            </div>
+            <div class="popup-item">
+              <span class="popup-label">服务数:</span>
+              <span class="popup-value highlight">${org.serviceCount || 0}项</span>
+            </div>
+          </div>
+        </div>
+      `, {
+        maxWidth: 300,
+        className: 'custom-popup-wrapper'
+      });
+
+    mapLayers.value.organizations.addLayer(marker);
   });
 };
 
 // 添加老人分布标记
 const addElderlyMarkers = () => {
-  if (!dashboardData.value?.mapData?.communities) return;
+  if (!dashboardData.value?.mapData?.elderly) return;
 
-  dashboardData.value.mapData.communities.forEach(community => {
-    const radius = Math.sqrt(community.elderlyCount / 100) * 10;
+  dashboardData.value.mapData.elderly.forEach(elderly => {
+    let iconColor = '#2ed573';
+    let iconHtml = '👤';
     
-    const circle = L.circle([community.lat, community.lng], {
-      color: '#7b68ee',
-      fillColor: '#7b68ee',
-      fillOpacity: 0.3,
-      radius: radius * 100
-    }).bindPopup(`
-      <div style="color: #333; font-family: 'Microsoft YaHei';">
-        <h4 style="margin: 0 0 8px 0; color: #7b68ee;">${community.name}</h4>
-        <p style="margin: 0; font-size: 12px;">老人数量: ${community.elderlyCount}人</p>
-        <p style="margin: 4px 0 0 0; font-size: 12px;">机构数量: ${community.facilities.length}个</p>
-      </div>
-    `);
+    // 根据老人类型设置图标
+    switch (elderly.elderlyType) {
+      case 'empty_nest':
+        iconColor = '#ff6b35';
+        iconHtml = '🏠';
+        break;
+      case 'living_alone':
+        iconColor = '#7b68ee';
+        iconHtml = '👤';
+        break;
+      case 'disabled':
+        iconColor = '#ff4757';
+        iconHtml = '♿';
+        break;
+      case 'elderly':
+        iconColor = '#ffa502';
+        iconHtml = '👴';
+        break;
+      case 'low_income':
+        iconColor = '#ff6348';
+        iconHtml = '💰';
+        break;
+      case 'special_care':
+        iconColor = '#ff9ff3';
+        iconHtml = '🏥';
+        break;
+      default:
+        iconColor = '#2ed573';
+        iconHtml = '👤';
+        break;
+    }
 
-    mapLayers.value.elderly.addLayer(circle);
+    const customIcon = L.divIcon({
+      html: `<div style="background: ${iconColor}; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">${iconHtml}</div>`,
+      className: 'elderly-marker',
+      iconSize: [25, 25],
+      iconAnchor: [12.5, 12.5]
+    });
+
+    const marker = L.marker([elderly.latitude, elderly.longitude], { icon: customIcon })
+      .bindPopup(`
+        <div style="color: #333; font-family: 'Microsoft YaHei';">
+          <h4 style="margin: 0 0 8px 0; color: ${iconColor};">${elderly.elderlyName}</h4>
+          <p style="margin: 0; font-size: 12px;">社区: ${elderly.community}</p>
+          <p style="margin: 4px 0 0 0; font-size: 12px;">地址: ${elderly.address || '未填写'}</p>
+          <p style="margin: 4px 0 0 0; font-size: 12px;">年龄: ${elderly.age}岁</p>
+          <p style="margin: 4px 0 0 0; font-size: 12px;">性别: ${elderly.gender}</p>
+          <p style="margin: 4px 0 0 0; font-size: 12px;">老人类型: ${getElderlyTypeLabel(elderly.elderlyType)}</p>
+          <p style="margin: 4px 0 0 0; font-size: 12px;">能力评估: ${elderly.abilityAssessment || '未评估'}</p>
+        </div>
+      `);
+
+    mapLayers.value.elderly.addLayer(marker);
   });
 };
 
@@ -795,24 +823,23 @@ const addAlarmMarkers = () => {
   dashboardData.value.mapData.alarms.forEach(alarm => {
     let iconColor = '#ff4757';
     let iconHtml = '🚨';
-    let alarmType = '告警';
     
-    switch (alarm.type) {
-      case 'sos':
-        iconColor = '#ff4757';
-        iconHtml = '🆘';
-        alarmType = 'SOS报警';
-        break;
-      case 'smoke':
-        iconColor = '#ff6b35';
-        iconHtml = '🔥';
-        alarmType = '烟感报警';
-        break;
-      case 'fall':
-        iconColor = '#ffa502';
-        iconHtml = '⚠️';
-        alarmType = '跌倒报警';
-        break;
+    // 根据告警类型设置图标
+    if (alarm.alarmType.includes('SOS') || alarm.alarmType.includes('紧急')) {
+      iconColor = '#ff4757';
+      iconHtml = '🆘';
+    } else if (alarm.alarmType.includes('烟感') || alarm.alarmType.includes('火灾')) {
+      iconColor = '#ff6b35';
+      iconHtml = '🔥';
+    } else if (alarm.alarmType.includes('跌倒')) {
+      iconColor = '#ffa502';
+      iconHtml = '⚠️';
+    } else if (alarm.alarmType.includes('健康') || alarm.alarmType.includes('医疗')) {
+      iconColor = '#ff6348';
+      iconHtml = '💊';
+    } else if (alarm.alarmType.includes('设备') || alarm.alarmType.includes('故障')) {
+      iconColor = '#ff9ff3';
+      iconHtml = '🔧';
     }
 
     const customIcon = L.divIcon({
@@ -822,14 +849,33 @@ const addAlarmMarkers = () => {
       iconAnchor: [12.5, 12.5]
     });
 
-    const marker = L.marker([alarm.lat, alarm.lng], { icon: customIcon })
+    const marker = L.marker([alarm.latitude, alarm.longitude], { icon: customIcon })
       .bindPopup(`
-        <div style="color: #333; font-family: 'Microsoft YaHei';">
-          <h4 style="margin: 0 0 8px 0; color: ${iconColor};">${alarmType}</h4>
-          <p style="margin: 0; font-size: 12px;">报警人: ${alarm.name}</p>
-          <p style="margin: 4px 0 0 0; font-size: 12px;">时间: ${alarm.time}</p>
+        <div class="custom-popup alarm-popup">
+          <div class="popup-header">
+            <div class="popup-icon alarm-icon" style="background: ${iconColor};">🚨</div>
+            <h4 class="popup-title">${alarm.alarmType}</h4>
+            <span class="alarm-level ${alarm.alarmLevel}">${alarm.alarmLevel}</span>
+          </div>
+          <div class="popup-content">
+            <div class="popup-item">
+              <span class="popup-label">📍 位置:</span>
+              <span class="popup-value">${alarm.location}</span>
+            </div>
+            <div class="popup-item">
+              <span class="popup-label">⏰ 时间:</span>
+              <span class="popup-value">${new Date(alarm.alarmTime).toLocaleString('zh-CN')}</span>
+            </div>
+            <div class="popup-item">
+              <span class="popup-label">📋 状态:</span>
+              <span class="popup-value status-${alarm.processStatus}">${alarm.processStatus}</span>
+            </div>
+          </div>
         </div>
-      `);
+      `, {
+        maxWidth: 320,
+        className: 'custom-popup-wrapper alarm-popup-wrapper'
+      });
 
     mapLayers.value.alarms.addLayer(marker);
   });
@@ -841,22 +887,30 @@ const toggleLayer = (layerType) => {
   if (!layer || !mapInstance.value) return;
 
   switch (layerType) {
-    case 'facilities':
-      showFacilities.value = !showFacilities.value;
-      if (showFacilities.value) {
+    case 'communities':
+      showCommunities.value = !showCommunities.value;
+      if (showCommunities.value) {
         mapInstance.value.addLayer(layer);
       } else {
         mapInstance.value.removeLayer(layer);
       }
       break;
-    case 'elderly':
-      showElderly.value = !showElderly.value;
-      if (showElderly.value) {
+    case 'organizations':
+      showOrganizations.value = !showOrganizations.value;
+      if (showOrganizations.value) {
         mapInstance.value.addLayer(layer);
       } else {
         mapInstance.value.removeLayer(layer);
       }
       break;
+    // case 'elderly': // 移除老人图层切换逻辑
+    //   showElderly.value = !showElderly.value;
+    //   if (showElderly.value) {
+    //     mapInstance.value.addLayer(layer);
+    //   } else {
+    //     mapInstance.value.removeLayer(layer);
+    //   }
+    //   break;
     case 'alarms':
       showAlarms.value = !showAlarms.value;
       if (showAlarms.value) {
@@ -935,6 +989,22 @@ const initCharts = () => {
   // 年龄分布柱状图
   if (ageChart.value) {
     const ageChartInstance = echarts.init(ageChart.value);
+    
+    // 使用真实的年龄分布数据
+    const ageData = dashboardData.value?.ageDistribution;
+    const maleData = [
+      Math.round((ageData?.age60to69Count || 0) * 0.48), // 假设男性占48%
+      Math.round((ageData?.age70to79Count || 0) * 0.47),
+      Math.round((ageData?.age80to89Count || 0) * 0.45),
+      Math.round((ageData?.age90PlusCount || 0) * 0.42)
+    ];
+    const femaleData = [
+      Math.round((ageData?.age60to69Count || 0) * 0.52), // 假设女性占52%
+      Math.round((ageData?.age70to79Count || 0) * 0.53),
+      Math.round((ageData?.age80to89Count || 0) * 0.55),
+      Math.round((ageData?.age90PlusCount || 0) * 0.58)
+    ];
+    
     ageChartInstance.setOption({
       backgroundColor: 'transparent',
       tooltip: {
@@ -958,7 +1028,7 @@ const initCharts = () => {
       },
       xAxis: {
         type: 'category',
-        data: ['60-65', '66-70', '71-75', '76-80', '81-85', '86-90', '90以上'],
+        data: ['60-69岁', '70-79岁', '80-89岁', '90岁以上'],
         axisLine: { lineStyle: { color: '#00d4ff' } },
         axisLabel: { color: '#fff', fontSize: 10 }
       },
@@ -972,13 +1042,13 @@ const initCharts = () => {
         {
           name: '男',
           type: 'bar',
-          data: [1200, 1100, 950, 800, 650, 400, 200],
+          data: maleData,
           itemStyle: { color: '#00d4ff' }
         },
         {
           name: '女',
           type: 'bar',
-          data: [1350, 1250, 1100, 900, 750, 500, 300],
+          data: femaleData,
           itemStyle: { color: '#ff6b35' }
         }
       ]
@@ -990,6 +1060,7 @@ const initCharts = () => {
 onMounted(() => {
   updateTime();
   timeInterval = setInterval(updateTime, 1000);
+  loadWeatherData();
   loadDashboardData();
   loadAlarmData();
 });
@@ -1006,12 +1077,39 @@ onUnmounted(() => {
     mapInstance.value = null;
   }
 });
+
+// 获取天气信息
+const loadWeatherData = async () => {
+  try {
+    // 可以接入真实的天气API，这里使用模拟数据
+    const weatherOptions = [
+      { icon: '☀️', text: '晴天' },
+      { icon: '⛅', text: '多云' },
+      { icon: '🌤️', text: '晴转多云' },
+      { icon: '🌦️', text: '阵雨' },
+      { icon: '❄️', text: '雪' }
+    ];
+    
+    // 根据时间或随机选择天气
+    const hour = new Date().getHours();
+    if (hour >= 6 && hour <= 18) {
+      weatherData.value = weatherOptions[0]; // 白天晴天
+    } else {
+      weatherData.value = { icon: '🌙', text: '晴夜' };
+    }
+  } catch (error) {
+    console.error('获取天气信息失败:', error);
+    // 保持默认值
+  }
+};
+
+
 </script>
 
 <style scoped>
 .smart-dashboard {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0c1426 0%, #1a2332 50%, #0c1426 100%);
+  background: #0c1426;
   background-image: 
     radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),
@@ -1023,10 +1121,12 @@ onUnmounted(() => {
 
 /* 顶部标题栏 */
 .dashboard-header {
-  display: flex;
+  display: none;
   justify-content: space-between;
   align-items: center;
+  width: 90%;
   padding: 20px 40px;
+  /* margin-bottom: 20px; */
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(0, 212, 255, 0.3);
@@ -1058,16 +1158,74 @@ onUnmounted(() => {
 }
 
 /* 顶部统计卡片 */
+/* 顶部标题栏 */
+.dashboard-header {
+  position: relative;
+  z-index: 20;
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.current-time {
+  font-size: 14px;
+  color: #00d4ff;
+  font-weight: 500;
+}
+
+.system-title {
+  font-size: 24px;
+  font-weight: 700;
+  background: linear-gradient(45deg, #00d4ff, #ff6b35);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+  margin: 0;
+  text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+}
+
+.weather-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #ffffff;
+}
+
+/* 背景地图 */
+.background-map {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 1;
+}
+
+.background-map .leaflet-map {
+  width: 100%;
+  height: 100%;
+}
+
+/* 顶部数据统计卡片 */
 .top-stats {
+  position: fixed;
+  top: 5px;
+  left: 80px;
+  right: 20px;
+  z-index: 10;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  padding: 20px 40px;
-  margin-bottom: 20px;
+  gap: 15px;
+  margin: 0 300px;
 }
 
 .stat-card {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(10px);
   border-radius: 12px;
   padding: 20px;
@@ -1128,31 +1286,113 @@ onUnmounted(() => {
   opacity: 0.8;
 }
 
-/* 主要内容区域 */
-.main-dashboard {
-  display: grid;
-  grid-template-columns: 320px 1fr 320px;
-  gap: 20px;
-  padding: 0 40px 40px;
-  height: calc(100vh - 200px);
+/* 地图控制面板 */
+.map-control-panel {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  padding: 16px 20px;
+  margin-bottom: 20px;
 }
 
-.left-panel,
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #00d4ff;
+}
+
+.panel-controls {
+  display: flex;
+  justify-content: center;
+}
+
+/* 图例面板 */
+.legend-panel {
+  position: absolute;
+  left: 80px;
+  bottom: 5px;
+  width: 160px;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 12px 8px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.legend-panel .legend-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #00d4ff;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.legend-panel .legend-items {
+  display: flex;
+  /* flex-direction: column; */
+  gap: 12px;
+}
+
+.legend-panel .legend-item {
+  display: flex;
+  /* flex-direction: column; */
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #ffffff;
+  text-align: center;
+}
+
+.legend-panel .legend-marker {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid white;
+}
+
+/* 左侧面板 */
+.left-panel {
+  position: fixed;
+  left: 80px;
+  top: 5px;
+  bottom: 120px;
+  width: 280px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto;
+}
+
+/* 右侧面板 */
 .right-panel {
+  position: fixed;
+  right: 20px;
+  top: 5px;
+  bottom: 5px;
+  width: 280px;
+  z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 15px;
+  overflow-y: auto;
 }
 
-.center-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
+
 
 /* 卡片样式 */
 .dashboard-card {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(10px);
   border-radius: 12px;
   border: 1px solid rgba(0, 212, 255, 0.3);
@@ -1161,7 +1401,7 @@ onUnmounted(() => {
 }
 
 .dashboard-card:hover {
-  border-color: rgba(0, 212, 255, 0.6);
+  border-color: rgba(0, 212, 255, 0.7);
   box-shadow: 0 8px 25px rgba(0, 212, 255, 0.2);
 }
 
@@ -1190,120 +1430,54 @@ onUnmounted(() => {
   width: 100%;
 }
 
-/* 地图卡片 */
-.map-card {
-  flex: 2;
+
+
+/* 底部控制栏 */
+.bottom-controls {
+  position: fixed;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 12px 20px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
 }
 
+/* 地图控制按钮 */
 .map-controls {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.map-stats {
-  display: flex;
-  gap: 16px;
-}
-
-.map-stat-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #ffffff;
-}
-
-.stat-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.stat-dot.blue { background: #00d4ff; }
-.stat-dot.orange { background: #ff6b35; }
-.stat-dot.green { background: #2ed573; }
-
-.map-tools {
-  display: flex;
   gap: 8px;
+  justify-content: center;
 }
 
-.map-tool-btn {
+.control-icon-btn {
   background: rgba(0, 212, 255, 0.2);
   border: 1px solid rgba(0, 212, 255, 0.3);
   color: #00d4ff;
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 8px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 12px;
-  white-space: nowrap;
+  font-size: 16px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.map-tool-btn:hover {
+.control-icon-btn:hover {
   background: rgba(0, 212, 255, 0.3);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
-.map-tool-btn.active {
+.control-icon-btn.active {
   background: rgba(0, 212, 255, 0.4);
   border-color: rgba(0, 212, 255, 0.6);
   box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
-}
-
-.map-container {
-  height: 400px;
-  position: relative;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.leaflet-map {
-  width: 100%;
-  height: 100%;
-  border-radius: 8px;
-}
-
-.map-legend {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  border-radius: 8px;
-  padding: 12px;
-  border: 1px solid rgba(0, 212, 255, 0.3);
-  z-index: 1000;
-}
-
-.legend-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: #00d4ff;
-  margin-bottom: 8px;
-}
-
-.legend-items {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  color: #ffffff;
-}
-
-.legend-marker {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 1px solid white;
 }
 
 .legend-marker.blue { background: #00d4ff; }
@@ -1479,9 +1653,29 @@ onUnmounted(() => {
   background: rgba(0, 212, 255, 0.3);
 }
 
+/* 自动高度的告警卡片 */
+.alarm-card-auto {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.alarm-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.alarm-list-auto {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
 /* 告警列表 */
 .alarm-list {
-  max-height: 200px;
   overflow-y: auto;
 }
 
@@ -1567,137 +1761,134 @@ onUnmounted(() => {
   color: #2ed573;
 }
 
-/* 信息面板 */
-.info-panel {
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  border: 1px solid rgba(0, 212, 255, 0.3);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 
-.info-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  border-left: 3px solid #ff4757;
-}
-
-.info-icon {
-  font-size: 20px;
-  margin-top: 2px;
-}
-
-.info-content {
-  flex: 1;
-}
-
-.info-title {
-  font-size: 14px;
-  color: #ffffff;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.info-desc {
-  font-size: 12px;
-  color: #ffffff;
-  opacity: 0.8;
-  margin-bottom: 8px;
-  line-height: 1.4;
-}
-
-.info-status {
-  display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 500;
-  margin-bottom: 4px;
-}
-
-.info-status.emergency {
-  background: rgba(255, 71, 87, 0.2);
-  color: #ff4757;
-  border: 1px solid rgba(255, 71, 87, 0.3);
-}
-
-.info-status.sos {
-  background: rgba(255, 107, 53, 0.2);
-  color: #ff6b35;
-  border: 1px solid rgba(255, 107, 53, 0.3);
-}
-
-.info-time {
-  font-size: 11px;
-  color: #ffffff;
-  opacity: 0.6;
-}
 
 /* 响应式设计 */
 @media (max-width: 1400px) {
-  .main-dashboard {
-    grid-template-columns: 280px 1fr 280px;
+  .left-panel,
+  .right-panel {
+    width: 250px;
   }
   
   .system-title {
-    font-size: 28px;
+    font-size: 22px;
   }
 }
 
 @media (max-width: 1200px) {
-  .main-dashboard {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
-  }
-  
-  .left-panel,
-  .right-panel {
-    flex-direction: row;
-    overflow-x: auto;
-  }
-  
-  .left-panel .dashboard-card,
-  .right-panel .dashboard-card {
-    min-width: 300px;
-  }
-  
   .top-stats {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    left: 110px;
+  }
+  
+  .legend-panel {
+    width: 80px;
+    padding: 8px 6px;
+  }
+  
+  .left-panel {
+    left: 110px;
+    width: 220px;
+  }
+  
+  .right-panel {
+    right: 15px;
+    width: 220px;
+    bottom: 5px;
   }
 }
 
 @media (max-width: 768px) {
   .dashboard-header {
-    padding: 15px 20px;
+    padding: 10px 15px;
   }
   
-  .system-title {
-    font-size: 24px;
+  .dashboard-header .header-center {
+    display: none;
   }
   
   .top-stats {
+    top: 60px;
+    left: 80px;
+    right: 10px;
     grid-template-columns: 1fr;
-    padding: 15px 20px;
+    gap: 8px;
   }
   
-  .main-dashboard {
-    padding: 0 20px 20px;
-    gap: 15px;
+  .stat-card {
+    padding: 12px;
   }
   
-  .card-content {
-    padding: 15px;
+  .stat-icon {
+    font-size: 20px;
+    width: 35px;
+    height: 35px;
+  }
+  
+  .stat-value {
+    font-size: 18px;
+  }
+  
+  .stat-label {
+    font-size: 12px;
+  }
+  
+  .legend-panel {
+    left: 10px;
+    width: 60px;
+    padding: 8px 4px;
+  }
+  
+  .legend-panel .legend-title {
+    font-size: 10px;
+    margin-bottom: 8px;
+  }
+  
+  .legend-panel .legend-item {
+    font-size: 9px;
+    gap: 2px;
+  }
+  
+  .legend-panel .legend-marker {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .left-panel {
+    left: 80px;
+    top: 350px;
+    width: calc(50% - 45px);
+  }
+  
+  .right-panel {
+    right: 10px;
+    top: 350px;
+    bottom: 5px;
+    width: calc(50% - 45px);
+  }
+  
+  .dashboard-card {
+    margin-bottom: 10px;
+  }
+  
+  .card-header h3 {
+    font-size: 14px;
   }
   
   .chart-container {
     height: 150px;
+  }
+  
+  .bottom-controls {
+    bottom: 10px;
+    padding: 8px 12px;
+  }
+  
+  .control-icon-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
   }
 }
 
@@ -1775,4 +1966,157 @@ onUnmounted(() => {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 212, 255, 0.7);
 }
+
+/* 自定义弹出框样式 */
+:deep(.custom-popup-wrapper .leaflet-popup-content-wrapper) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  padding: 0;
+  overflow: hidden;
+}
+
+:deep(.custom-popup-wrapper .leaflet-popup-content) {
+  margin: 0;
+  padding: 0;
+  font-family: 'Microsoft YaHei', sans-serif;
+}
+
+:deep(.custom-popup-wrapper .leaflet-popup-tip) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.custom-popup {
+  color: white;
+  min-width: 200px;
+}
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+}
+
+.popup-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin-right: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.popup-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  flex: 1;
+  color: white;
+}
+
+.popup-content {
+  padding: 12px 16px;
+}
+
+.popup-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.popup-item:last-child {
+  margin-bottom: 0;
+}
+
+.popup-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.popup-value {
+  color: white;
+  font-weight: 600;
+  text-align: right;
+}
+
+.popup-value.highlight {
+  color: #00d4ff;
+  font-weight: 700;
+}
+
+/* 告警弹出框特殊样式 */
+:deep(.alarm-popup-wrapper .leaflet-popup-content-wrapper) {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+}
+
+:deep(.alarm-popup-wrapper .leaflet-popup-tip) {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+}
+
+.alarm-popup .popup-header {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.alarm-level {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.alarm-level.警告 {
+  background: #ffa502;
+  color: white;
+}
+
+.alarm-level.严重 {
+  background: #ff4757;
+  color: white;
+}
+
+.alarm-level.紧急 {
+  background: #ff3838;
+  color: white;
+  animation: pulse-alarm 1.5s infinite;
+}
+
+.status-未处理 {
+  color: #ff6b6b !important;
+}
+
+.status-处理中 {
+  color: #ffa502 !important;
+}
+
+.status-已处理 {
+  color: #2ed573 !important;
+}
+
+@keyframes pulse-alarm {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 56, 56, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 56, 56, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 56, 56, 0);
+      }
+  }
 </style> 

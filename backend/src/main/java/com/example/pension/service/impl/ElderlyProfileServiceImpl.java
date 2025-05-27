@@ -5,6 +5,7 @@ import com.example.pension.dao.ElderlyProfileDao;
 import com.example.pension.dao.OrganizationDao;
 import com.example.pension.dto.ElderlyFamilyMemberDTO;
 import com.example.pension.dto.ElderlyProfileDTO;
+import com.example.pension.dto.DictionaryDTO;
 import com.example.pension.exception.ResourceNotFoundException;
 import com.example.pension.exception.ValidationException;
 import com.example.pension.mapper.ElderlyFamilyMemberDTOMapper;
@@ -13,6 +14,7 @@ import com.example.pension.model.ElderlyFamilyMember;
 import com.example.pension.model.ElderlyProfile;
 import com.example.pension.model.Organization;
 import com.example.pension.service.ElderlyProfileService;
+import com.example.pension.service.DictionaryService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ public class ElderlyProfileServiceImpl implements ElderlyProfileService {
     private final ElderlyProfileMapper elderlyProfileMapper;
     private final ElderlyFamilyMemberDao elderlyFamilyMemberDao;
     private final ElderlyFamilyMemberDTOMapper elderlyFamilyMemberMapper;
+    private final DictionaryService dictionaryService;
 
     private ElderlyProfileDTO mapToDTOWithFamilyMembers(ElderlyProfile elderlyProfile) {
         if (elderlyProfile == null) {
@@ -52,6 +55,19 @@ public class ElderlyProfileServiceImpl implements ElderlyProfileService {
         } else if (dto != null) {
             dto.setFamilyMembers(Collections.emptyList());
         }
+        
+        // 设置老人类型标签
+        if (dto != null && dto.getElderlyType() != null) {
+            try {
+                DictionaryDTO elderlyTypeDict = dictionaryService.getByTypeAndCode("elderly_type", dto.getElderlyType());
+                if (elderlyTypeDict != null) {
+                    dto.setElderlyTypeLabel(elderlyTypeDict.getDictLabel());
+                }
+            } catch (Exception e) {
+                // 忽略字典查询异常，保持原有数据
+            }
+        }
+        
         return dto;
     }
 
@@ -124,7 +140,7 @@ public class ElderlyProfileServiceImpl implements ElderlyProfileService {
     @Transactional(readOnly = true)
     public PageInfo<ElderlyProfileDTO> getAll(int pageNum, int pageSize) {
         PageHelper.startPage(pageNum, pageSize);
-        List<ElderlyProfile> elderlyProfiles = elderlyProfileDao.findWithConditions(null, null, null, null, (pageNum -1) * pageSize, pageSize);
+        List<ElderlyProfile> elderlyProfiles = elderlyProfileDao.findWithConditions(null, null, null, null, null, (pageNum -1) * pageSize, pageSize);
         PageInfo<ElderlyProfile> entityPageInfo = new PageInfo<>(elderlyProfiles);
         return convertToDtoPageInfo(entityPageInfo);
     }
@@ -135,6 +151,7 @@ public class ElderlyProfileServiceImpl implements ElderlyProfileService {
             String name,
             String idCardNumber,
             String phone,
+            String elderlyType,
             Long organizationId,
             int pageNum,
             int pageSize) {
@@ -143,6 +160,7 @@ public class ElderlyProfileServiceImpl implements ElderlyProfileService {
                 StringUtils.hasText(name) ? name : null,
                 StringUtils.hasText(idCardNumber) ? idCardNumber : null,
                 StringUtils.hasText(phone) ? phone : null,
+                StringUtils.hasText(elderlyType) ? elderlyType : null,
                 organizationId,
                 (pageNum-1) * pageSize, 
                 pageSize);

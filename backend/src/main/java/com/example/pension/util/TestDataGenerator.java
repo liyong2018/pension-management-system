@@ -31,6 +31,7 @@ public class TestDataGenerator {
     private final String[] communities = {"东湖社区", "西湖社区", "南湖社区", "北湖社区", "中心社区", "阳光社区", "和平社区", "幸福社区"};
     private final String[] pensionTypes = {"居家养老", "社区养老", "机构养老"};
     private final String[] abilityAssessments = {"能力完好", "轻度失能", "中度失能", "重度失能"};
+    private final String[] elderlyTypes = {"normal", "empty_nest", "living_alone", "disabled", "elderly", "low_income", "special_care"};
     private final String[] relationships = {"子", "女", "儿媳", "女婿", "孙子", "孙女", "兄弟", "姐妹", "其他亲属"};
     private final String[] surnames = {"张", "王", "李", "赵", "刘", "陈", "杨", "黄", "周", "吴", "徐", "孙", "马", "朱", "胡", "林", "郭", "何", "高", "罗"};
     private final String[] firstNames = {"伟", "芳", "娜", "秀英", "敏", "静", "丽", "强", "磊", "军", "洋", "勇", "艳", "杰", "娟", "涛", "明", "超", "秀兰", "霞"};
@@ -67,7 +68,7 @@ public class TestDataGenerator {
             }
             System.out.println("已生成50个老人档案测试数据");
             
-            List<ElderlyProfile> savedElderlyProfiles = elderlyProfileDao.findWithConditions(null,null,null,null,0, Integer.MAX_VALUE);
+            List<ElderlyProfile> savedElderlyProfiles = elderlyProfileDao.findWithConditions(null,null,null,null,null,0, Integer.MAX_VALUE);
             
             List<ElderlyFamilyMember> familyMembers = new ArrayList<>();
             if (!savedElderlyProfiles.isEmpty()) {
@@ -127,6 +128,7 @@ public class TestDataGenerator {
             profile.setAddressDetail(getRandomAddress());
             profile.setCommunity(communities[random.nextInt(communities.length)]);
             profile.setPensionType(pensionTypes[random.nextInt(pensionTypes.length)]);
+            profile.setElderlyType(elderlyTypes[random.nextInt(elderlyTypes.length)]);
             
             if ("机构养老".equals(profile.getPensionType()) && organizations != null && !organizations.isEmpty()) {
                 profile.setOrganization(organizations.get(random.nextInt(organizations.size())));

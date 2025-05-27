@@ -37,6 +37,8 @@ CREATE TABLE `organization` (
   `short_name` VARCHAR(100) COMMENT '机构简称',
   `type` VARCHAR(50) COMMENT '机构类型：居家养老单位、社区养老单位（日照）、机构养老单位（养老院）',
   `address` VARCHAR(255) COMMENT '地址',
+  `longitude` DECIMAL(10, 7) COMMENT '经度',
+  `latitude` DECIMAL(10, 7) COMMENT '纬度',
   `phone` VARCHAR(20) COMMENT '联系电话',
   `email` VARCHAR(100) COMMENT '电子邮箱',
   `website` VARCHAR(255) COMMENT '网址',
@@ -490,18 +492,18 @@ INSERT INTO `role` (`role_name`, `role_key`, `description`) VALUES
 ('普通用户', 'USER', '基本查看权限');
 
 -- 2. 插入机构数据
-INSERT INTO `organization` (`name`, `short_name`, `type`, `address`, `phone`, `email`, `website`, `establishment_date`, `license_number`, `business_scope`, `bed_count`, `actual_service_count`, `charging_standard`, `area`, `director_name`, `director_contact`, `employee_count`, `professional_nurse_count`, `fire_license`, `sanitary_license`, `medical_license`, `other_qualifications`) VALUES 
-('阳光老年公寓', '阳光公寓', '机构养老单位（养老院）', '北京市朝阳区阳光路123号', '010-12345678', 'yangguang@example.com', 'www.yangguang.com', '2015-01-15',
+INSERT INTO `organization` (`name`, `short_name`, `type`, `address`, `longitude`, `latitude`, `phone`, `email`, `website`, `establishment_date`, `license_number`, `business_scope`, `bed_count`, `actual_service_count`, `charging_standard`, `area`, `director_name`, `director_contact`, `employee_count`, `professional_nurse_count`, `fire_license`, `sanitary_license`, `medical_license`, `other_qualifications`) VALUES 
+('阳光老年公寓', '阳光公寓', '机构养老单位（养老院）', '北京市朝阳区阳光路123号', 116.4203, 39.9289, '010-12345678', 'yangguang@example.com', 'www.yangguang.com', '2015-01-15',
 'YL2015001', '提供养老服务、医疗保健、文化娱乐等综合服务', 200, 180, '标准间：3000元/月；单人间：4000元/月；特需间：6000元/月',
 '占地面积：5000㎡，建筑面积：8000㎡', '张明', '13901234567', 50, 20,
 'XF202301001', 'WS202301001', 'YY202301001', '养老机构等级评定5A级'),
 
-('和谐养老院', '和谐院', '机构养老单位（养老院）', '上海市浦东新区和谐路456号', '021-87654321', 'hexie@example.com', 'www.hexie.com', '2016-03-20',
+('和谐养老院', '和谐院', '机构养老单位（养老院）', '上海市浦东新区和谐路456号', 121.5054, 31.2304, '021-87654321', 'hexie@example.com', 'www.hexie.com', '2016-03-20',
 'YL2016002', '养老照护、康复理疗、营养配餐', 150, 130, '双人间：3500元/月；单人间：4500元/月',
 '占地面积：4000㎡，建筑面积：6000㎡', '李华', '13812345678', 40, 15,
 'XF202302002', 'WS202302002', 'YY202302002', '医养结合示范单位'),
 
-('乐龄社区日照中心', '乐龄中心', '社区养老单位（日照）', '广州市天河区乐龄路789号', '020-98765432', 'leling@example.com', 'www.leling.com', '2017-05-10',
+('乐龄社区日照中心', '乐龄中心', '社区养老单位（日照）', '广州市天河区乐龄路789号', 113.3245, 23.1291, '020-98765432', 'leling@example.com', 'www.leling.com', '2017-05-10',
 'YL2017003', '日间照料、康复训练、文娱活动', 0, 50, '日托：100元/天；半月托：1400元/月；月托：2600元/月',
 '建筑面积：1200㎡', '王芳', '13923456789', 15, 5,
 'XF202303003', 'WS202303003', 'YY202303003', '社区养老示范点');
@@ -576,15 +578,30 @@ INSERT INTO `smart_device` (`device_code`, `device_name`, `device_type`, `device
 -- 9. 插入设备告警记录数据
 INSERT INTO `device_alarm_record` (`device_id`, `alarm_type`, `alarm_level`, `alarm_content`, `alarm_time`, `alarm_data`, `process_status`, `process_person`, `process_time`, `process_result`, `remarks`, `created_time`, `updated_time`) VALUES
 
-(1, '健康异常', '警告', '心率异常：检测到心率过高', '2024-01-15 10:30:00',
+(1, '健康异常', '警告', '心率异常：检测到心率过高', DATE_SUB(NOW(), INTERVAL 1 DAY),
  '{"heart_rate": 135, "threshold": 120}', '已处理', '护士小王',
- '2024-01-15 10:35:00', '已联系家属，老人情况稳定', '老人刚运动完，心率正常升高',
- '2024-01-15 10:30:00', '2024-01-15 10:35:00'),
+ DATE_SUB(NOW(), INTERVAL 1 DAY), '已联系家属，老人情况稳定', '老人刚运动完，心率正常升高',
+ DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),
 
-(2, '健康异常', '严重', '血压异常：收缩压过高', '2024-01-15 11:15:00',
+(2, '健康异常', '严重', '血压异常：收缩压过高', DATE_SUB(NOW(), INTERVAL 2 DAY),
  '{"systolic": 165, "diastolic": 95, "threshold_systolic": 140}', '已处理', '医生李明',
- '2024-01-15 11:20:00', '建议调整药物剂量，已联系主治医生', '需要密切观察血压变化',
- '2024-01-15 11:15:00', '2024-01-15 11:20:00');
+ DATE_SUB(NOW(), INTERVAL 2 DAY), '建议调整药物剂量，已联系主治医生', '需要密切观察血压变化',
+ DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
+
+(1, '设备异常', '警告', '设备电量低', DATE_SUB(NOW(), INTERVAL 3 DAY),
+ '{"battery_level": 15, "threshold": 20}', '未处理', NULL,
+ NULL, NULL, '需要及时充电',
+ DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY)),
+
+(2, '健康异常', '紧急', '血压异常：收缩压过高', DATE_SUB(NOW(), INTERVAL 5 DAY),
+ '{"systolic": 180, "diastolic": 110, "threshold_systolic": 140}', '处理中', '医生张华',
+ DATE_SUB(NOW(), INTERVAL 5 DAY), '已紧急联系家属，建议立即就医', '高血压危象，需要紧急处理',
+ DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY)),
+
+(1, '跌倒告警', '紧急', '检测到老人跌倒', DATE_SUB(NOW(), INTERVAL 7 DAY),
+ '{"acceleration": 15.2, "threshold": 10.0}', '已处理', '护理员王丽',
+ DATE_SUB(NOW(), INTERVAL 7 DAY), '已到现场确认，老人无大碍', '虚惊一场，老人只是坐下时动作较大',
+ DATE_SUB(NOW(), INTERVAL 7 DAY), DATE_SUB(NOW(), INTERVAL 7 DAY));
 
 -- 10. 插入操作日志数据
 INSERT INTO `operation_log` (`username`, `user_id`, `operation_type`, `operation_desc`, `module`, `log_level`, `ip_address`, `user_agent`, `request_url`, `request_method`, `request_params`, `response_data`, `request_time`) VALUES

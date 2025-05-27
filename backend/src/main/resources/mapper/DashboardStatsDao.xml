@@ -73,34 +73,53 @@
 
     <!-- ===== 从业人员统计 ===== -->
     
-    <!-- 获取从业人员总数 -->
+    <!-- 获取从业人员总数（从用户表中统计角色为机构从业人员的用户） -->
     <select id="countTotalStaff" resultType="java.lang.Long">
-        SELECT COALESCE(SUM(employee_count), 0) FROM organization 
-        WHERE employee_count IS NOT NULL
+        SELECT COUNT(*) FROM system_user u
+        INNER JOIN user_role ur ON u.id = ur.user_id
+        INNER JOIN role r ON ur.role_id = r.id
+        WHERE r.role_key = 'ORG_SERVER' 
+        AND u.is_active = TRUE
     </select>
     
-    <!-- 获取护理人员总数 -->
+    <!-- 获取护理人员总数（从机构从业人员中筛选包含护理相关关键词的用户） -->
     <select id="countTotalNurses" resultType="java.lang.Long">
-        SELECT COALESCE(SUM(professional_nurse_count), 0) FROM organization 
-        WHERE professional_nurse_count IS NOT NULL
+        SELECT COUNT(*) FROM system_user u
+        INNER JOIN user_role ur ON u.id = ur.user_id
+        INNER JOIN role r ON ur.role_id = r.id
+        WHERE r.role_key = 'ORG_SERVER' 
+        AND u.is_active = TRUE
+        AND (u.full_name LIKE '%护理%' 
+             OR u.full_name LIKE '%护士%' 
+             OR u.username LIKE '%nurse%'
+             OR u.username LIKE '%护理%')
     </select>
     
-    <!-- 获取医生数量（从系统用户中估算） -->
+    <!-- 获取医生数量（从机构从业人员中筛选包含医生相关关键词的用户） -->
     <select id="countDoctors" resultType="java.lang.Long">
-        SELECT COUNT(*) FROM system_user 
-        WHERE full_name LIKE '%医生%' 
-        OR full_name LIKE '%医师%'
-        OR username LIKE '%doctor%'
-        OR username LIKE '%dr%'
+        SELECT COUNT(*) FROM system_user u
+        INNER JOIN user_role ur ON u.id = ur.user_id
+        INNER JOIN role r ON ur.role_id = r.id
+        WHERE r.role_key = 'ORG_SERVER' 
+        AND u.is_active = TRUE
+        AND (u.full_name LIKE '%医生%' 
+             OR u.full_name LIKE '%医师%'
+             OR u.username LIKE '%doctor%'
+             OR u.username LIKE '%dr%'
+             OR u.username LIKE '%医生%')
     </select>
     
-    <!-- 获取社工数量（从总员工数中估算） -->
+    <!-- 获取社工数量（从机构从业人员中筛选包含社工相关关键词的用户） -->
     <select id="countSocialWorkers" resultType="java.lang.Long">
-        SELECT COALESCE(
-            (SELECT SUM(employee_count) FROM organization WHERE employee_count IS NOT NULL) - 
-            (SELECT SUM(professional_nurse_count) FROM organization WHERE professional_nurse_count IS NOT NULL),
-            0
-        )
+        SELECT COUNT(*) FROM system_user u
+        INNER JOIN user_role ur ON u.id = ur.user_id
+        INNER JOIN role r ON ur.role_id = r.id
+        WHERE r.role_key = 'ORG_SERVER' 
+        AND u.is_active = TRUE
+        AND (u.full_name LIKE '%社工%' 
+             OR u.full_name LIKE '%社会工作%'
+             OR u.username LIKE '%social%'
+             OR u.username LIKE '%社工%')
     </select>
 
     <!-- ===== 老人类型统计 ===== -->
@@ -136,7 +155,16 @@
     <!-- 根据设备类型统计数量 -->
     <select id="countDevicesByType" resultType="java.lang.Long">
         SELECT COUNT(*) FROM smart_device 
-        WHERE device_type LIKE CONCAT('%', #{deviceType}, '%')
+        WHERE (
+            CASE 
+                WHEN #{deviceType} = 'SOS' THEN (device_name LIKE '%SOS%' OR device_name LIKE '%紧急%' OR device_name LIKE '%报警器%' OR device_type LIKE '%安全%')
+                WHEN #{deviceType} = '烟感' THEN (device_name LIKE '%烟感%' OR device_name LIKE '%烟雾%' OR device_model LIKE '%SMOKE%' OR device_model LIKE '%DS-PDSMK%')
+                WHEN #{deviceType} = '水浸' THEN (device_name LIKE '%水浸%' OR device_name LIKE '%水位%' OR device_name LIKE '%漏水%')
+                WHEN #{deviceType} = '跌倒' THEN (device_name LIKE '%跌倒%' OR device_name LIKE '%摔倒%')
+                WHEN #{deviceType} = '燃气' THEN (device_name LIKE '%燃气%' OR device_name LIKE '%气体%' OR device_name LIKE '%煤气%')
+                ELSE device_type LIKE CONCAT('%', #{deviceType}, '%')
+            END
+        )
         AND is_deleted = 0
     </select>
     
@@ -186,28 +214,149 @@
     <!-- 获取社区统计数据 -->
     <select id="getCommunityStats" resultType="java.util.Map">
         SELECT 
-            community as name,
-            COUNT(*) as elderlyCount,
-            116.4074 + (RAND() - 0.5) * 0.1 as longitude,
-            39.9042 + (RAND() - 0.5) * 0.1 as latitude,
+            d.dict_value as name,
+            COALESCE(ep_count.elderlyCount, 0) as elderlyCount,
             CASE 
-                WHEN pension_type LIKE '%居家%' THEN '居家养老'
-                WHEN pension_type LIKE '%日照%' THEN '日照'
-                WHEN pension_type LIKE '%机构%' THEN '机构'
-                ELSE '居家养老'
-            END as type,
-            1 as facilityCount
-        FROM elderly_profile 
-        WHERE community IS NOT NULL 
-        GROUP BY community, 
+                WHEN d.dict_value = '朝阳公园社区' THEN 116.4203
+                WHEN d.dict_value = '中关村社区' THEN 116.3145
+                WHEN d.dict_value = '东直门社区' THEN 116.4217
+                WHEN d.dict_value = '三里屯社区' THEN 116.4472
+                WHEN d.dict_value = '丰台社区' THEN 116.2867
+                WHEN d.dict_value = '海淀社区' THEN 116.2982
+                WHEN d.dict_value = '西单社区' THEN 116.3668
+                WHEN d.dict_value = '王府井社区' THEN 116.4074
+                WHEN d.dict_value = '中山社区' THEN 116.3950
+                WHEN d.dict_value = '石景山社区' THEN 116.1950
+                WHEN d.dict_value = '测试社区' THEN 116.4100
+                ELSE 116.4074 + (RAND() - 0.5) * 0.1
+            END as longitude,
             CASE 
-                WHEN pension_type LIKE '%居家%' THEN '居家养老'
-                WHEN pension_type LIKE '%日照%' THEN '日照'
-                WHEN pension_type LIKE '%机构%' THEN '机构'
-                ELSE '居家养老'
-            END
-        ORDER BY elderlyCount DESC
-        LIMIT 10
+                WHEN d.dict_value = '朝阳公园社区' THEN 39.9289
+                WHEN d.dict_value = '中关村社区' THEN 39.9831
+                WHEN d.dict_value = '东直门社区' THEN 39.9434
+                WHEN d.dict_value = '三里屯社区' THEN 39.9364
+                WHEN d.dict_value = '丰台社区' THEN 39.8583
+                WHEN d.dict_value = '海淀社区' THEN 39.9590
+                WHEN d.dict_value = '西单社区' THEN 39.9097
+                WHEN d.dict_value = '王府井社区' THEN 39.9042
+                WHEN d.dict_value = '中山社区' THEN 39.9150
+                WHEN d.dict_value = '石景山社区' THEN 39.9063
+                WHEN d.dict_value = '测试社区' THEN 39.9100
+                ELSE 39.9042 + (RAND() - 0.5) * 0.1
+            END as latitude,
+            'community' as type,
+            0 as facilityCount
+        FROM dictionary d
+        LEFT JOIN (
+            SELECT community, COUNT(*) as elderlyCount
+            FROM elderly_profile 
+            WHERE community IS NOT NULL AND community != ''
+            GROUP BY community
+        ) ep_count ON d.dict_value = ep_count.community
+        WHERE d.dict_type = 'community' AND d.status = 'ACTIVE'
+        ORDER BY COALESCE(ep_count.elderlyCount, 0) DESC
+    </select>
+    
+    <!-- 获取机构数据 -->
+    <select id="getOrganizationStats" resultType="java.util.Map">
+        SELECT 
+            name as name,
+            COALESCE(longitude, 116.4074 + (RAND() - 0.5) * 0.3) as longitude,
+            COALESCE(latitude, 39.9042 + (RAND() - 0.5) * 0.2) as latitude,
+            type as type,
+            bed_count as bedCount,
+            employee_count as staffCount,
+            actual_service_count as serviceCount
+        FROM organization
+        ORDER BY bed_count DESC
+    </select>
+    
+    <!-- 获取老人位置数据 -->
+    <select id="getElderlyLocationStats" resultType="java.util.Map">
+        SELECT 
+            ep.name as elderlyName,
+            ep.community as community,
+            ep.address_detail as address,
+            CASE 
+                WHEN ep.community = '朝阳公园社区' THEN 116.4203 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '中关村社区' THEN 116.3145 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '东直门社区' THEN 116.4217 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '三里屯社区' THEN 116.4472 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '丰台社区' THEN 116.2867 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '海淀社区' THEN 116.2982 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '西单社区' THEN 116.3668 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '王府井社区' THEN 116.4074 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '中山社区' THEN 116.3950 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '建国门社区' THEN 116.4350 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '石景山社区' THEN 116.1950 + (RAND() - 0.5) * 0.01
+                ELSE 116.4074 + (RAND() - 0.5) * 0.05
+            END as longitude,
+            CASE 
+                WHEN ep.community = '朝阳公园社区' THEN 39.9289 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '中关村社区' THEN 39.9831 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '东直门社区' THEN 39.9434 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '三里屯社区' THEN 39.9364 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '丰台社区' THEN 39.8583 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '海淀社区' THEN 39.9590 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '西单社区' THEN 39.9097 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '王府井社区' THEN 39.9042 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '中山社区' THEN 39.9150 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '建国门社区' THEN 39.9080 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '石景山社区' THEN 39.9063 + (RAND() - 0.5) * 0.01
+                ELSE 39.9042 + (RAND() - 0.5) * 0.05
+            END as latitude,
+            ep.elderly_type as elderlyType,
+            ep.ability_assessment as abilityAssessment,
+            TIMESTAMPDIFF(YEAR, ep.birth_date, CURDATE()) as age,
+            ep.gender as gender
+        FROM elderly_profile ep
+        WHERE ep.community IS NOT NULL AND ep.community != ''
+        ORDER BY ep.id
+        LIMIT 50
+    </select>
+    
+    <!-- 获取告警位置数据 -->
+    <select id="getAlarmLocationStats" resultType="java.util.Map">
+        SELECT 
+            dar.alarm_type as alarmType,
+            dar.alarm_level as alarmLevel,
+            COALESCE(sd.installation_location, CONCAT(ep.community, ep.address_detail)) as location,
+            dar.alarm_time as alarmTime,
+            dar.process_status as processStatus,
+            CASE 
+                WHEN ep.community = '朝阳公园社区' OR sd.installation_location LIKE '%朝阳公园%' THEN 116.4203 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '中关村社区' OR sd.installation_location LIKE '%中关村%' THEN 116.3145 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '东直门社区' OR sd.installation_location LIKE '%东直门%' THEN 116.4217 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '三里屯社区' OR sd.installation_location LIKE '%三里屯%' THEN 116.4472 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '丰台社区' OR sd.installation_location LIKE '%丰台%' THEN 116.2867 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '海淀社区' OR sd.installation_location LIKE '%海淀%' THEN 116.2982 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '西单社区' OR sd.installation_location LIKE '%西单%' THEN 116.3668 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '王府井社区' OR sd.installation_location LIKE '%王府井%' THEN 116.4074 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '中山社区' OR sd.installation_location LIKE '%中山%' THEN 116.3950 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '建国门社区' OR sd.installation_location LIKE '%建国门%' THEN 116.4350 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '石景山社区' OR sd.installation_location LIKE '%石景山%' THEN 116.1950 + (RAND() - 0.5) * 0.01
+                ELSE 116.4074 + (RAND() - 0.5) * 0.05
+            END as longitude,
+            CASE 
+                WHEN ep.community = '朝阳公园社区' OR sd.installation_location LIKE '%朝阳公园%' THEN 39.9289 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '中关村社区' OR sd.installation_location LIKE '%中关村%' THEN 39.9831 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '东直门社区' OR sd.installation_location LIKE '%东直门%' THEN 39.9434 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '三里屯社区' OR sd.installation_location LIKE '%三里屯%' THEN 39.9364 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '丰台社区' OR sd.installation_location LIKE '%丰台%' THEN 39.8583 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '海淀社区' OR sd.installation_location LIKE '%海淀%' THEN 39.9590 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '西单社区' OR sd.installation_location LIKE '%西单%' THEN 39.9097 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '王府井社区' OR sd.installation_location LIKE '%王府井%' THEN 39.9042 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '中山社区' OR sd.installation_location LIKE '%中山%' THEN 39.9150 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '建国门社区' OR sd.installation_location LIKE '%建国门%' THEN 39.9080 + (RAND() - 0.5) * 0.01
+                WHEN ep.community = '石景山社区' OR sd.installation_location LIKE '%石景山%' THEN 39.9063 + (RAND() - 0.5) * 0.01
+                ELSE 39.9042 + (RAND() - 0.5) * 0.05
+            END as latitude
+        FROM device_alarm_record dar
+        LEFT JOIN smart_device sd ON dar.device_id = sd.id
+        LEFT JOIN elderly_profile ep ON sd.elderly_id = ep.id
+        WHERE dar.alarm_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        ORDER BY dar.alarm_time DESC
+        LIMIT 20
     </select>
     
     <!-- 获取最近告警数据 -->
@@ -223,6 +372,40 @@
         LEFT JOIN elderly_profile ep ON sd.elderly_id = ep.id
         ORDER BY dar.alarm_time DESC
         LIMIT #{limit}
+    </select>
+    
+    <!-- 获取设备运行状态详细信息 -->
+    <select id="getDeviceStatusDetails" resultType="java.util.Map">
+        SELECT 
+            CASE 
+                WHEN device_name LIKE '%红外%' OR device_name LIKE '%探测%' THEN '红外探测器'
+                WHEN device_name LIKE '%门磁%' OR device_name LIKE '%门窗%' THEN '门磁传感器'
+                WHEN device_name LIKE '%水浸%' OR device_name LIKE '%水位%' THEN '水浸传感器'
+                WHEN device_name LIKE '%光照%' OR device_name LIKE '%光线%' THEN '光照传感器'
+                WHEN device_name LIKE '%SOS%' OR device_name LIKE '%紧急%' OR device_name LIKE '%报警器%' THEN '紧急按钮'
+                WHEN device_name LIKE '%烟感%' OR device_name LIKE '%烟雾%' THEN '烟感器'
+                WHEN device_name LIKE '%温度%' OR device_name LIKE '%温控%' THEN '温度传感器'
+                WHEN device_name LIKE '%湿度%' THEN '湿度传感器'
+                ELSE CONCAT(device_type, '设备')
+            END as deviceName,
+            COUNT(*) as totalCount,
+            SUM(CASE WHEN device_status = '故障' THEN 1 ELSE 0 END) as faultCount,
+            SUM(CASE WHEN device_status = '在线' THEN 1 ELSE 0 END) as onlineCount
+        FROM smart_device 
+        WHERE is_deleted = 0
+        GROUP BY 
+            CASE 
+                WHEN device_name LIKE '%红外%' OR device_name LIKE '%探测%' THEN '红外探测器'
+                WHEN device_name LIKE '%门磁%' OR device_name LIKE '%门窗%' THEN '门磁传感器'
+                WHEN device_name LIKE '%水浸%' OR device_name LIKE '%水位%' THEN '水浸传感器'
+                WHEN device_name LIKE '%光照%' OR device_name LIKE '%光线%' THEN '光照传感器'
+                WHEN device_name LIKE '%SOS%' OR device_name LIKE '%紧急%' OR device_name LIKE '%报警器%' THEN '紧急按钮'
+                WHEN device_name LIKE '%烟感%' OR device_name LIKE '%烟雾%' THEN '烟感器'
+                WHEN device_name LIKE '%温度%' OR device_name LIKE '%温控%' THEN '温度传感器'
+                WHEN device_name LIKE '%湿度%' THEN '湿度传感器'
+                ELSE CONCAT(device_type, '设备')
+            END
+        ORDER BY totalCount DESC
     </select>
 
 </mapper> 

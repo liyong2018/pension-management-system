@@ -25,6 +25,7 @@ public class ElderlyProfileController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String idCardNumber,
             @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String elderlyType,
             @RequestParam(required = false) Long organizationId, // Matched service layer
             @RequestParam(defaultValue = "1") int pageNum,      // PageHelper is 1-based
             @RequestParam(defaultValue = "10") int pageSize) {
@@ -35,10 +36,11 @@ public class ElderlyProfileController {
         boolean hasSearchCriteria = StringUtils.hasText(name) || 
                                    StringUtils.hasText(idCardNumber) || 
                                    StringUtils.hasText(phone) || 
+                                   StringUtils.hasText(elderlyType) ||
                                    organizationId != null;
 
         if (hasSearchCriteria) {
-            page = elderlyProfileService.searchByMultipleConditions(name, idCardNumber, phone, organizationId, pageNum, pageSize);
+            page = elderlyProfileService.searchByMultipleConditions(name, idCardNumber, phone, elderlyType, organizationId, pageNum, pageSize);
         } else {
             page = elderlyProfileService.getAll(pageNum, pageSize);
         }
