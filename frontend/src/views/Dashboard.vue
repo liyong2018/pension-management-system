@@ -2001,10 +2001,6 @@ const loadWeatherData = async () => {
 }
 
 /* 自定义弹出框样式 */
-:deep(.custom-popup-wrapper) {
-  margin: 10px !important;
-}
-
 :deep(.custom-popup-wrapper .leaflet-popup-content-wrapper) {
   background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f1419 100%);
   border-radius: 16px;
@@ -2014,14 +2010,15 @@ const loadWeatherData = async () => {
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   border: 2px solid rgba(0, 212, 255, 0.3);
   backdrop-filter: blur(20px);
-  padding: 0;
+  padding: 10px !important;
   overflow: hidden;
   min-width: 320px !important;
   width: auto !important;
+  box-sizing: border-box !important;
 }
 
 :deep(.custom-popup-wrapper .leaflet-popup-content) {
-  margin: 0 !important;
+  margin: -10px !important;
   padding: 0 !important;
   font-family: 'Microsoft YaHei', sans-serif;
   width: auto !important;
@@ -2156,10 +2153,6 @@ const loadWeatherData = async () => {
 }
 
 /* 告警弹出框特殊样式 */
-:deep(.alarm-popup-wrapper) {
-  margin: 10px !important;
-}
-
 :deep(.alarm-popup-wrapper .leaflet-popup-content-wrapper) {
   background: linear-gradient(145deg, #2d1b1b 0%, #3d1a1a 50%, #4a1515 100%);
   border: 2px solid rgba(255, 71, 87, 0.4);
@@ -2168,6 +2161,8 @@ const loadWeatherData = async () => {
     0 8px 20px rgba(255, 71, 87, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   min-width: 350px !important;
+  padding: 10px !important;
+  box-sizing: border-box !important;
 }
 
 :deep(.alarm-popup-wrapper .leaflet-popup-tip) {
@@ -2178,6 +2173,7 @@ const loadWeatherData = async () => {
 
 :deep(.alarm-popup-wrapper .leaflet-popup-content) {
   color: white !important;
+  margin: -10px !important;
 }
 
 :deep(.alarm-popup-wrapper .leaflet-popup-content *) {
