@@ -291,7 +291,6 @@
             :props="{ children: 'children', label: 'name', disabled: 'disabled' }"
             show-checkbox
             node-key="id"
-            :default-checked-keys="checkedPermissions"
             :check-strictly="false"
             class="permission-tree-component"
           >
@@ -394,13 +393,14 @@
 </template>
 
 <script>
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   Avatar, UserFilled, Setting, User, Plus, CircleCheck, CircleClose, 
   ArrowDown, Lock, CopyDocument, Switch, Delete, House, OfficeBuilding, 
   Monitor, Warning, Key, Collection, Document, Menu, Operation, Folder
 } from '@element-plus/icons-vue'
+import request from '@/utils/request'
 
 export default {
   name: 'RoleList',
@@ -540,70 +540,44 @@ export default {
     const loadRoles = async () => {
       loading.value = true
       try {
-        let url = `/api/roles?page=${pagination.page}&size=${pagination.pageSize}`
+        let url = 'roles'
+        let params = {
+          page: pagination.page,
+          size: pagination.pageSize
+        }
         
-        // 如果有搜索条件，使用搜索接口
+        // 如果有搜索条件，添加搜索参数
         if (searchForm.name || searchForm.code) {
-          const queryParams = new URLSearchParams({
-            page: pagination.page,
-            size: pagination.pageSize
-          })
-          
+          url = 'roles/search'
           if (searchForm.name) {
-            queryParams.append('roleName', searchForm.name)
+            params.roleName = searchForm.name
           }
           if (searchForm.code) {
-            queryParams.append('roleKey', searchForm.code)
+            params.roleKey = searchForm.code
           }
-          
-          url = `/api/roles/search?${queryParams}`
         }
 
         console.log('正在加载角色数据，请求URL:', url)
         
-        const response = await fetch(url)
-        console.log('角色API响应状态:', response.status)
+        const data = await request({
+          url,
+          method: 'get',
+          params
+        })
         
-        if (response.ok) {
-          const data = await response.json()
-          console.log('角色API响应数据:', data)
-          
-          // 处理分页数据
-          let roleList = []
-          if (data.list) {
-            roleList = data.list
-            pagination.total = data.total
-          } else {
-            // 兼容直接返回数组的情况
-            roleList = Array.isArray(data) ? data : []
-            pagination.total = roleList.length
-          }
-          
-          console.log('获取到角色列表:', roleList.length, '个角色')
-          
-          // 为每个角色获取真实的用户数
-          await loadRoleUserCounts(roleList)
-          
-          roles.value = roleList
-          
-          // 更新统计信息
-          stats.value = {
-            totalRoles: pagination.total,
-            assignedUsers: roles.value.reduce((sum, role) => sum + (role.userCount || 0), 0),
-            adminRoles: roles.value.filter(r => r.roleKey?.includes('ADMIN')).length || 0,
-            customRoles: roles.value.filter(r => !r.roleKey?.includes('ADMIN')).length || 0
-          }
-          
-          console.log('角色统计数据:', stats.value)
+        // 处理响应数据
+        if (data && data.list) {
+          roles.value = data.list
+          pagination.total = data.total
         } else {
-          const errorText = await response.text()
-          console.error('角色API请求失败，状态码:', response.status)
-          console.error('错误响应:', errorText)
-          ElMessage.error(`加载角色列表失败: ${response.status}`)
+          roles.value = []
+          pagination.total = 0
         }
       } catch (error) {
-        console.error('加载角色列表异常:', error)
-        ElMessage.error('加载角色列表失败: ' + error.message)
+        console.error('加载角色列表失败:', error)
+        ElMessage.error('加载角色列表失败')
+        roles.value = []
+        pagination.total = 0
       } finally {
         loading.value = false
       }
@@ -614,69 +588,52 @@ export default {
       try {
         console.log('开始加载角色用户数统计...')
         
-        // 获取所有用户数据来统计每个角色的用户数
-        const response = await fetch('/api/system-users?page=1&size=1000')
-        console.log('用户API响应状态:', response.status)
+        const userData = await request({
+          url: 'system-users',
+          method: 'get',
+          params: {
+            page: 1,
+            size: 1000
+          }
+        })
         
-        if (response.ok) {
-          const userData = await response.json()
-          console.log('用户API响应数据:', userData)
+        if (userData && userData.list && Array.isArray(userData.list)) {
+          const allUsers = userData.list
+          console.log('获取到用户数据:', allUsers.length, '个用户')
           
-          if (userData && userData.list && Array.isArray(userData.list)) {
-            const allUsers = userData.list
-            console.log('获取到用户数据:', allUsers.length, '个用户')
+          // 统计每个角色的用户数
+          for (const role of roleList) {
+            let userCount = 0
             
-            // 统计每个角色的用户数
-            for (const role of roleList) {
-              let userCount = 0
-              
-              // 遍历所有用户，统计分配给当前角色的用户数
-              for (const user of allUsers) {
-                // 检查用户是否分配了当前角色
-                if (user.roles && Array.isArray(user.roles)) {
-                  // 用户有角色信息
-                  const hasRole = user.roles.some(userRole => userRole.id === role.id)
-                  if (hasRole) {
-                    userCount++
-                  }
-                } else if (user.roleIds && Array.isArray(user.roleIds)) {
-                  // 用户有角色ID数组
-                  if (user.roleIds.includes(role.id)) {
-                    userCount++
-                  }
-                } else {
-                  // 根据用户类型推断角色分配
-                  if (role.roleKey === 'SUPER_ADMIN' && user.isAdmin) {
-                    userCount++
-                  } else if (role.roleKey === 'USER' && !user.isAdmin) {
-                    userCount++
-                  }
+            // 遍历所有用户，统计分配给当前角色的用户数
+            for (const user of allUsers) {
+              // 检查用户是否分配了当前角色
+              if (user.roles && Array.isArray(user.roles)) {
+                // 用户有角色信息
+                const hasRole = user.roles.some(userRole => userRole.id === role.id)
+                if (hasRole) {
+                  userCount++
+                }
+              } else if (user.roleIds && Array.isArray(user.roleIds)) {
+                // 用户有角色ID数组
+                if (user.roleIds.includes(role.id)) {
+                  userCount++
+                }
+              } else {
+                // 根据用户类型推断角色分配
+                if (role.roleKey === 'SUPER_ADMIN' && user.isAdmin) {
+                  userCount++
+                } else if (role.roleKey === 'USER' && !user.isAdmin) {
+                  userCount++
                 }
               }
-              
-              role.userCount = userCount
-              console.log(`角色 ${role.roleName} 的用户数: ${userCount}`)
             }
-          } else {
-            console.warn('用户API返回数据格式异常，使用默认值')
-            // 使用默认值
-            roleList.forEach(role => {
-              role.userCount = 0
-            })
+            
+            role.userCount = userCount
           }
-        } else {
-          console.warn('获取用户数据失败，使用默认值')
-          // 使用默认值
-          roleList.forEach(role => {
-            role.userCount = 0
-          })
         }
       } catch (error) {
-        console.error('加载角色用户数异常:', error)
-        // 使用默认值
-        roleList.forEach(role => {
-          role.userCount = 0
-        })
+        console.error('加载角色用户数统计失败:', error)
       }
     }
 
@@ -720,24 +677,17 @@ export default {
     const handleCreate = async () => {
       createLoading.value = true
       try {
-        const response = await fetch('/api/roles', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(currentRole)
+        await request({
+          url: 'roles',
+          method: 'post',
+          data: currentRole
         })
         
-        if (response.ok) {
-          ElMessage.success('创建成功')
-          dialogVisible.value = false
-          loadRoles()
-        } else {
-          const errorData = await response.json()
-          ElMessage.error(errorData.message || '创建失败')
-        }
+        ElMessage.success('创建成功')
+        dialogVisible.value = false
+        loadRoles()
       } catch (error) {
-        ElMessage.error('创建失败')
+        ElMessage.error(error.message || '创建失败')
         console.error('Error creating role:', error)
       } finally {
         createLoading.value = false
@@ -768,24 +718,17 @@ export default {
     const handleUpdate = async () => {
       editLoading.value = true
       try {
-        const response = await fetch(`/api/roles/${selectedRole.value.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(currentRole)
+        await request({
+          url: `roles/${selectedRole.value.id}`,
+          method: 'put',
+          data: currentRole
         })
         
-        if (response.ok) {
-          ElMessage.success('更新成功')
-          dialogVisible.value = false
-          loadRoles()
-        } else {
-          const errorData = await response.json()
-          ElMessage.error(errorData.message || '更新失败')
-        }
+        ElMessage.success('更新成功')
+        dialogVisible.value = false
+        loadRoles()
       } catch (error) {
-        ElMessage.error('更新失败')
+        ElMessage.error(error.message || '更新失败')
         console.error('Error updating role:', error)
       } finally {
         editLoading.value = false
@@ -800,53 +743,53 @@ export default {
       try {
         console.log('开始加载权限树数据...')
         
-        // 使用与权限管理页面一致的API路径
-        const response = await fetch('/api/permissions/tree')
-        console.log('权限树API响应状态:', response.status)
+        const data = await request({
+          url: 'permissions/tree',
+          method: 'get'
+        })
+        console.log('权限树数据:', data)
         
-        if (response.ok) {
-          const data = await response.json()
-          console.log('权限树数据:', data)
-          
-          // 转换后端数据格式为前端需要的格式
-          const convertPermissionData = (permissions) => {
-            return permissions.map(permission => ({
-              id: permission.id,
-              name: permission.name,
-              parentId: permission.parentId,
-              type: permission.type,
-              permissionKey: permission.permissionKey || '',
-              icon: permission.icon || '',
-              isVisible: permission.isVisible,
-              status: permission.status,
-              description: permission.remark || '',
-              children: permission.children ? convertPermissionData(permission.children) : []
-            }))
-          }
-          
-          let permissionData = []
-          if (Array.isArray(data)) {
-            permissionData = convertPermissionData(data)
-          } else {
-            console.warn('权限API返回数据格式异常:', data)
-            permissionData = []
-          }
-          
-          permissionTree.value = permissionData
-          console.log('权限树数据转换完成:', permissionData.length, '个顶级权限')
-          
-        } else {
-          console.warn('权限树API失败，状态码:', response.status)
-          const errorText = await response.text()
-          console.error('错误响应:', errorText)
-          
-          // 使用空数据作为后备
-          permissionTree.value = []
-          ElMessage.warning('加载权限数据失败，请检查网络连接')
+        // 转换后端数据格式为前端需要的格式
+        const convertPermissionData = (permissions) => {
+          return permissions.map(permission => ({
+            id: permission.id,
+            name: permission.name,
+            parentId: permission.parentId,
+            type: permission.type,
+            permissionKey: permission.permissionKey || '',
+            icon: permission.icon || '',
+            isVisible: permission.isVisible,
+            status: permission.status,
+            description: permission.remark || '',
+            children: permission.children ? convertPermissionData(permission.children) : []
+          }))
         }
+        
+        let permissionData = []
+        if (Array.isArray(data)) {
+          permissionData = convertPermissionData(data)
+        } else {
+          console.warn('权限API返回数据格式异常:', data)
+          permissionData = []
+        }
+        
+        permissionTree.value = permissionData
+        console.log('权限树数据转换完成:', permissionData.length, '个顶级权限')
         
         // 加载角色已有权限
         await loadRolePermissions(role.id)
+        
+        // 先显示对话框，等到DOM更新后再设置选中状态
+        permissionDialogVisible.value = true
+        
+        // 等待下一个tick，确保树组件已经渲染
+        await nextTick()
+        
+        // 设置树组件的选中状态
+        if (permissionTreeRef.value && checkedPermissions.value.length > 0) {
+          console.log('设置权限树选中状态:', checkedPermissions.value)
+          permissionTreeRef.value.setCheckedKeys(checkedPermissions.value)
+        }
         
       } catch (error) {
         console.error('加载权限数据异常:', error)
@@ -855,11 +798,11 @@ export default {
         // 异常情况下使用空数据
         permissionTree.value = []
         selectedPermissions.value = []
+        checkedPermissions.value = []
+        permissionDialogVisible.value = true
       } finally {
         permissionLoading.value = false
       }
-      
-      permissionDialogVisible.value = true
     }
 
     // 加载角色权限
@@ -867,61 +810,28 @@ export default {
       try {
         console.log('开始加载角色权限:', roleId)
         
-        const response = await fetch(`/api/permissions/role/${roleId}`)
-        console.log('角色权限API响应状态:', response.status)
+        const data = await request({
+          url: `permissions/role/${roleId}`,
+          method: 'get'
+        })
+        console.log('角色权限数据:', data)
         
-        if (response.ok) {
-          const data = await response.json()
-          console.log('角色权限数据:', data)
-          
-          // 处理权限对象数组，提取权限ID
-          let permissionIds = []
-          if (Array.isArray(data)) {
-            // 如果返回的是权限对象数组
-            permissionIds = data.map(p => p.id).filter(id => id)
-          } else {
-            console.warn('角色权限数据格式不识别:', data)
-            permissionIds = []
-          }
-          
-          selectedPermissions.value = permissionIds
-          checkedPermissions.value = permissionIds
-          console.log('角色权限加载完成:', permissionIds.length, '个权限')
-          
+        // 处理权限对象数组，提取权限ID
+        let permissionIds = []
+        if (Array.isArray(data)) {
+          // 如果返回的是权限对象数组
+          permissionIds = data.map(p => p.id).filter(id => id)
         } else {
-          console.warn('加载角色权限失败，状态码:', response.status)
-          const errorText = await response.text()
-          console.error('错误响应:', errorText)
-          
-          // 根据角色类型设置默认权限（作为后备方案）
-          let defaultPermissions = []
-          if (selectedRole.value.roleKey === 'SUPER_ADMIN') {
-            // 超级管理员默认拥有所有权限
-            const getAllPermissionIds = (permissions) => {
-              let ids = []
-              for (const perm of permissions) {
-                ids.push(perm.id)
-                if (perm.children && perm.children.length > 0) {
-                  ids = ids.concat(getAllPermissionIds(perm.children))
-                }
-              }
-              return ids
-            }
-            defaultPermissions = getAllPermissionIds(permissionTree.value)
-          } else if (selectedRole.value.roleKey === 'ORG_ADMIN') {
-            // 机构管理员默认拥有业务相关权限
-            defaultPermissions = []
-          } else {
-            // 普通用户默认拥有基本查看权限
-            defaultPermissions = []
-          }
-          
-          selectedPermissions.value = defaultPermissions
-          checkedPermissions.value = defaultPermissions
-          console.log('使用默认权限:', defaultPermissions.length, '个权限')
+          console.warn('角色权限数据格式不识别:', data)
+          permissionIds = []
         }
+        
+        selectedPermissions.value = permissionIds
+        checkedPermissions.value = permissionIds
+        console.log('角色权限加载完成:', permissionIds.length, '个权限')
       } catch (error) {
-        console.error('加载角色权限异常:', error)
+        console.error('加载角色权限失败:', error)
+        ElMessage.error('加载角色权限失败')
         selectedPermissions.value = []
         checkedPermissions.value = []
       }
@@ -946,42 +856,24 @@ export default {
         console.log('开始保存角色权限:', selectedRole.value.id)
         console.log('选中的权限ID:', allSelectedKeys)
         
-        // 调用后端API保存权限，直接发送权限ID数组
-        const response = await fetch(`/api/roles/${selectedRole.value.id}/permissions`, {
-          method: 'PUT',
+        // 使用request方法替代fetch
+        await request({
+          url: `roles/${selectedRole.value.id}/permissions`,
+          method: 'put',
+          data: allSelectedKeys,
           headers: {
             'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(allSelectedKeys)
+          }
         })
         
-        console.log('保存权限API响应状态:', response.status)
+        ElMessage.success('权限配置保存成功')
+        permissionDialogVisible.value = false
         
-        if (response.ok) {
-          console.log('保存权限API响应成功')
-          ElMessage.success('权限配置保存成功')
-          permissionDialogVisible.value = false
-          
-          // 刷新角色列表
-          loadRoles()
-        } else {
-          const errorText = await response.text()
-          console.error('保存权限失败，状态码:', response.status)
-          console.error('错误响应:', errorText)
-          
-          let errorMessage = '权限配置保存失败'
-          try {
-            const errorData = JSON.parse(errorText)
-            errorMessage = errorData.message || errorData.error || errorMessage
-          } catch (e) {
-            errorMessage = `保存失败 (${response.status}): ${errorText}`
-          }
-          
-          ElMessage.error(errorMessage)
-        }
+        // 刷新角色列表
+        loadRoles()
       } catch (error) {
         console.error('保存权限异常:', error)
-        ElMessage.error('权限配置保存失败: ' + error.message)
+        ElMessage.error(error.message || '权限配置保存失败')
       } finally {
         savePermissionLoading.value = false
       }
@@ -1018,8 +910,9 @@ export default {
         )
         
         for (const role of multipleSelection.value) {
-          await fetch(`/api/roles/${role.id}`, {
-            method: 'DELETE'
+          await request({
+            url: `roles/${role.id}`,
+            method: 'delete'
           })
         }
         
@@ -1027,7 +920,7 @@ export default {
         loadRoles()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('批量删除失败')
+          ElMessage.error(error.message || '批量删除失败')
         }
       }
     }
@@ -1061,21 +954,23 @@ export default {
     // 切换角色状态
     const handleToggleStatus = async (role) => {
       try {
-        const response = await fetch(`/api/roles/${role.id}/status`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: role.status === '1' ? '0' : '1' })
+        const newStatus = role.status === '1' ? '0' : '1'
+        console.log('切换角色状态:', role.id, '从', role.status, '到', newStatus)
+        
+        await request({
+          url: `roles/${role.id}/status`,
+          method: 'put',
+          data: { status: newStatus }
         })
         
-        if (response.ok) {
-          role.status = role.status === '1' ? '0' : '1'
-          ElMessage.success('状态更新成功')
-        } else {
-          ElMessage.error('状态更新失败')
-        }
+        role.status = newStatus
+        ElMessage.success(`角色已${newStatus === '1' ? '启用' : '禁用'}`)
+        
+        // 刷新角色列表数据
+        loadRoles()
       } catch (error) {
-        ElMessage.error('状态更新失败')
-        console.error('Error toggling role status:', error)
+        console.error('切换角色状态异常:', error)
+        ElMessage.error(error.message || '状态更新失败')
       }
     }
 
@@ -1092,19 +987,16 @@ export default {
           }
         )
         
-        const response = await fetch(`/api/roles/${role.id}`, {
-          method: 'DELETE'
+        await request({
+          url: `roles/${role.id}`,
+          method: 'delete'
         })
         
-        if (response.ok) {
-          ElMessage.success('删除成功')
-          loadRoles()
-        } else {
-          ElMessage.error('删除失败')
-        }
+        ElMessage.success('删除成功')
+        loadRoles()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除失败')
+          ElMessage.error(error.message || '删除失败')
           console.error('Error deleting role:', error)
         }
       }
@@ -1147,14 +1039,16 @@ export default {
     const loadRoleUsers = async () => {
       usersLoading.value = true
       try {
-        const response = await fetch(`/api/system-users/role/${selectedRole.value.id}`)
+        const response = await request({
+          url: `system-users/role/${selectedRole.value.id}`,
+          method: 'get'
+        })
         
-        if (response.ok) {
-          const data = await response.json()
-          roleUsers.value = data
-          console.log('加载角色用户成功:', data.length, '个用户')
+        if (response && Array.isArray(response)) {
+          roleUsers.value = response
+          console.log('加载角色用户成功:', response.length, '个用户')
         } else {
-          console.error('加载角色用户失败，状态码:', response.status)
+          console.error('加载角色用户失败，响应格式错误:', response)
           ElMessage.error('加载角色用户失败')
           roleUsers.value = []
         }

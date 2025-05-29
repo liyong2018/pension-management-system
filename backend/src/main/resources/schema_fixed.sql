@@ -69,6 +69,7 @@ CREATE TABLE `role` (
   `role_name` VARCHAR(50) NOT NULL UNIQUE COMMENT '角色名称',
   `role_key` VARCHAR(50) NOT NULL UNIQUE COMMENT '角色键',
   `description` TEXT COMMENT '角色描述',
+  `status` VARCHAR(1) DEFAULT '1' COMMENT '状态：1启用，0禁用',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`)
@@ -878,3 +879,8 @@ WHERE `status` = TRUE
 ORDER BY 
     COALESCE(parent_id, id), 
     sort_order; 
+
+
+
+ALTER TABLE `role` ADD COLUMN `status` VARCHAR(1) DEFAULT '1' COMMENT '状态：1启用，0禁用';
+UPDATE `role` SET `status` = '1' WHERE `status` IS NULL;

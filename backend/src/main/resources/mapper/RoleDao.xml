@@ -8,19 +8,20 @@
         <result property="roleName" column="role_name"/>
         <result property="roleKey" column="role_key"/>
         <result property="description" column="description"/>
+        <result property="status" column="status"/>
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
     </resultMap>
 
     <!-- 基础查询字段 -->
     <sql id="baseColumns">
-        id, role_name, role_key, description, create_time, update_time
+        id, role_name, role_key, description, status, create_time, update_time
     </sql>
 
     <!-- 插入角色 -->
     <insert id="insert" parameterType="com.example.pension.model.Role" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO role (role_name, role_key, description, create_time, update_time)
-        VALUES (#{roleName}, #{roleKey}, #{description}, NOW(), NOW())
+        INSERT INTO role (role_name, role_key, description, status, create_time, update_time)
+        VALUES (#{roleName}, #{roleKey}, #{description}, #{status}, NOW(), NOW())
     </insert>
 
     <!-- 更新角色 -->
@@ -29,6 +30,7 @@
             role_name = #{roleName},
             role_key = #{roleKey},
             description = #{description},
+            status = #{status},
             update_time = NOW()
         WHERE id = #{id}
     </update>
@@ -93,5 +95,13 @@
         SELECT COUNT(*) > 0 FROM role 
         WHERE role_key = #{roleKey} AND id != #{excludeId}
     </select>
+
+    <!-- 更新角色状态 -->
+    <update id="updateStatus">
+        UPDATE role SET
+            status = #{status},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
 
 </mapper> 

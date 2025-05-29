@@ -27,7 +27,7 @@ public class UserService {
         User user = userDao.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> new BadCredentialsException("用户名或密码错误"));
 
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
             throw new BadCredentialsException("用户名或密码错误");
         }
 
@@ -43,6 +43,11 @@ public class UserService {
         return new LoginResponse(token, convertToDTO(updatedUser != null ? updatedUser : user));
     }
 
+    // 新增的辅助方法，用于生成密码哈希
+    public String generatePasswordHash(String rawPassword) {
+        return passwordEncoder.encode(rawPassword);
+    }
+
     private UserDTO convertToDTO(User user) {
         if (user == null) return null;
         UserDTO dto = new UserDTO();
@@ -51,12 +56,8 @@ public class UserService {
         dto.setFullName(user.getFullName());
         dto.setEmail(user.getEmail());
         dto.setPhone(user.getPhone());
-        if (user.getOrganization() != null) {
-            dto.setOrganizationId(user.getOrganization().getId());
-            if (user.getOrganization().getName() != null) {
-                dto.setOrganizationName(user.getOrganization().getName());
-            }
-        }
+        // dto.setOrganizationId(user.getOrganizationId()); // 暂时注释
+        // dto.setOrganizationName(null); // 暂时注释
         dto.setAdmin(user.isAdmin());
         dto.setActive(user.isActive());
         dto.setLastLoginTime(user.getLastLoginTime());

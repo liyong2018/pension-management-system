@@ -277,4 +277,26 @@ public class MenuPermissionServiceImpl implements MenuPermissionService {
         
         return RoleDTOMapper.INSTANCE.toDTO(roles);
     }
+
+    /**
+     * 更新权限状态
+     */
+    public void updateStatus(Long id, Boolean status) {
+        MenuPermission permission = menuPermissionDao.findById(id);
+        if (permission == null) {
+            throw new RuntimeException("权限不存在，ID：" + id);
+        }
+        menuPermissionDao.updateStatus(id, status);
+    }
+
+    /**
+     * 更新权限显示状态
+     */
+    public void updateVisible(Long id, Boolean isVisible) {
+        MenuPermission permission = menuPermissionDao.findById(id);
+        if (permission == null) {
+            throw new RuntimeException("权限不存在，ID：" + id);
+        }
+        menuPermissionDao.updateVisible(id, isVisible);
+    }
 } 

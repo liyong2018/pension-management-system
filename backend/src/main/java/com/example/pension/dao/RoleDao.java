@@ -13,6 +13,8 @@ public interface RoleDao {
 
     void update(Role role);
 
+    void updateStatus(@Param("id") Long id, @Param("status") String status);
+
     void deleteById(@Param("id") Long id);
 
     void deleteBatchByIds(@Param("ids") List<Long> ids);

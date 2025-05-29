@@ -284,6 +284,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   Document, CircleCheck, Warning, User, Download, View, Delete, ArrowDown, CopyDocument
 } from '@element-plus/icons-vue'
+import request from '@/utils/request'
 
 export default {
   name: 'LogList',
@@ -325,36 +326,48 @@ export default {
     const loadLogs = async () => {
       loading.value = true
       try {
-        const queryParams = new URLSearchParams({
+        const queryParams = {
           page: pagination.page,
           size: pagination.pageSize,
           ...searchForm
-        })
+        }
         
         // 处理时间范围参数
         if (searchForm.dateRange && searchForm.dateRange.length === 2) {
-          queryParams.append('startTime', searchForm.dateRange[0])
-          queryParams.append('endTime', searchForm.dateRange[1])
+          queryParams.startTime = searchForm.dateRange[0]
+          queryParams.endTime = searchForm.dateRange[1]
         }
         
-        const response = await fetch(`/api/operation-logs?${queryParams}`)
-        const data = await response.json()
+        // 使用request方法替代fetch
+        const data = await request({
+          url: 'operation-logs',
+          method: 'get',
+          params: queryParams
+        })
         
-        if (response.ok) {
-          logs.value = data.list || []
+        if (data && data.list) {
+          logs.value = data.list
           pagination.total = data.total || 0
           
           // 更新统计信息
-          const statsResponse = await fetch('/api/operation-logs/statistics')
-          if (statsResponse.ok) {
-            stats.value = await statsResponse.json()
+          const statsData = await request({
+            url: 'operation-logs/statistics',
+            method: 'get'
+          })
+          
+          if (statsData) {
+            stats.value = statsData
           }
         } else {
-          ElMessage.error('加载日志列表失败')
+          console.warn('日志API返回数据格式异常:', data)
+          logs.value = []
+          pagination.total = 0
         }
       } catch (error) {
-        ElMessage.error('加载日志列表失败')
-        console.error('Error loading logs:', error)
+        console.error('加载日志列表异常:', error)
+        ElMessage.error('加载日志列表失败: ' + error.message)
+        logs.value = []
+        pagination.total = 0
       } finally {
         loading.value = false
       }
@@ -447,8 +460,9 @@ export default {
           }
         )
         
-        const response = await fetch(`/api/operation-logs/${log.id}`, {
-          method: 'DELETE'
+        const response = await request({
+          url: `operation-logs/${log.id}`,
+          method: 'delete'
         })
         
         if (response.ok) {
@@ -496,8 +510,9 @@ export default {
         )
         
         const ids = multipleSelection.value.map(item => item.id)
-        const response = await fetch('/api/operation-logs/batch', {
-          method: 'DELETE',
+        const response = await request({
+          url: 'operation-logs/batch',
+          method: 'delete',
           headers: {
             'Content-Type': 'application/json'
           },

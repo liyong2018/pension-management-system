@@ -2,12 +2,14 @@ package com.example.pension.controller;
 
 import com.example.pension.dto.RoleDTO;
 import com.example.pension.service.RoleService;
+import com.example.pension.service.impl.RoleServiceImpl;
 import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/roles")
@@ -162,5 +164,23 @@ public class RoleController {
             exists = roleService.existsByRoleKey(roleKey);
         }
         return ResponseEntity.ok(exists);
+    }
+
+    /**
+     * 切换角色状态（启用/禁用）
+     */
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Void> toggleRoleStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        String status = request.get("status");
+        
+        try {
+            // 使用专门的状态更新方法
+            ((RoleServiceImpl) roleService).updateStatus(id, status);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            throw new RuntimeException("更新角色状态失败: " + e.getMessage());
+        }
     }
 } 

@@ -406,6 +406,8 @@ import {
   Switch, Delete, House, OfficeBuilding, User, Monitor, Warning, Avatar, 
   Setting, Key, Collection
 } from '@element-plus/icons-vue'
+import request from '@/utils/request'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'MenuList',
@@ -541,125 +543,129 @@ export default {
     const loadMenuTree = async () => {
       loading.value = true
       try {
-        console.log('开始加载菜单权限数据...')
+        console.log('🔄 开始加载菜单权限数据...')
+        console.log('🔑 当前Token:', localStorage.getItem('authToken'))
         
-        // 调用后端API获取菜单权限树
-        const response = await fetch('/api/permissions/tree')
-        console.log('菜单权限API响应状态:', response.status)
+        // 使用request方法替代fetch
+        const data = await request({
+          url: '/permissions/user-menu-tree',
+          method: 'get'
+        })
         
-        if (response.ok) {
-          const data = await response.json()
-          console.log('菜单权限API响应数据:', data)
-          
-          // 转换后端数据格式为前端需要的格式
-          const convertMenuData = (menus) => {
-            return menus.map(menu => ({
-              id: menu.id,
-              name: menu.name,
-              parentId: menu.parentId,
-              sort: menu.sortOrder || 0,
-              path: menu.routePath || '',
-              component: menu.componentPath || '',
-              type: menu.type,
-              visible: menu.isVisible ? '1' : '0',
-              status: menu.status ? '1' : '0',
-              permission: menu.permissionKey || '',
-              icon: menu.icon || '',
-              createTime: menu.createTime || '',
-              remark: menu.remark || '',
-              children: menu.children ? convertMenuData(menu.children) : []
-            }))
-          }
-          
-          let menuData = []
-          if (Array.isArray(data)) {
-            menuData = convertMenuData(data)
-          } else {
-            console.warn('菜单权限API返回数据格式异常:', data)
-            menuData = []
-          }
-          
-          // 应用搜索过滤
-          let filteredData = JSON.parse(JSON.stringify(menuData))
-          
-          if (searchForm.name || searchForm.type || searchForm.status) {
-            const filterMenus = (menus) => {
-              return menus.filter(menu => {
-                let matches = true
-                
-                if (searchForm.name) {
-                  matches = matches && menu.name.includes(searchForm.name)
-                }
-                
-                if (searchForm.type) {
-                  matches = matches && menu.type === searchForm.type
-                }
-                
-                if (searchForm.status) {
-                  matches = matches && menu.status === searchForm.status
-                }
-                
-                if (menu.children && menu.children.length > 0) {
-                  menu.children = filterMenus(menu.children)
-                  // 如果子菜单有匹配的，保留父菜单
-                  if (menu.children.length > 0) {
-                    matches = true
-                  }
-                }
-                
-                return matches
-              })
-            }
-            
-            filteredData = filterMenus(filteredData)
-          }
-          
-          menuTree.value = filteredData
-          stats.value = calculateStats(filteredData)
-          
-          // 设置父级菜单选项（扁平化处理）
-          const flattenMenus = (menus, level = 0) => {
-            let result = []
-            for (const menu of menus) {
-              if (menu.type !== 'BUTTON') { // 排除按钮类型
-                result.push({
-                  id: menu.id,
-                  name: '　'.repeat(level) + menu.name,
-                  level: level
-                })
-                if (menu.children && menu.children.length > 0) {
-                  result = result.concat(flattenMenus(menu.children, level + 1))
-                }
-              }
-            }
-            return result
-          }
-          
-          parentMenuOptions.value = flattenMenus(filteredData)
-          
-          console.log('菜单数据加载成功:', filteredData.length, '条')
-          
-        } else {
-          console.error('菜单权限API请求失败，状态码:', response.status)
-          const errorText = await response.text()
-          console.error('错误响应:', errorText)
-          
-          // 如果API失败，使用空数据
-          menuTree.value = []
-          stats.value = {
-            totalMenus: 0,
-            topLevelMenus: 0,
-            functionMenus: 0,
-            externalLinks: 0
-          }
-          parentMenuOptions.value = []
-          
-          ElMessage.error(`加载菜单数据失败: ${response.status}`)
+        console.log('📊 菜单权限API响应数据:', data)
+        
+        // 转换后端数据格式为前端需要的格式
+        const convertMenuData = (menus) => {
+          return menus.map(menu => ({
+            id: menu.id,
+            name: menu.name,
+            parentId: menu.parentId,
+            sort: menu.sortOrder || 0,
+            path: menu.routePath || '',
+            component: menu.componentPath || '',
+            type: menu.type,
+            visible: menu.isVisible ? '1' : '0',
+            status: menu.status ? '1' : '0',
+            permission: menu.permissionKey || '',
+            icon: menu.icon || '',
+            createTime: menu.createTime || '',
+            remark: menu.remark || '',
+            children: menu.children ? convertMenuData(menu.children) : []
+          }))
         }
         
+        let menuData = []
+        if (Array.isArray(data)) {
+          menuData = convertMenuData(data)
+        } else if (data.data && Array.isArray(data.data)) {
+          menuData = convertMenuData(data.data)
+        } else {
+          console.warn('⚠️ 菜单权限API返回数据格式异常:', data)
+          menuData = []
+        }
+        
+        // 应用搜索过滤
+        let filteredData = JSON.parse(JSON.stringify(menuData))
+        
+        if (searchForm.name || searchForm.permission || searchForm.type || searchForm.status) {
+          const filterMenus = (menus) => {
+            return menus.filter(menu => {
+              let matches = true
+              
+              if (searchForm.name) {
+                matches = matches && menu.name.includes(searchForm.name)
+              }
+              
+              if (searchForm.permission) {
+                matches = matches && menu.permission && menu.permission.includes(searchForm.permission)
+              }
+              
+              if (searchForm.type) {
+                matches = matches && menu.type === searchForm.type
+              }
+              
+              if (searchForm.status) {
+                matches = matches && menu.status === searchForm.status
+              }
+              
+              if (menu.children && menu.children.length > 0) {
+                menu.children = filterMenus(menu.children)
+                // 如果子菜单有匹配的，保留父菜单
+                if (menu.children.length > 0) {
+                  matches = true
+                }
+              }
+              
+              return matches
+            })
+          }
+          
+          filteredData = filterMenus(filteredData)
+        }
+        
+        menuTree.value = filteredData
+        stats.value = calculateStats(filteredData)
+        
+        // 设置父级菜单选项（扁平化处理）
+        const flattenMenus = (menus, level = 0) => {
+          let result = []
+          for (const menu of menus) {
+            if (menu.type !== 'BUTTON') { // 排除按钮类型
+              result.push({
+                id: menu.id,
+                name: '　'.repeat(level) + menu.name,
+                level: level
+              })
+              if (menu.children && menu.children.length > 0) {
+                result = result.concat(flattenMenus(menu.children, level + 1))
+              }
+            }
+          }
+          return result
+        }
+        
+        parentMenuOptions.value = flattenMenus(filteredData)
+        
+        console.log('✅ 菜单数据加载成功:', filteredData.length, '条')
+        
       } catch (error) {
-        console.error('加载菜单列表异常:', error)
-        ElMessage.error('加载菜单列表失败: ' + error.message)
+        console.error('❌ 加载菜单列表异常:', error)
+        console.error('❌ 错误详情:', error.response)
+        
+        if (error.response?.status === 403) {
+          console.log('🔒 权限被拒绝，检查token:', localStorage.getItem('authToken'))
+          ElMessage.error('没有权限访问菜单，请重新登录')
+          localStorage.removeItem('authToken')
+          router.push('/login')
+        } else if (error.response?.status === 401) {
+          console.log('🔑 未授权，需要重新登录')
+          ElMessage.error('登录已过期，请重新登录')
+          localStorage.removeItem('authToken')
+          router.push('/login')
+        } else {
+          console.error('❌ 其他错误:', error.message)
+          ElMessage.error('加载菜单列表失败: ' + (error.message || '未知错误'))
+        }
         
         // 异常情况下使用空数据
         menuTree.value = []
@@ -792,41 +798,20 @@ export default {
         console.log('创建菜单数据:', createData)
         
         // 调用后端API创建菜单
-        const response = await fetch('/api/permissions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(createData)
+        const response = await request({
+          url: '/permissions',
+          method: 'post',
+          data: createData
         })
         
-        console.log('创建菜单API响应状态:', response.status)
+        // 如果请求没有抛出异常，就认为是成功的
+        ElMessage.success('创建成功')
+        dialogVisible.value = false
+        loadMenuTree()
         
-        if (response.ok) {
-          const result = await response.json()
-          console.log('创建菜单API响应数据:', result)
-          ElMessage.success('创建成功')
-          dialogVisible.value = false
-          loadMenuTree()
-          
-          // 刷新顶部菜单
-          if (window.refreshTopMenu) {
-            window.refreshTopMenu()
-          }
-        } else {
-          const errorText = await response.text()
-          console.error('创建菜单失败，状态码:', response.status)
-          console.error('错误响应:', errorText)
-          
-          let errorMessage = '创建失败'
-          try {
-            const errorData = JSON.parse(errorText)
-            errorMessage = errorData.message || errorData.error || errorMessage
-          } catch (e) {
-            errorMessage = `创建失败 (${response.status}): ${errorText}`
-          }
-          
-          ElMessage.error(errorMessage)
+        // 刷新顶部菜单
+        if (window.refreshTopMenu) {
+          window.refreshTopMenu()
         }
       } catch (error) {
         console.error('创建菜单异常:', error)
@@ -883,41 +868,20 @@ export default {
         console.log('更新菜单数据:', updateData)
         
         // 调用后端API更新菜单
-        const response = await fetch(`/api/permissions/${selectedMenu.value.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(updateData)
+        const response = await request({
+          url: `/permissions/${selectedMenu.value.id}`,
+          method: 'put',
+          data: updateData
         })
         
-        console.log('更新菜单API响应状态:', response.status)
+        // 如果请求没有抛出异常，就认为是成功的
+        ElMessage.success('更新成功')
+        dialogVisible.value = false
+        loadMenuTree()
         
-        if (response.ok) {
-          const result = await response.json()
-          console.log('更新菜单API响应数据:', result)
-          ElMessage.success('更新成功')
-          dialogVisible.value = false
-          loadMenuTree()
-          
-          // 刷新顶部菜单
-          if (window.refreshTopMenu) {
-            window.refreshTopMenu()
-          }
-        } else {
-          const errorText = await response.text()
-          console.error('更新菜单失败，状态码:', response.status)
-          console.error('错误响应:', errorText)
-          
-          let errorMessage = '更新失败'
-          try {
-            const errorData = JSON.parse(errorText)
-            errorMessage = errorData.message || errorData.error || errorMessage
-          } catch (e) {
-            errorMessage = `更新失败 (${response.status}): ${errorText}`
-          }
-          
-          ElMessage.error(errorMessage)
+        // 刷新顶部菜单
+        if (window.refreshTopMenu) {
+          window.refreshTopMenu()
         }
       } catch (error) {
         console.error('更新菜单异常:', error)
@@ -957,34 +921,18 @@ export default {
         console.log('开始删除菜单:', menu.id)
         
         // 调用后端API删除菜单
-        const response = await fetch(`/api/permissions/${menu.id}`, {
-          method: 'DELETE'
+        const response = await request({
+          url: `/permissions/${menu.id}`,
+          method: 'delete'
         })
         
-        console.log('删除菜单API响应状态:', response.status)
+        // 如果请求没有抛出异常，就认为是成功的
+        ElMessage.success('删除成功')
+        loadMenuTree()
         
-        if (response.ok) {
-          ElMessage.success('删除成功')
-          loadMenuTree()
-          
-          // 刷新顶部菜单
-          if (window.refreshTopMenu) {
-            window.refreshTopMenu()
-          }
-        } else {
-          const errorText = await response.text()
-          console.error('删除菜单失败，状态码:', response.status)
-          console.error('错误响应:', errorText)
-          
-          let errorMessage = '删除失败'
-          try {
-            const errorData = JSON.parse(errorText)
-            errorMessage = errorData.message || errorData.error || errorMessage
-          } catch (e) {
-            errorMessage = `删除失败 (${response.status}): ${errorText}`
-          }
-          
-          ElMessage.error(errorMessage)
+        // 刷新顶部菜单
+        if (window.refreshTopMenu) {
+          window.refreshTopMenu()
         }
       } catch (error) {
         if (error !== 'cancel') {
@@ -1084,15 +1032,13 @@ export default {
         }
         
         // 调用后端API更新菜单
-        const response = await fetch(`/api/permissions/${menu.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(updateData)
+        const response = await request({
+          url: `/permissions/${menu.id}`,
+          method: 'put',
+          data: updateData
         })
         
-        if (response.ok) {
+        if (response.code === 0) {
           menu.visible = newVisible
           ElMessage.success(`菜单已${newVisible === '1' ? '显示' : '隐藏'}`)
           
@@ -1101,9 +1047,7 @@ export default {
             window.refreshTopMenu()
           }
         } else {
-          const errorText = await response.text()
-          console.error('更新菜单显示状态失败:', response.status, errorText)
-          ElMessage.error('更新显示状态失败')
+          ElMessage.error(response.msg || '更新显示状态失败')
         }
       } catch (error) {
         console.error('切换菜单显示状态异常:', error)
@@ -1117,43 +1061,22 @@ export default {
         const newStatus = menu.status === '1' ? '0' : '1'
         console.log('切换菜单启用状态:', menu.id, '从', menu.status, '到', newStatus)
         
-        // 构建更新数据
-        const updateData = {
-          id: menu.id,
-          name: menu.name,
-          parentId: menu.parentId,
-          type: menu.type,
-          permissionKey: menu.permission,
-          routePath: menu.path,
-          componentPath: menu.component,
-          icon: menu.icon,
-          sortOrder: menu.sort,
-          isVisible: menu.visible === '1',
-          status: newStatus === '1',
-          remark: menu.remark
-        }
-        
-        // 调用后端API更新菜单
-        const response = await fetch(`/api/permissions/${menu.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(updateData)
+        // 使用专门的状态切换接口
+        await request({
+          url: `permissions/${menu.id}/status`,
+          method: 'put',
+          data: { status: newStatus === '1' }
         })
         
-        if (response.ok) {
-          menu.status = newStatus
-          ElMessage.success(`菜单已${newStatus === '1' ? '启用' : '禁用'}`)
-          
-          // 刷新顶部菜单
-          if (window.refreshTopMenu) {
-            window.refreshTopMenu()
-          }
-        } else {
-          const errorText = await response.text()
-          console.error('更新菜单启用状态失败:', response.status, errorText)
-          ElMessage.error('更新启用状态失败')
+        // 如果请求成功，显示成功消息并刷新列表
+        ElMessage.success(`菜单已${newStatus === '1' ? '启用' : '禁用'}`)
+        
+        // 刷新菜单列表以获取最新数据
+        await loadMenuTree()
+        
+        // 刷新顶部菜单
+        if (window.refreshTopMenu) {
+          window.refreshTopMenu()
         }
       } catch (error) {
         console.error('切换菜单启用状态异常:', error)
@@ -1211,6 +1134,8 @@ export default {
       }
       parentMenus.value = extractParentMenus(menuTree.value)
     }
+
+    const router = useRouter()
 
     onMounted(() => {
       loadMenuTree()

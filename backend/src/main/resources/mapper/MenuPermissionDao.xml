@@ -55,6 +55,22 @@
         WHERE id = #{id}
     </update>
 
+    <!-- 更新权限状态 -->
+    <update id="updateStatus">
+        UPDATE menu_permission SET
+            status = #{status},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新权限显示状态 -->
+    <update id="updateVisible">
+        UPDATE menu_permission SET
+            is_visible = #{isVisible},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
     <!-- 根据ID删除权限 -->
     <delete id="deleteById" parameterType="long">
         DELETE FROM menu_permission WHERE id = #{id}

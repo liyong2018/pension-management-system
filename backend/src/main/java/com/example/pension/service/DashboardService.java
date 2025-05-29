@@ -200,16 +200,8 @@ public class DashboardService {
             List<Map<String, Object>> communityData = dashboardStatsDao.getCommunityStats();
             List<DashboardStatsDTO.MapDataDTO.CommunityDataDTO> communities = new ArrayList<>();
             
-            System.out.println("=== 社区数据调试 ===");
-            System.out.println("communityData: " + communityData);
-            System.out.println("communityData size: " + (communityData != null ? communityData.size() : "null"));
-            
             if (communityData != null && !communityData.isEmpty()) {
-                System.out.println("开始处理社区数据...");
-                for (int i = 0; i < communityData.size(); i++) {
-                    Map<String, Object> data = communityData.get(i);
-                    System.out.println("处理第" + (i+1) + "个社区: " + data);
-                    
+                for (Map<String, Object> data : communityData) {
                     try {
                         String name = (String) data.get("name");
                         Double longitude = ((Number) data.get("longitude")).doubleValue();
@@ -218,19 +210,14 @@ public class DashboardService {
                         Long facilityCount = ((Number) data.get("facilityCount")).longValue();
                         String type = (String) data.get("type");
                         
-                        System.out.println("社区数据解析成功: " + name + " (" + longitude + ", " + latitude + ")");
-                        
                         communities.add(new DashboardStatsDTO.MapDataDTO.CommunityDataDTO(
                             name, longitude, latitude, elderlyCount, facilityCount, type
                         ));
                     } catch (Exception e) {
-                        System.err.println("处理社区数据异常: " + e.getMessage());
+                        // 记录错误但继续处理其他数据
                         e.printStackTrace();
                     }
                 }
-                System.out.println("社区数据处理完成，总数: " + communities.size());
-            } else {
-                System.out.println("社区数据为空或null");
             }
             
             // 机构数据
@@ -303,12 +290,8 @@ public class DashboardService {
             stats.setMapData(mapData);
             
         } catch (Exception e) {
-            System.err.println("=== 数据库查询异常 ===");
-            System.err.println("异常类型: " + e.getClass().getName());
-            System.err.println("异常消息: " + e.getMessage());
-            e.printStackTrace();
-            System.err.println("=== 异常详情结束 ===");
             // 如果数据库查询失败，返回默认值
+            e.printStackTrace();
             return getDefaultStats();
         }
         

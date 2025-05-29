@@ -7,7 +7,7 @@
     <resultMap id="UserResultMap" type="com.example.pension.model.User">
         <id property="id" column="id"/>
         <result property="username" column="username"/>
-        <result property="password" column="password_hash"/>
+        <result property="passwordHash" column="password_hash"/>
         <result property="fullName" column="full_name"/>
         <result property="email" column="email"/>
         <result property="phone" column="phone"/>
@@ -42,14 +42,14 @@
 
     <insert id="save" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO system_user (username, password_hash, full_name, email, phone, organization_id, is_admin, is_active, last_login_time, create_time, update_time)
-        VALUES (#{username}, #{password}, #{fullName}, #{email}, #{phone}, #{organization.id,jdbcType=BIGINT}, #{isAdmin}, #{isActive}, #{lastLoginTime}, NOW(), NOW())
+        VALUES (#{username}, #{passwordHash}, #{fullName}, #{email}, #{phone}, #{organization.id,jdbcType=BIGINT}, #{isAdmin}, #{isActive}, #{lastLoginTime}, NOW(), NOW())
     </insert>
 
     <update id="update">
         UPDATE system_user
         <set>
             <if test="username != null">username = #{username},</if>
-            <if test="password != null">password_hash = #{password},</if>
+            <if test="passwordHash != null">password_hash = #{passwordHash},</if>
             <if test="fullName != null">full_name = #{fullName},</if>
             <if test="email != null">email = #{email},</if>
             <if test="phone != null">phone = #{phone},</if>

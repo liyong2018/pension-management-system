@@ -589,7 +589,7 @@ const beforePhotoUpload = (file) => {
 
 // 上传头部信息（包含token）
 const uploadHeaders = computed(() => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('authToken')
   return token ? { 'Authorization': `Bearer ${token}` } : {}
 })
 

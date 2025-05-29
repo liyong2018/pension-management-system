@@ -33,6 +33,23 @@ export default defineConfig({
           });
         }
       },
+      // Add proxy for /auth path
+      '/auth': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('认证代理错误:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('发送认证请求:', req.method, req.url);
+          });
+          proxy.on('proxyRes', (proxyRes, req, _res) => {
+            console.log('收到认证响应:', req.url, proxyRes.statusCode);
+          });
+        }
+      }
     },
   },
 }); 

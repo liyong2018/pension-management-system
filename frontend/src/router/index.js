@@ -1,11 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router';
 // 尝试查找 HomeView.vue，如果不存在，则需要创建一个简单的占位组件或实际的首页组件
 // import HomeView from '../views/HomeView.vue'; 
+import LoginView from '../views/LoginView.vue'; // Import LoginView
 
 // 导入首页组件
 const HomeView = () => import('../views/Dashboard.vue');
 
 const routes = [
+  {
+    path: '/login', // Add login route
+    name: 'Login',
+    component: LoginView,
+    meta: { title: '用户登录' }
+  },
   {
     path: '/',
     name: 'Home',
@@ -113,6 +120,12 @@ const routes = [
     name: 'DictionaryDiagnosis',
     component: () => import('@/views/system/DictionaryDiagnosis.vue'),
     meta: { title: '字典问题诊断', requiresAuth: true }
+  },
+  {
+    path: '/system/api-test',
+    name: 'ApiTest',
+    component: () => import('@/views/system/ApiTest.vue'),
+    meta: { title: '接口测试', requiresAuth: true }
   }
   // ... 其他模块的路由
 ];
@@ -128,15 +141,26 @@ router.beforeEach((to, from, next) => {
     document.title = `${to.meta.title} - 养老信息管理系统`;
   }
 
-  // 路由守卫示例：检查认证状态 (假设有一个 token 存储在 localStorage)
-  // const isAuthenticated = !!localStorage.getItem('userToken');
-  // if (to.matched.some(record => record.meta.requiresAuth) && !isAuthenticated) {
-  //   // ElMessage.warning('请先登录');
-  //   next({ name: 'Login' }); // 跳转到登录页，假设有名为 Login 的路由
-  // } else {
-  //   next();
-  // }
-  next(); // 默认放行
+  const isAuthenticated = !!localStorage.getItem('authToken');
+  console.log('🔒 路由守卫检查认证状态:', isAuthenticated);
+  console.log('🎯 目标路由:', to.path);
+
+  // 如果用户未认证且不是去登录页
+  if (!isAuthenticated && to.path !== '/login') {
+    console.log('⚠️ 未认证，重定向到登录页');
+    next({ path: '/login' });
+    return;
+  }
+
+  // 如果用户已认证且尝试访问登录页
+  if (isAuthenticated && to.path === '/login') {
+    console.log('✅ 已认证，重定向到首页');
+    next({ path: '/' });
+    return;
+  }
+
+  // 其他情况正常放行
+  next();
 });
 
 export default router; 

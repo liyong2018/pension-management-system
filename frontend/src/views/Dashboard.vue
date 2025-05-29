@@ -1378,7 +1378,55 @@ const loadWeatherData = async () => {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 15px;
-  margin: 0 300px;
+  margin: 0 320px;
+  transition: all 0.3s ease;
+}
+
+/* 当侧边栏展开时的顶部统计卡片调整 */
+.el-container:not(.el-aside-collapsed) .top-stats {
+  left: 270px;
+  margin: 0 320px;
+}
+
+/* 当侧边栏收起时的顶部统计卡片调整 */
+.el-container.el-aside-collapsed .top-stats {
+  left: 80px;
+  margin: 0 320px;
+}
+
+@media (max-width: 1600px) {
+  .top-stats {
+    margin: 0 300px;
+  }
+}
+
+@media (max-width: 1400px) {
+  .left-panel,
+  .right-panel {
+    width: 250px;
+  }
+  
+  .top-stats {
+    margin: 0 270px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .top-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 0 250px;
+  }
+  
+  .left-panel {
+    left: 110px;
+    width: 220px;
+  }
+  
+  .right-panel {
+    right: 20px;
+    width: 220px;
+  }
 }
 
 .stat-card {
@@ -1474,7 +1522,7 @@ const loadWeatherData = async () => {
 
 /* 图例面板 */
 .legend-panel {
-  position: absolute;
+  position: fixed;
   left: 80px;
   bottom: 5px;
   width: 160px;
@@ -1484,6 +1532,17 @@ const loadWeatherData = async () => {
   border-radius: 8px;
   padding: 12px 8px;
   border: 1px solid rgba(0, 212, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+/* 当侧边栏展开时的图例位置调整 */
+.el-container:not(.el-aside-collapsed) .legend-panel {
+  left: 270px;
+}
+
+/* 当侧边栏收起时的图例位置调整 */
+.el-container.el-aside-collapsed .legend-panel {
+  left: 80px;
 }
 
 .legend-panel .legend-title {
@@ -1520,7 +1579,7 @@ const loadWeatherData = async () => {
 /* 左侧面板 */
 .left-panel {
   position: fixed;
-  left: 80px;
+  left: 20px;
   top: 5px;
   bottom: 120px;
   width: 280px;
@@ -1529,6 +1588,7 @@ const loadWeatherData = async () => {
   flex-direction: column;
   gap: 15px;
   overflow-y: auto;
+  transition: all 0.3s ease;
 }
 
 /* 右侧面板 */
@@ -1543,9 +1603,18 @@ const loadWeatherData = async () => {
   flex-direction: column;
   gap: 15px;
   overflow-y: auto;
+  transition: all 0.3s ease;
 }
 
+/* 当侧边栏展开时的面板位置调整 */
+.el-container:not(.el-aside-collapsed) .left-panel {
+  left: 270px;
+}
 
+/* 当侧边栏收起时的面板位置调整 */
+.el-container.el-aside-collapsed .left-panel {
+  left: 80px;
+}
 
 /* 卡片样式 */
 .dashboard-card {
@@ -1585,6 +1654,7 @@ const loadWeatherData = async () => {
 .chart-container {
   height: 200px;
   width: 100%;
+  transition: all 0.3s ease;
 }
 
 

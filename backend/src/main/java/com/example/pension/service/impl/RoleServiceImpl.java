@@ -223,4 +223,15 @@ public class RoleServiceImpl implements RoleService {
         
         return rolePermissionMapper.findPermissionIdsByRoleId(roleId);
     }
+
+    /**
+     * 更新角色状态
+     */
+    public void updateStatus(Long id, String status) {
+        Role role = roleDao.findById(id);
+        if (role == null) {
+            throw new RuntimeException("角色不存在，ID：" + id);
+        }
+        roleDao.updateStatus(id, status);
+    }
 } 

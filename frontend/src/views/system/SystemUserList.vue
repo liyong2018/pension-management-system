@@ -595,6 +595,7 @@ import {
   CircleCheck, CircleClose, ArrowDown, Key, Switch
 } from '@element-plus/icons-vue'
 import organizationService from '@/services/organizationService'
+import request from '@/utils/request'
 
 export default {
   name: 'SystemUserList',
@@ -709,53 +710,39 @@ export default {
     const loadUsers = async () => {
       loading.value = true
       try {
-        const queryParams = new URLSearchParams()
-        queryParams.append('page', pagination.page)
-        queryParams.append('size', pagination.pageSize)
+        const queryParams = {
+          page: pagination.page,
+          size: pagination.pageSize
+        }
         
         // 添加搜索条件
-        if (searchForm.username) queryParams.append('username', searchForm.username)
-        if (searchForm.fullName) queryParams.append('fullName', searchForm.fullName)
-        if (searchForm.isActive !== null) queryParams.append('isActive', searchForm.isActive)
+        if (searchForm.username) queryParams.username = searchForm.username
+        if (searchForm.fullName) queryParams.fullName = searchForm.fullName
+        if (searchForm.isActive !== null) queryParams.isActive = searchForm.isActive
         
-        console.log('正在加载用户数据，请求URL:', `/api/system-users?${queryParams}`)
+        console.log('正在加载用户数据，请求参数:', queryParams)
         
-        const response = await fetch(`/api/system-users?${queryParams}`)
-        console.log('API响应状态:', response.status)
+        const data = await request({
+          url: 'system-users',
+          method: 'get',
+          params: queryParams
+        })
         
-        if (response.ok) {
-          const data = await response.json()
-          console.log('API响应数据:', data)
+        console.log('API响应数据:', data)
+        
+        // 处理后端返回的数据格式
+        if (data && data.list && Array.isArray(data.list)) {
+          // 后端返回格式: { total: 6, list: [...], pageNum: 1, pageSize: 10, ... }
+          users.value = data.list
+          pagination.total = data.total || 0
           
-          // 处理后端返回的数据格式
-          if (data && data.list && Array.isArray(data.list)) {
-            // 后端返回格式: { total: 6, list: [...], pageNum: 1, pageSize: 10, ... }
-            users.value = data.list
-            pagination.total = data.total || 0
-            
-            console.log('成功加载用户数据:', users.value.length, '条')
-            console.log('总数据量:', pagination.total)
-            
-            // 加载统计数据
-            await loadUserStats()
-          } else {
-            console.warn('API返回数据格式异常:', data)
-            users.value = []
-            pagination.total = 0
-            stats.value = {
-              totalUsers: 0,
-              activeUsers: 0,
-              adminUsers: 0,
-              todayLogins: 0
-            }
-          }
+          console.log('成功加载用户数据:', users.value.length, '条')
+          console.log('总数据量:', pagination.total)
+          
+          // 加载统计数据
+          await loadUserStats()
         } else {
-          console.error('API请求失败，状态码:', response.status)
-          const errorText = await response.text()
-          console.error('错误响应:', errorText)
-          ElMessage.error(`加载用户列表失败: ${response.status}`)
-          
-          // 使用空数据
+          console.warn('API返回数据格式异常:', data)
           users.value = []
           pagination.total = 0
           stats.value = {
@@ -789,55 +776,51 @@ export default {
         console.log('开始加载用户统计数据...')
         
         // 获取所有用户数据进行统计
-        const response = await fetch('/api/system-users?page=1&size=1000')
-        console.log('统计API响应状态:', response.status)
+        const data = await request({
+          url: 'system-users',
+          method: 'get',
+          params: { page: 1, size: 1000 }
+        })
         
-        if (response.ok) {
-          const data = await response.json()
-          console.log('统计API响应数据:', data)
+        console.log('统计API响应数据:', data)
+        
+        if (data && data.list && Array.isArray(data.list)) {
+          const allUsers = data.list
+          const totalUsers = data.total || allUsers.length
+          const activeUsers = allUsers.filter(u => u.isActive).length
+          const adminUsers = allUsers.filter(u => u.isAdmin).length
           
-          if (data && data.list && Array.isArray(data.list)) {
-            const allUsers = data.list
-            const totalUsers = data.total || allUsers.length
-            const activeUsers = allUsers.filter(u => u.isActive).length
-            const adminUsers = allUsers.filter(u => u.isAdmin).length
-            
-            // 获取今日登录数据（模拟，因为需要操作日志API支持）
-            let todayLogins = 0
-            try {
-              const today = new Date().toISOString().split('T')[0]
-              const logsResponse = await fetch(`/api/operation-logs?operationType=LOGIN&date=${today}&page=1&size=1000`)
-              if (logsResponse.ok) {
-                const logsData = await logsResponse.json()
-                todayLogins = logsData.total || (logsData.list ? logsData.list.length : 0)
-              } else {
-                // 如果日志API不可用，使用基于活跃用户的估算
-                todayLogins = Math.floor(activeUsers * 0.3) // 假设30%的活跃用户今日登录
+          // 获取今日登录数据
+          let todayLogins = 0
+          try {
+            const today = new Date().toISOString().split('T')[0]
+            const logsData = await request({
+              url: 'operation-logs',
+              method: 'get',
+              params: {
+                operationType: 'LOGIN',
+                date: today,
+                page: 1,
+                size: 1000
               }
-            } catch (error) {
-              console.warn('获取今日登录数据失败，使用估算值:', error)
-              todayLogins = Math.floor(activeUsers * 0.3)
-            }
+            })
             
-            stats.value = {
-              totalUsers,
-              activeUsers,
-              adminUsers,
-              todayLogins
-            }
-            
-            console.log('统计数据更新完成:', stats.value)
-          } else {
-            console.warn('统计API返回数据格式异常')
-            stats.value = {
-              totalUsers: pagination.total,
-              activeUsers: users.value.filter(u => u.isActive).length,
-              adminUsers: users.value.filter(u => u.isAdmin).length,
-              todayLogins: 0
-            }
+            todayLogins = logsData.total || (logsData.list ? logsData.list.length : 0)
+          } catch (error) {
+            console.warn('获取今日登录数据失败，使用估算值:', error)
+            todayLogins = Math.floor(activeUsers * 0.3)
           }
+          
+          stats.value = {
+            totalUsers,
+            activeUsers,
+            adminUsers,
+            todayLogins
+          }
+          
+          console.log('统计数据更新完成:', stats.value)
         } else {
-          console.warn('统计API请求失败，使用当前页面数据')
+          console.warn('统计API返回数据格式异常')
           stats.value = {
             totalUsers: pagination.total,
             activeUsers: users.value.filter(u => u.isActive).length,
@@ -862,39 +845,35 @@ export default {
       try {
         console.log('开始加载机构数据...')
         
-        // 直接调用后端API
-        const response = await fetch('/api/organizations?pageNum=1&pageSize=100')
-        console.log('机构API响应状态:', response.status)
+        const data = await request({
+          url: 'organizations',
+          method: 'get',
+          params: {
+            page: 1,
+            size: 100
+          }
+        })
         
-        if (response.ok) {
-          const data = await response.json()
-          console.log('机构API响应数据:', data)
-          
-          // 处理不同的API响应格式
-          let orgList = []
-          if (data.list) {
-            orgList = data.list
-          } else if (data.content) {
-            orgList = data.content
-          } else if (Array.isArray(data)) {
-            orgList = data
-          } else if (data.data) {
-            orgList = data.data.list || data.data.content || []
-          }
-          
-          organizations.value = orgList
-          console.log('加载的机构数据:', organizations.value)
-          
-          if (organizations.value.length === 0) {
-            console.warn('没有获取到机构数据')
-            ElMessage.warning('没有获取到机构数据，请检查后端服务')
-          }
-        } else {
-          const errorText = await response.text()
-          console.error('机构API请求失败，状态码:', response.status)
-          console.error('错误响应:', errorText)
-          ElMessage.error(`加载机构数据失败: ${response.status}`)
-          organizations.value = []
+        console.log('机构API响应数据:', data)
+        
+        // 处理不同的API响应格式
+        let orgList = []
+        if (data.list) {
+          orgList = data.list
+        } else if (data.content) {
+          orgList = data.content
+        } else if (Array.isArray(data)) {
+          orgList = data
+        } else if (data.data) {
+          orgList = data.data.list || data.data.content || []
+        }
+        
+        organizations.value = orgList
+        console.log('加载的机构数据:', organizations.value)
+        
+        if (organizations.value.length === 0) {
+          console.warn('没有获取到机构数据')
+          ElMessage.warning('没有获取到机构数据，请检查后端服务')
         }
       } catch (error) {
         console.error('加载机构列表异常:', error)
@@ -908,65 +887,41 @@ export default {
       try {
         console.log('开始加载角色数据...')
         
-        // 调用后端角色API - 使用/all端点获取所有角色
-        const response = await fetch('/api/roles/all')
-        console.log('角色API响应状态:', response.status)
+        const data = await request({
+          url: 'roles/all',
+          method: 'get'
+        })
         
-        if (response.ok) {
-          const data = await response.json()
-          console.log('角色API响应数据:', data)
-          
-          // 处理API响应格式 - /api/roles/all 直接返回角色数组
-          let roleList = []
-          if (Array.isArray(data)) {
-            roleList = data
-          } else if (data.data && Array.isArray(data.data)) {
-            roleList = data.data
-          } else if (data.list && Array.isArray(data.list)) {
-            roleList = data.list
-          }
-          
-          // 转换为前端需要的格式
-          availableRoles.value = roleList.map(role => ({
-            id: role.id,
-            name: role.roleName || role.name,
-            roleKey: role.roleKey || role.key,
-            description: role.description || '暂无描述'
-          }))
-          
-          console.log('加载的角色数据:', availableRoles.value)
-          
-          if (availableRoles.value.length === 0) {
-            console.warn('没有获取到角色数据，使用默认角色')
-            // 如果API失败，使用从数据库查询到的默认角色
-            availableRoles.value = [
-              { id: 1, name: '超级管理员', description: '拥有所有权限' },
-              { id: 2, name: '机构管理员', description: '管理本机构相关事务' },
-              { id: 3, name: '普通用户', description: '基本查看权限' },
-              { id: 4, name: '机构负责人', description: '机构负责人，负责机构日常管理和运营' }
-            ]
-          }
-        } else {
-          console.error('角色API请求失败，状态码:', response.status)
-          const errorText = await response.text()
-          console.error('错误响应:', errorText)
-          // 使用默认角色数据
-          availableRoles.value = [
-            { id: 1, name: '超级管理员', description: '拥有所有权限' },
-            { id: 2, name: '机构管理员', description: '管理本机构相关事务' },
-            { id: 3, name: '普通用户', description: '基本查看权限' },
-            { id: 4, name: '机构负责人', description: '机构负责人，负责机构日常管理和运营' }
-          ]
+        console.log('角色API响应数据:', data)
+        
+        // 处理API响应格式
+        let roleList = []
+        if (Array.isArray(data)) {
+          roleList = data
+        } else if (data.data && Array.isArray(data.data)) {
+          roleList = data.data
+        } else if (data.list && Array.isArray(data.list)) {
+          roleList = data.list
+        }
+        
+        // 转换为前端需要的格式
+        availableRoles.value = roleList.map(role => ({
+          id: role.id,
+          name: role.roleName || role.name,
+          roleKey: role.roleKey || role.key,
+          description: role.description || '暂无描述'
+        }))
+        
+        console.log('加载的角色数据:', availableRoles.value)
+        
+        if (availableRoles.value.length === 0) {
+          console.warn('没有获取到角色数据')
+          ElMessage.warning('没有获取到角色数据，请检查后端服务')
         }
       } catch (error) {
         console.error('加载角色列表异常:', error)
-        // 使用默认角色数据
-        availableRoles.value = [
-          { id: 1, name: '超级管理员', description: '拥有所有权限' },
-          { id: 2, name: '机构管理员', description: '管理本机构相关事务' },
-          { id: 3, name: '普通用户', description: '基本查看权限' },
-          { id: 4, name: '机构负责人', description: '机构负责人，负责机构日常管理和运营' }
-        ]
+        ElMessage.error('加载角色数据失败: ' + error.message)
+        availableRoles.value = []
       }
     }
 
@@ -1003,25 +958,21 @@ export default {
     const handleCreate = async () => {
       createLoading.value = true
       try {
-        const response = await fetch('/api/system-users', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(createForm)
+        console.log('正在创建用户:', createForm)
+        
+        const response = await request({
+          url: 'system-users',
+          method: 'post',
+          data: createForm
         })
         
-        if (response.ok) {
-          ElMessage.success('创建成功')
-          createDialogVisible.value = false
-          loadUsers()
-        } else {
-          const errorData = await response.json()
-          ElMessage.error(errorData.message || '创建失败')
-        }
+        console.log('创建用户响应:', response)
+        ElMessage.success('创建成功')
+        createDialogVisible.value = false
+        loadUsers()
       } catch (error) {
-        ElMessage.error('创建失败')
-        console.error('Error creating user:', error)
+        console.error('创建用户异常:', error)
+        ElMessage.error('创建失败: ' + (error.message || '请稍后重试'))
       } finally {
         createLoading.value = false
       }
@@ -1042,50 +993,49 @@ export default {
     const loadUserLogs = async (userId) => {
       logsLoading.value = true
       try {
-        const response = await fetch(`/api/operation-logs/user/${userId}?page=1&size=20`)
-        console.log('用户日志API响应状态:', response.status)
+        console.log('正在加载用户操作日志:', userId)
         
-        if (response.ok) {
-          const data = await response.json()
-          console.log('用户日志数据:', data)
-          
-          if (data.list && Array.isArray(data.list)) {
-            userLogs.value = data.list
-          } else if (Array.isArray(data)) {
-            userLogs.value = data
-          } else {
-            userLogs.value = []
+        const data = await request({
+          url: `operation-logs/user/${userId}`,
+          method: 'get',
+          params: {
+            page: 1,
+            size: 20
           }
+        })
+        
+        console.log('用户日志数据:', data)
+        
+        if (data.list && Array.isArray(data.list)) {
+          userLogs.value = data.list
+        } else if (Array.isArray(data)) {
+          userLogs.value = data
         } else {
-          console.warn('加载用户日志失败，使用模拟数据')
-          // 使用模拟数据
-          userLogs.value = [
-            {
-              operationType: 'LOGIN',
-              operationDesc: '用户登录系统',
-              module: '用户认证',
-              ipAddress: '192.168.1.100',
-              createTime: '2024-01-15 09:30:00'
-            },
-            {
-              operationType: 'UPDATE',
-              operationDesc: '修改个人信息',
-              module: '用户管理',
-              ipAddress: '192.168.1.100',
-              createTime: '2024-01-15 10:15:00'
-            },
-            {
-              operationType: 'VIEW',
-              operationDesc: '查看老人档案',
-              module: '人员档案',
-              ipAddress: '192.168.1.100',
-              createTime: '2024-01-15 11:20:00'
-            }
-          ]
+          userLogs.value = []
+          console.warn('用户日志数据格式异常')
         }
       } catch (error) {
         console.error('加载用户日志异常:', error)
         userLogs.value = []
+        
+        // 如果API不存在或出错，使用模拟数据
+        console.warn('使用模拟用户日志数据')
+        userLogs.value = [
+          {
+            operationType: 'LOGIN',
+            operationDesc: '用户登录系统',
+            module: '用户认证',
+            ipAddress: '192.168.1.100',
+            createTime: '2024-01-15 09:30:00'
+          },
+          {
+            operationType: 'UPDATE',
+            operationDesc: '修改个人信息',
+            module: '用户管理',
+            ipAddress: '192.168.1.100',
+            createTime: '2024-01-15 10:15:00'
+          }
+        ]
       } finally {
         logsLoading.value = false
       }
@@ -1094,21 +1044,20 @@ export default {
     // 加载用户角色信息
     const loadUserRoles = async (userId) => {
       try {
-        const response = await fetch(`/api/system-users/${userId}`)
-        console.log('用户详情API响应状态:', response.status)
+        console.log('正在加载用户角色信息:', userId)
         
-        if (response.ok) {
-          const userData = await response.json()
-          console.log('用户详情数据:', userData)
-          
-          if (userData.roles && Array.isArray(userData.roles)) {
-            userRoles.value = userData.roles
-          } else {
-            userRoles.value = []
-          }
+        const userData = await request({
+          url: `system-users/${userId}`,
+          method: 'get'
+        })
+        
+        console.log('用户详情数据:', userData)
+        
+        if (userData.roles && Array.isArray(userData.roles)) {
+          userRoles.value = userData.roles
         } else {
-          console.warn('加载用户角色失败')
           userRoles.value = []
+          console.warn('用户角色数据格式异常')
         }
       } catch (error) {
         console.error('加载用户角色异常:', error)
@@ -1151,37 +1100,16 @@ export default {
 
         console.log('正在更新用户数据:', updateData)
 
-        const response = await fetch(`/api/system-users/${editForm.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(updateData)
+        const response = await request({
+          url: `system-users/${editForm.id}`,
+          method: 'put',
+          data: updateData
         })
         
-        console.log('更新用户API响应状态:', response.status)
-        
-        if (response.ok) {
-          const result = await response.json()
-          console.log('更新用户API响应数据:', result)
-          ElMessage.success('更新成功')
-          editDialogVisible.value = false
-          loadUsers()
-        } else {
-          const errorText = await response.text()
-          console.error('更新用户失败，状态码:', response.status)
-          console.error('错误响应:', errorText)
-          
-          let errorMessage = '更新失败'
-          try {
-            const errorData = JSON.parse(errorText)
-            errorMessage = errorData.message || errorData.error || errorMessage
-          } catch (e) {
-            errorMessage = `更新失败 (${response.status}): ${errorText}`
-          }
-          
-          ElMessage.error(errorMessage)
-        }
+        console.log('更新用户API响应数据:', response)
+        ElMessage.success('更新成功')
+        editDialogVisible.value = false
+        loadUsers()
       } catch (error) {
         console.error('更新用户异常:', error)
         ElMessage.error('更新失败: ' + error.message)
@@ -1195,38 +1123,29 @@ export default {
       selectedUser.value = user
       console.log('为用户分配角色:', user.username)
       
-      // 从用户详情API获取角色信息（因为单独的角色API有问题）
+      // 从用户详情API获取角色信息
       try {
-        const response = await fetch(`/api/system-users/${user.id}`)
-        console.log('获取用户详情API响应状态:', response.status)
+        console.log('正在获取用户详情:', user.id)
         
-        if (response.ok) {
-          const userData = await response.json()
-          console.log('用户详情数据:', userData)
-          
-          // 从用户详情中提取角色信息
-          if (userData.roles && Array.isArray(userData.roles)) {
-            selectedRoles.value = userData.roles.map(role => role.id)
-            console.log('用户当前角色ID:', selectedRoles.value)
-          } else if (userData.roleIds && Array.isArray(userData.roleIds)) {
-            selectedRoles.value = userData.roleIds
-            console.log('用户当前角色ID:', selectedRoles.value)
-          } else {
-            console.warn('用户详情中没有角色信息，使用默认值')
-            // 根据用户信息推断角色
-            if (userData.isAdmin) {
-              selectedRoles.value = [1] // 超级管理员
-            } else {
-              selectedRoles.value = [3] // 普通用户
-            }
-          }
+        const userData = await request({
+          url: `system-users/${user.id}`,
+          method: 'get'
+        })
+        
+        console.log('用户详情数据:', userData)
+        
+        // 从用户详情中提取角色信息
+        if (userData.roles && Array.isArray(userData.roles)) {
+          selectedRoles.value = userData.roles.map(role => role.id)
+          console.log('用户当前角色ID:', selectedRoles.value)
+        } else if (userData.roleIds && Array.isArray(userData.roleIds)) {
+          selectedRoles.value = userData.roleIds
+          console.log('用户当前角色ID:', selectedRoles.value)
         } else {
-          console.warn('获取用户详情失败，使用默认值')
+          console.warn('用户详情中没有角色信息，使用默认值')
           // 根据用户信息推断角色
-          if (user.isAdmin) {
+          if (userData.isAdmin) {
             selectedRoles.value = [1] // 超级管理员
-          } else if (user.roles && user.roles.length > 0) {
-            selectedRoles.value = user.roles.map(role => role.id)
           } else {
             selectedRoles.value = [3] // 普通用户
           }
@@ -1252,38 +1171,66 @@ export default {
       try {
         console.log('正在分配角色:', selectedRoles.value, '给用户:', selectedUser.value.username)
         
-        const response = await fetch(`/api/system-users/${selectedUser.value.id}/roles`, {
-          method: 'PUT',
+        if (!selectedUser.value || !selectedUser.value.id) {
+          throw new Error('用户信息无效')
+        }
+
+        if (!Array.isArray(selectedRoles.value) || selectedRoles.value.length === 0) {
+          throw new Error('请至少选择一个角色')
+        }
+
+        // 修改请求数据格式
+        const requestData = {
+          roleIds: selectedRoles.value
+        }
+
+        console.log('发送角色分配请求:', {
+          url: `system-users/${selectedUser.value.id}/roles`,
+          method: 'put',
+          data: requestData
+        })
+
+        const response = await request({
+          url: `system-users/${selectedUser.value.id}/roles`,
+          method: 'put',
+          data: requestData,
           headers: {
             'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ roleIds: selectedRoles.value })
+          }
         })
         
-        console.log('角色分配API响应状态:', response.status)
+        console.log('角色分配响应:', response)
+
+        // 更健壮的响应处理
+        // 如果请求没有抛出异常，就认为是成功的（因为后端返回200状态码）
+        ElMessage.success('角色分配成功')
+        roleAssignDialogVisible.value = false
         
-        if (response.ok) {
-          ElMessage.success('角色分配成功')
-          roleAssignDialogVisible.value = false
-          loadUsers() // 重新加载用户列表以更新角色信息
-        } else {
-          const errorText = await response.text()
-          console.error('角色分配失败，状态码:', response.status)
-          console.error('错误响应:', errorText)
-          
-          let errorMessage = '角色分配失败'
-          try {
-            const errorData = JSON.parse(errorText)
-            errorMessage = errorData.message || errorData.error || errorMessage
-          } catch (e) {
-            errorMessage = `角色分配失败 (${response.status}): ${errorText}`
-          }
-          
-          ElMessage.error(errorMessage)
-        }
+        // 重新加载用户列表和角色信息
+        await Promise.all([
+          loadUsers(),
+          detailDialogVisible.value && loadUserRoles(selectedUser.value.id)
+        ])
+        
+        console.log('角色分配成功，已重新加载数据')
       } catch (error) {
-        console.error('角色分配异常:', error)
-        ElMessage.error('角色分配失败: ' + error.message)
+        console.error('角色分配异常:', {
+          error: error.message,
+          user: selectedUser.value?.username,
+          roles: selectedRoles.value,
+          stack: error.stack
+        })
+        
+        // 显示详细的错误信息
+        let errorMessage = error.message || '角色分配失败，请稍后重试'
+        if (error.response) {
+          const responseError = error.response.data?.message || error.response.data?.msg || error.response.data?.error
+          if (responseError) {
+            errorMessage = `角色分配失败: ${responseError}`
+          }
+        }
+        
+        ElMessage.error(errorMessage)
       } finally {
         roleAssignLoading.value = false
       }
@@ -1315,21 +1262,19 @@ export default {
           }
         )
         
-        const response = await fetch(`/api/system-users/${user.id}`, {
-          method: 'DELETE'
+        console.log('正在删除用户:', user.id)
+        
+        await request({
+          url: `system-users/${user.id}`,
+          method: 'delete'
         })
         
-        if (response.ok) {
-          ElMessage.success('删除成功')
-          loadUsers()
-        } else {
-          const errorData = await response.json()
-          ElMessage.error(errorData.message || '删除失败')
-        }
+        ElMessage.success('删除成功')
+        loadUsers()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除失败')
-          console.error('Error deleting user:', error)
+          console.error('删除用户异常:', error)
+          ElMessage.error('删除失败: ' + (error.message || '请稍后重试'))
         }
       }
     }
@@ -1365,16 +1310,15 @@ export default {
         )
         
         for (const user of multipleSelection.value) {
-          await fetch(`/api/system-users/${user.id}`, {
-            method: 'DELETE'
-          })
+          await deleteUser(user)
         }
         
         ElMessage.success('批量删除成功')
         loadUsers()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('批量删除失败')
+          console.error('批量删除异常:', error)
+          ElMessage.error('批量删除失败: ' + (error.message || '请稍后重试'))
         }
       }
     }
@@ -1410,18 +1354,18 @@ export default {
           }
         )
         
-        const response = await fetch(`/api/system-users/${user.id}/reset-password`, {
-          method: 'POST'
+        console.log('正在重置用户密码:', user.id)
+        
+        await request({
+          url: `system-users/${user.id}/reset-password`,
+          method: 'post'
         })
         
-        if (response.ok) {
-          ElMessage.success('密码重置成功')
-        } else {
-          ElMessage.error('密码重置失败')
-        }
+        ElMessage.success('密码重置成功')
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('密码重置失败')
+          console.error('重置密码异常:', error)
+          ElMessage.error('密码重置失败: ' + (error.message || '请稍后重试'))
         }
       }
     }
@@ -1440,19 +1384,19 @@ export default {
           }
         )
         
-        const response = await fetch(`/api/system-users/${user.id}/toggle-status`, {
-          method: 'PUT'
+        console.log('正在切换用户状态:', user.id, action)
+        
+        await request({
+          url: `system-users/${user.id}/toggle-status`,
+          method: 'put'
         })
         
-        if (response.ok) {
-          ElMessage.success(`${action}成功`)
-          loadUsers()
-        } else {
-          ElMessage.error(`${action}失败`)
-        }
+        ElMessage.success(`${action}成功`)
+        loadUsers()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('操作失败')
+          console.error('切换用户状态异常:', error)
+          ElMessage.error('操作失败: ' + (error.message || '请稍后重试'))
         }
       }
     }

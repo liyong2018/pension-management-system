@@ -13,6 +13,10 @@ public interface MenuPermissionDao {
 
     void update(MenuPermission menuPermission);
 
+    void updateStatus(@Param("id") Long id, @Param("status") Boolean status);
+
+    void updateVisible(@Param("id") Long id, @Param("isVisible") Boolean isVisible);
+
     void deleteById(@Param("id") Long id);
 
     void deleteBatchByIds(@Param("ids") List<Long> ids);

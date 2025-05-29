@@ -537,6 +537,7 @@ import {
   Folder, Document, View, Hide, House, OfficeBuilding, User, 
   Monitor, Warning, Setting, Key, Collection
 } from '@element-plus/icons-vue'
+import request from '@/utils/request'
 
 export default {
   name: 'PermissionList',
@@ -677,124 +678,108 @@ export default {
       try {
         console.log('开始加载权限数据...')
         
-        // 调用后端API获取权限树
-        const response = await fetch('/api/permissions/tree')
-        console.log('权限API响应状态:', response.status)
+        // 使用request方法替代fetch
+        const data = await request({
+          url: 'permissions/tree',
+          method: 'get'
+        })
         
-        if (response.ok) {
-          const data = await response.json()
-          console.log('权限API响应数据:', data)
-          
-          // 转换后端数据格式为前端需要的格式
-          const convertPermissionData = (permissions) => {
-            return permissions.map(permission => ({
-              id: permission.id,
-              name: permission.name,
-              parentId: permission.parentId,
-              sortOrder: permission.sortOrder || 0,
-              routePath: permission.routePath || '',
-              componentPath: permission.componentPath || '',
-              type: permission.type,
-              isVisible: permission.isVisible,
-              status: permission.status,
-              permissionKey: permission.permissionKey || '',
-              icon: permission.icon || '',
-              createTime: permission.createTime || '',
-              remark: permission.remark || '',
-              children: permission.children ? convertPermissionData(permission.children) : []
-            }))
-          }
-          
-          let permissionData = []
-          if (Array.isArray(data)) {
-            permissionData = convertPermissionData(data)
-          } else {
-            console.warn('权限API返回数据格式异常:', data)
-            permissionData = []
-          }
-          
-          // 应用搜索过滤
-          let filteredData = JSON.parse(JSON.stringify(permissionData))
-          
-          if (searchForm.name || searchForm.code || searchForm.type || searchForm.status) {
-            const filterPermissions = (permissions) => {
-              return permissions.filter(permission => {
-                let matches = true
-                
-                if (searchForm.name) {
-                  matches = matches && permission.name.includes(searchForm.name)
-                }
-                
-                if (searchForm.code) {
-                  matches = matches && permission.permissionKey && permission.permissionKey.includes(searchForm.code)
-                }
-                
-                if (searchForm.type) {
-                  matches = matches && permission.type === searchForm.type
-                }
-                
-                if (searchForm.status) {
-                  const statusValue = searchForm.status === '1'
-                  matches = matches && permission.status === statusValue
-                }
-                
-                if (permission.children && permission.children.length > 0) {
-                  permission.children = filterPermissions(permission.children)
-                  // 如果子权限有匹配的，保留父权限
-                  if (permission.children.length > 0) {
-                    matches = true
-                  }
-                }
-                
-                return matches
-              })
-            }
-            
-            filteredData = filterPermissions(filteredData)
-          }
-          
-          permissionTree.value = filteredData
-          stats.value = calculateStats(filteredData)
-          
-          // 设置父级权限选项（扁平化处理）
-          const flattenPermissions = (permissions, level = 0) => {
-            let result = []
-            for (const permission of permissions) {
-              if (permission.type !== 'BUTTON') { // 排除按钮类型
-                result.push({
-                  id: permission.id,
-                  name: '　'.repeat(level) + permission.name,
-                  level: level
-                })
-                if (permission.children && permission.children.length > 0) {
-                  result = result.concat(flattenPermissions(permission.children, level + 1))
+        console.log('权限API响应数据:', data)
+        
+        // 转换后端数据格式为前端需要的格式
+        const convertPermissionData = (permissions) => {
+          return permissions.map(permission => ({
+            id: permission.id,
+            name: permission.name,
+            parentId: permission.parentId,
+            sortOrder: permission.sortOrder || 0,
+            routePath: permission.routePath || '',
+            componentPath: permission.componentPath || '',
+            type: permission.type,
+            isVisible: permission.isVisible,
+            status: permission.status,
+            permissionKey: permission.permissionKey || '',
+            icon: permission.icon || '',
+            createTime: permission.createTime || '',
+            remark: permission.remark || '',
+            children: permission.children ? convertPermissionData(permission.children) : []
+          }))
+        }
+        
+        let permissionData = []
+        if (Array.isArray(data)) {
+          permissionData = convertPermissionData(data)
+        } else if (data.data && Array.isArray(data.data)) {
+          permissionData = convertPermissionData(data.data)
+        } else {
+          console.warn('权限API返回数据格式异常:', data)
+          permissionData = []
+        }
+        
+        // 应用搜索过滤
+        let filteredData = JSON.parse(JSON.stringify(permissionData))
+        
+        if (searchForm.name || searchForm.code || searchForm.type || searchForm.status) {
+          const filterPermissions = (permissions) => {
+            return permissions.filter(permission => {
+              let matches = true
+              
+              if (searchForm.name) {
+                matches = matches && permission.name.includes(searchForm.name)
+              }
+              
+              if (searchForm.code) {
+                matches = matches && permission.permissionKey && permission.permissionKey.includes(searchForm.code)
+              }
+              
+              if (searchForm.type) {
+                matches = matches && permission.type === searchForm.type
+              }
+              
+              if (searchForm.status) {
+                const statusValue = searchForm.status === '1'
+                matches = matches && permission.status === statusValue
+              }
+              
+              if (permission.children && permission.children.length > 0) {
+                permission.children = filterPermissions(permission.children)
+                // 如果子权限有匹配的，保留父权限
+                if (permission.children.length > 0) {
+                  matches = true
                 }
               }
-            }
-            return result
+              
+              return matches
+            })
           }
           
-          parentPermissions.value = flattenPermissions(filteredData)
-          
-          console.log('权限数据加载成功:', filteredData.length, '条')
-          
-        } else {
-          console.error('权限API请求失败，状态码:', response.status)
-          const errorText = await response.text()
-          console.error('错误响应:', errorText)
-          
-          // 如果API失败，使用空数据
-          permissionTree.value = []
-          stats.value = {
-            totalPermissions: 0,
-            menuPermissions: 0,
-            operationPermissions: 0,
-            catalogPermissions: 0
-          }
-          parentPermissions.value = []
-          
-          ElMessage.error(`加载权限数据失败: ${response.status}`)
+          filteredData = filterPermissions(filteredData)
         }
+        
+        permissionTree.value = filteredData
+        stats.value = calculateStats(filteredData)
+        
+        // 设置父级权限选项（扁平化处理）
+        const flattenPermissions = (permissions, level = 0) => {
+          let result = []
+          for (const permission of permissions) {
+            if (permission.type !== 'BUTTON') { // 排除按钮类型
+              result.push({
+                id: permission.id,
+                name: '　'.repeat(level) + permission.name,
+                level: level
+              })
+              if (permission.children && permission.children.length > 0) {
+                result = result.concat(flattenPermissions(permission.children, level + 1))
+              }
+            }
+          }
+          return result
+        }
+        
+        parentPermissions.value = flattenPermissions(filteredData)
+        
+        console.log('权限数据加载成功:', filteredData.length, '条')
         
       } catch (error) {
         console.error('加载权限列表异常:', error)
@@ -928,46 +913,25 @@ export default {
         
         console.log('创建权限数据:', createData)
         
-        // 调用后端API创建权限
-        const response = await fetch('/api/permissions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(createData)
+        // 使用request方法替代fetch
+        const response = await request({
+          url: 'permissions',
+          method: 'post',
+          data: createData
         })
         
-        console.log('创建权限API响应状态:', response.status)
+        // 如果请求没有抛出异常，就认为是成功的
+        ElMessage.success('创建成功')
+        dialogVisible.value = false
+        loadPermissions()
         
-        if (response.ok) {
-          const result = await response.json()
-          console.log('创建权限API响应数据:', result)
-          ElMessage.success('创建成功')
-          dialogVisible.value = false
-          loadPermissions()
-          
-          // 刷新顶部菜单
-          if (window.refreshTopMenu) {
-            window.refreshTopMenu()
-          }
-        } else {
-          const errorText = await response.text()
-          console.error('创建权限失败，状态码:', response.status)
-          console.error('错误响应:', errorText)
-          
-          let errorMessage = '创建失败'
-          try {
-            const errorData = JSON.parse(errorText)
-            errorMessage = errorData.message || errorData.error || errorMessage
-          } catch (e) {
-            errorMessage = `创建失败 (${response.status}): ${errorText}`
-          }
-          
-          ElMessage.error(errorMessage)
+        // 刷新顶部菜单
+        if (window.refreshTopMenu) {
+          window.refreshTopMenu()
         }
       } catch (error) {
         console.error('创建权限异常:', error)
-        ElMessage.error('创建失败: ' + error.message)
+        ElMessage.error(error.message || '创建失败')
       } finally {
         createLoading.value = false
       }
@@ -1019,46 +983,25 @@ export default {
         
         console.log('更新权限数据:', updateData)
         
-        // 调用后端API更新权限
-        const response = await fetch(`/api/permissions/${selectedPermission.value.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(updateData)
+        // 使用request方法替代fetch
+        const response = await request({
+          url: `permissions/${selectedPermission.value.id}`,
+          method: 'put',
+          data: updateData
         })
         
-        console.log('更新权限API响应状态:', response.status)
+        // 如果请求没有抛出异常，就认为是成功的
+        ElMessage.success('更新成功')
+        dialogVisible.value = false
+        loadPermissions()
         
-        if (response.ok) {
-          const result = await response.json()
-          console.log('更新权限API响应数据:', result)
-          ElMessage.success('更新成功')
-          dialogVisible.value = false
-          loadPermissions()
-          
-          // 刷新顶部菜单
-          if (window.refreshTopMenu) {
-            window.refreshTopMenu()
-          }
-        } else {
-          const errorText = await response.text()
-          console.error('更新权限失败，状态码:', response.status)
-          console.error('错误响应:', errorText)
-          
-          let errorMessage = '更新失败'
-          try {
-            const errorData = JSON.parse(errorText)
-            errorMessage = errorData.message || errorData.error || errorMessage
-          } catch (e) {
-            errorMessage = `更新失败 (${response.status}): ${errorText}`
-          }
-          
-          ElMessage.error(errorMessage)
+        // 刷新顶部菜单
+        if (window.refreshTopMenu) {
+          window.refreshTopMenu()
         }
       } catch (error) {
         console.error('更新权限异常:', error)
-        ElMessage.error('更新失败: ' + error.message)
+        ElMessage.error(error.message || '更新失败')
       } finally {
         editLoading.value = false
       }
@@ -1073,77 +1016,55 @@ export default {
         console.log('开始加载角色数据和权限关联信息...')
         
         // 1. 加载所有角色
-        const rolesResponse = await fetch('/api/roles/all')
-        console.log('角色API响应状态:', rolesResponse.status)
+        const rolesData = await request({
+          url: 'roles/all',
+          method: 'get'
+        })
+        console.log('角色数据:', rolesData)
         
-        if (rolesResponse.ok) {
-          const rolesData = await rolesResponse.json()
-          console.log('角色数据:', rolesData)
-          
-          // 处理角色数据格式
-          let roleList = []
-          if (Array.isArray(rolesData)) {
-            roleList = rolesData
-          } else if (rolesData.data && Array.isArray(rolesData.data)) {
-            roleList = rolesData.data
-          } else if (rolesData.list && Array.isArray(rolesData.list)) {
-            roleList = rolesData.list
-          }
-          
-          availableRoles.value = roleList.map(role => ({
-            id: role.id,
-            roleName: role.roleName || role.name,
-            roleKey: role.roleKey || role.key,
-            description: role.description || '暂无描述',
-            status: role.status
-          }))
-          
-          console.log('处理后的角色数据:', availableRoles.value)
-        } else {
-          console.warn('加载角色失败，使用默认角色')
-          availableRoles.value = [
-            { id: 1, roleName: '超级管理员', roleKey: 'SUPER_ADMIN', description: '拥有所有权限', status: '1' },
-            { id: 2, roleName: '机构管理员', roleKey: 'ORG_ADMIN', description: '管理本机构相关事务', status: '1' },
-            { id: 3, roleName: '普通用户', roleKey: 'USER', description: '基本查看权限', status: '1' },
-            { id: 4, roleName: '机构负责人', roleKey: 'ORG_LEADER', description: '机构负责人，负责机构日常管理和运营', status: '1' }
-          ]
+        // 处理角色数据格式
+        let roleList = []
+        if (Array.isArray(rolesData)) {
+          roleList = rolesData
+        } else if (rolesData.data && Array.isArray(rolesData.data)) {
+          roleList = rolesData.data
+        } else if (rolesData.list && Array.isArray(rolesData.list)) {
+          roleList = rolesData.list
         }
+        
+        availableRoles.value = roleList.map(role => ({
+          id: role.id,
+          roleName: role.roleName || role.name,
+          roleKey: role.roleKey || role.key,
+          description: role.description || '暂无描述',
+          status: role.status
+        }))
+        
+        console.log('处理后的角色数据:', availableRoles.value)
         
         // 2. 加载拥有该权限的角色
         try {
-          const permissionRolesResponse = await fetch(`/api/permissions/${permission.id}/roles`)
-          console.log('权限角色关联API响应状态:', permissionRolesResponse.status)
+          const permissionRolesData = await request({
+            url: `permissions/${permission.id}/roles`,
+            method: 'get'
+          })
+          console.log('权限角色关联数据:', permissionRolesData)
           
-          if (permissionRolesResponse.ok) {
-            const permissionRolesData = await permissionRolesResponse.json()
-            console.log('权限角色关联数据:', permissionRolesData)
-            
-            // 处理权限角色关联数据
-            let roleIds = []
-            if (Array.isArray(permissionRolesData)) {
-              // 如果返回的是角色对象数组
-              roleIds = permissionRolesData.map(role => role.id).filter(id => id)
-            } else if (permissionRolesData.roleIds && Array.isArray(permissionRolesData.roleIds)) {
-              // 如果返回的是包含roleIds的对象
-              roleIds = permissionRolesData.roleIds
-            } else {
-              console.warn('权限角色关联数据格式不识别:', permissionRolesData)
-              roleIds = []
-            }
-            
-            selectedRoles.value = roleIds
-            console.log('拥有该权限的角色ID:', roleIds)
+          // 处理权限角色关联数据
+          let roleIds = []
+          if (Array.isArray(permissionRolesData)) {
+            // 如果返回的是角色对象数组
+            roleIds = permissionRolesData.map(role => role.id).filter(id => id)
+          } else if (permissionRolesData.roleIds && Array.isArray(permissionRolesData.roleIds)) {
+            // 如果返回的是包含roleIds的对象
+            roleIds = permissionRolesData.roleIds
           } else {
-            console.warn('加载权限角色关联失败，使用默认值')
-            // 根据权限类型推断默认角色
-            if (permission.type === 'CATALOG' || permission.permissionKey === 'system:manage') {
-              selectedRoles.value = [1] // 超级管理员
-            } else if (permission.type === 'MENU') {
-              selectedRoles.value = [1, 2] // 超级管理员和机构管理员
-            } else {
-              selectedRoles.value = [1, 2, 3] // 所有角色
-            }
+            console.warn('权限角色关联数据格式不识别:', permissionRolesData)
+            roleIds = []
           }
+          
+          selectedRoles.value = roleIds
+          console.log('拥有该权限的角色ID:', roleIds)
         } catch (error) {
           console.error('加载权限角色关联异常:', error)
           selectedRoles.value = [1] // 默认只有超级管理员
@@ -1190,40 +1111,24 @@ export default {
         
         console.log('开始删除权限:', permission.id)
         
-        // 调用后端API删除权限
-        const response = await fetch(`/api/permissions/${permission.id}`, {
-          method: 'DELETE'
+        // 使用request方法替代fetch
+        const response = await request({
+          url: `permissions/${permission.id}`,
+          method: 'delete'
         })
         
-        console.log('删除权限API响应状态:', response.status)
+        // 如果请求没有抛出异常，就认为是成功的
+        ElMessage.success('删除成功')
+        loadPermissions()
         
-        if (response.ok) {
-          ElMessage.success('删除成功')
-          loadPermissions()
-          
-          // 刷新顶部菜单
-          if (window.refreshTopMenu) {
-            window.refreshTopMenu()
-          }
-        } else {
-          const errorText = await response.text()
-          console.error('删除权限失败，状态码:', response.status)
-          console.error('错误响应:', errorText)
-          
-          let errorMessage = '删除失败'
-          try {
-            const errorData = JSON.parse(errorText)
-            errorMessage = errorData.message || errorData.error || errorMessage
-          } catch (e) {
-            errorMessage = `删除失败 (${response.status}): ${errorText}`
-          }
-          
-          ElMessage.error(errorMessage)
+        // 刷新顶部菜单
+        if (window.refreshTopMenu) {
+          window.refreshTopMenu()
         }
       } catch (error) {
         if (error !== 'cancel') {
           console.error('删除权限异常:', error)
-          ElMessage.error('删除失败: ' + error.message)
+          ElMessage.error(error.message || '删除失败')
         }
       }
     }
@@ -1298,103 +1203,61 @@ export default {
       ElMessage.info('复制权限功能正在开发中...')
     }
 
+    // 切换权限状态
+    const handleToggleStatus = async (permission) => {
+      try {
+        const newStatus = !permission.status
+        console.log('切换权限状态:', permission.id, '从', permission.status, '到', newStatus)
+        
+        // 使用新的状态切换接口
+        await request({
+          url: `permissions/${permission.id}/status`,
+          method: 'put',
+          data: { status: newStatus }
+        })
+        
+        // 如果请求成功，显示成功消息并刷新列表
+        ElMessage.success(`权限已${newStatus ? '启用' : '禁用'}`)
+        
+        // 刷新权限列表以获取最新数据
+        await loadPermissions()
+        
+        // 刷新顶部菜单
+        if (window.refreshTopMenu) {
+          window.refreshTopMenu()
+        }
+      } catch (error) {
+        console.error('切换权限状态异常:', error)
+        ElMessage.error(error.message || '更新权限状态失败')
+      }
+    }
+
     // 切换显示状态
     const handleToggleVisible = async (permission) => {
       try {
         const newVisible = !permission.isVisible
         console.log('切换权限显示状态:', permission.id, '从', permission.isVisible, '到', newVisible)
         
-        // 构建更新数据
-        const updateData = {
-          id: permission.id,
-          name: permission.name,
-          parentId: permission.parentId,
-          type: permission.type,
-          permissionKey: permission.permissionKey,
-          routePath: permission.routePath,
-          componentPath: permission.componentPath,
-          icon: permission.icon,
-          sortOrder: permission.sortOrder,
-          isVisible: newVisible,
-          status: permission.status,
-          remark: permission.remark
-        }
-        
-        // 调用后端API更新权限
-        const response = await fetch(`/api/permissions/${permission.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(updateData)
+        // 使用新的显示状态切换接口
+        await request({
+          url: `permissions/${permission.id}/visible`,
+          method: 'put',
+          data: { isVisible: newVisible }
         })
         
-        if (response.ok) {
-          permission.isVisible = newVisible
-          ElMessage.success(`权限已${newVisible ? '显示' : '隐藏'}`)
-          
-          // 刷新顶部菜单
-          if (window.refreshTopMenu) {
-            window.refreshTopMenu()
-          }
-        } else {
-          const errorText = await response.text()
-          console.error('更新权限显示状态失败:', response.status, errorText)
-          ElMessage.error('更新显示状态失败')
+        // 如果请求成功，显示成功消息并刷新列表
+        ElMessage.success(`权限已${newVisible ? '显示' : '隐藏'}`)
+        
+        // 刷新权限列表以获取最新数据
+        await loadPermissions()
+        
+        // 刷新顶部菜单
+        if (window.refreshTopMenu) {
+          window.refreshTopMenu()
         }
       } catch (error) {
         console.error('切换权限显示状态异常:', error)
-        ElMessage.error('更新显示状态失败: ' + error.message)
-      }
-    }
-
-    // 切换启用状态
-    const handleToggleStatus = async (permission) => {
-      try {
-        const newStatus = !permission.status
-        console.log('切换权限启用状态:', permission.id, '从', permission.status, '到', newStatus)
-        
-        // 构建更新数据
-        const updateData = {
-          id: permission.id,
-          name: permission.name,
-          parentId: permission.parentId,
-          type: permission.type,
-          permissionKey: permission.permissionKey,
-          routePath: permission.routePath,
-          componentPath: permission.componentPath,
-          icon: permission.icon,
-          sortOrder: permission.sortOrder,
-          isVisible: permission.isVisible,
-          status: newStatus,
-          remark: permission.remark
-        }
-        
-        // 调用后端API更新权限
-        const response = await fetch(`/api/permissions/${permission.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(updateData)
-        })
-        
-        if (response.ok) {
-          permission.status = newStatus
-          ElMessage.success(`权限已${newStatus ? '启用' : '禁用'}`)
-          
-          // 刷新顶部菜单
-          if (window.refreshTopMenu) {
-            window.refreshTopMenu()
-          }
-        } else {
-          const errorText = await response.text()
-          console.error('更新权限启用状态失败:', response.status, errorText)
-          ElMessage.error('更新启用状态失败')
-        }
-      } catch (error) {
-        console.error('切换权限启用状态异常:', error)
-        ElMessage.error('更新启用状态失败: ' + error.message)
+        ElMessage.error(error.message || '更新显示状态失败')
       }
     }
 

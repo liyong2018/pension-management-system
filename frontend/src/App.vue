@@ -1,5 +1,7 @@
 <template>
-  <el-container id="app-container" style="height: 100vh;">
+  <!-- Conditionally render login page or main app layout -->
+  <router-view v-if="isAuthRoute" />
+  <el-container v-else id="app-container" style="height: 100vh;" :class="{'el-aside-collapsed': isCollapsed}">
     <!-- 左侧边栏 -->
     <el-aside class="app-aside" :width="isCollapsed ? '64px' : '250px'">
       <!-- 系统标题区域 -->
@@ -140,7 +142,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, onMounted, computed, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { 
@@ -148,6 +150,7 @@ import {
   Setting, Key, Collection, Document, Menu, ArrowRight, ArrowLeft,
   Location, ArrowDown
 } from '@element-plus/icons-vue';
+import request from '@/utils/request';
 
 const router = useRouter();
 const route = useRoute();
@@ -156,6 +159,35 @@ const menuLoading = ref(false);
 const menuData = ref([]);
 const isCollapsed = ref(true); // 默认收起状态
 const showMask = ref(false);
+
+// 添加token监听
+const checkToken = () => {
+  const token = localStorage.getItem('authToken');
+  if (!token && route.path !== '/login') {
+    console.log('🔒 检测到token不存在，跳转到登录页面');
+    router.push('/login');
+  }
+};
+
+// 监听localStorage中token的变化
+window.addEventListener('storage', (e) => {
+  if (e.key === 'authToken') {
+    checkToken();
+  }
+});
+
+// 定期检查token
+const tokenCheckInterval = setInterval(checkToken, 1000);
+
+// 组件卸载时清除定时器
+onUnmounted(() => {
+  clearInterval(tokenCheckInterval);
+});
+
+// Computed property to check if the current route is an authentication route
+const isAuthRoute = computed(() => {
+  return route.name === 'Login'; // Add other auth route names if needed, e.g., 'Register', 'ForgotPassword'
+});
 
 // 计算面包屑导航路径
 const breadcrumbItems = computed(() => {
@@ -260,68 +292,41 @@ const loadMenuData = async () => {
   menuLoading.value = true;
   try {
     console.log('🔄 开始加载顶部菜单数据...');
-    console.log('🌐 请求URL: /api/permissions/tree');
+    console.log('🌐 请求URL: /api/permissions/user-menu-tree');
+    console.log('🔑 当前Token:', localStorage.getItem('authToken'));
     
-    const response = await fetch('/api/permissions/tree');
-    console.log('📡 菜单API响应状态:', response.status);
+    const response = await request.get('/permissions/user-menu-tree');
+    console.log('📊 菜单API响应数据:', response);
     
-    if (response.ok) {
-      const data = await response.json();
-      console.log('📊 菜单API响应数据:', data);
-      console.log('📋 数据类型:', Array.isArray(data) ? '数组' : typeof data);
-      console.log('📈 数据长度:', Array.isArray(data) ? data.length : 'N/A');
-      
-      if (Array.isArray(data) && data.length > 0) {
-        // 强制使用API数据
-        menuData.value = data;
-        console.log('✅ 顶部菜单数据加载成功:', data.length, '条');
-        console.log('🎯 菜单列表:', data.map(m => `${m.name}(${m.type})`).join(', '));
-        
-        // 详细调试每个菜单项的数据结构
-        data.forEach((menu, index) => {
-          console.log(`📋 菜单${index + 1}: ${menu.name}`);
-          console.log(`   - type: ${menu.type}`);
-          console.log(`   - isVisible: ${menu.isVisible}`);
-          console.log(`   - status: ${menu.status}`);
-          console.log(`   - routePath: ${menu.routePath}`);
-          console.log(`   - icon: ${menu.icon}`);
-          if (menu.children && menu.children.length > 0) {
-            console.log(`   - 子菜单数量: ${menu.children.length}`);
-            menu.children.forEach((child, childIndex) => {
-              console.log(`     ${childIndex + 1}. ${child.name} (${child.type}) - visible: ${child.isVisible}, status: ${child.status}`);
-            });
-          }
-        });
-        
-        // 清除可能的缓存
-        localStorage.removeItem('menuCache');
-        sessionStorage.removeItem('menuCache');
-      } else {
-        console.warn('⚠️ 菜单API返回数据为空或格式异常:', data);
-        // 即使API返回空数据，也不使用默认菜单，而是显示错误
-        menuData.value = [];
-        ElMessage.error('菜单数据为空，请检查后端数据');
-      }
+    if (response && Array.isArray(response)) {
+      menuData.value = response;
+      console.log('✅ 菜单加载成功，数量:', response.length);
     } else {
-      console.error('❌ 菜单API请求失败，状态码:', response.status);
-      const errorText = await response.text();
-      console.error('📄 错误响应:', errorText);
-      
-      // 不使用默认菜单，显示错误信息
-      menuData.value = [];
-      ElMessage.error(`菜单加载失败: HTTP ${response.status}`);
+      console.error('❌ 菜单数据格式不正确:', response);
+      ElMessage.error('菜单数据格式不正确');
+      menuData.value = getDefaultMenus(); // 使用默认菜单作为后备
     }
   } catch (error) {
-    console.error('💥 加载菜单数据异常:', error);
-    console.error('🔍 错误详情:', error.message);
-    console.error('📍 错误堆栈:', error.stack);
+    console.error('❌ 加载菜单失败:', error);
+    console.error('❌ 错误详情:', error.response);
     
-    // 不使用默认菜单，显示错误信息
-    menuData.value = [];
-    ElMessage.error('菜单加载异常: ' + error.message);
+    if (error.response?.status === 403) {
+      console.log('🔒 权限被拒绝，检查token:', localStorage.getItem('authToken'));
+      ElMessage.error('没有权限访问菜单，请重新登录');
+      localStorage.removeItem('authToken');
+      router.push('/login');
+    } else if (error.response?.status === 401) {
+      console.log('🔑 未授权，需要重新登录');
+      ElMessage.error('登录已过期，请重新登录');
+      localStorage.removeItem('authToken');
+      router.push('/login');
+    } else {
+      console.error('❌ 其他错误:', error.message);
+      ElMessage.error('加载菜单失败: ' + (error.message || '未知错误'));
+      menuData.value = getDefaultMenus(); // 使用默认菜单作为后备
+    }
   } finally {
     menuLoading.value = false;
-    console.log('🏁 菜单加载完成，当前菜单数量:', menuData.value.length);
   }
 };
 
@@ -488,6 +493,12 @@ const getDefaultMenus = () => {
 // 监听路由变化，更新导航菜单的激活状态
 watch(() => route.path, (newPath) => {
   activeIndex.value = newPath;
+  
+  // 如果从登录页面跳转到其他页面，并且有token，则刷新菜单
+  if (newPath !== '/login' && localStorage.getItem('authToken') && menuData.value.length === 0) {
+    console.log('📍 路由变化检测到需要刷新菜单');
+    loadMenuData();
+  }
 });
 
 // 处理菜单选择事件
@@ -540,20 +551,22 @@ const handleResize = () => {
 // 组件挂载时加载菜单数据
 onMounted(() => {
   console.log('🚀 App组件挂载，开始初始化菜单...');
+  console.log('🌐 当前路由:', route.path);
+  console.log('🔑 当前Token:', localStorage.getItem('authToken') ? '存在' : '不存在');
   
-  // 清除所有可能的缓存
-  localStorage.clear();
-  sessionStorage.clear();
-  
-  // 强制刷新菜单数据
-  loadMenuData();
+  // 只有在非登录页面且有token时才加载菜单
+  if (route.path !== '/login' && localStorage.getItem('authToken')) {
+    loadMenuData();
+  } else {
+    console.log('⏭️ 跳过菜单加载：在登录页面或无token');
+  }
   
   // 添加窗口大小变化监听
   window.addEventListener('resize', handleResize);
   
   // 添加页面可见性变化监听，确保页面重新激活时刷新菜单
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
+    if (!document.hidden && route.path !== '/login' && localStorage.getItem('authToken')) {
       console.log('📱 页面重新激活，刷新菜单数据...');
       loadMenuData();
     }
@@ -938,7 +951,74 @@ html, body {
   background-color: #f8f9fa;
   height: calc(100vh - 60px);
   overflow-y: auto;
+  transition: all 0.3s ease;
+  margin-left: 64px;
+  width: calc(100% - 64px - 48px); /* 减去收起的侧边栏宽度和padding */
+}
+
+/* 当侧边栏展开时的主内容区域样式 */
+.el-container:not(.el-aside-collapsed) .app-main {
+  margin-left: 20px;
+  width: calc(100% - 20px - 48px); /* 减去侧边栏宽度和padding */
+}
+
+/* 图表容器通用样式 */
+.chart-container {
+  width: 100%;
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+/* el-dialog样式覆盖 */
+:deep(.el-dialog) {
+  max-width: calc(100vw - 48px);
+  margin: 0 auto;
+  transition: all 0.3s ease;
+}
+
+:deep(.el-dialog.is-fullscreen) {
+  width: 100vw !important;
+  max-width: 100vw !important;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .app-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  
+  .el-container:not(.el-aside-collapsed) .app-main,
+  .el-container.el-aside-collapsed .app-main {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  :deep(.el-dialog) {
+    width: 90% !important;
+    max-width: none !important;
+  }
+  
+  .chart-container {
+    width: 100% !important;
+  }
+}
+
+/* 侧边栏过渡动画 */
+.el-aside {
+  transition: width 0.3s ease;
+}
+
+/* 内容区域过渡动画 */
+.el-container {
   transition: margin-left 0.3s ease;
+}
+
+/* 图表容器过渡动画 */
+.chart-wrapper {
+  transition: all 0.3s ease;
+  width: 100%;
+  height: 100%;
 }
 
 /* 遮罩层样式 */
@@ -956,28 +1036,5 @@ html, body {
 /* Element Plus 组件的某些全局覆盖 */
 .el-card__header {
     font-weight: bold;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .app-aside {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    z-index: 1001;
-  }
-  
-  .app-main {
-    margin-left: 0 !important;
-  }
-  
-  .header-content {
-    padding: 0 16px;
-  }
-  
-  .username {
-    display: none;
-  }
 }
 </style> 

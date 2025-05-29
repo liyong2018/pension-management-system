@@ -240,28 +240,48 @@ export default {
       try {
         // 并行请求所有统计数据
         const [usersResponse, rolesResponse, permissionsResponse] = await Promise.all([
-          fetch('/api/system-users?page=1&size=1'),
-          fetch('/api/roles?page=1&size=1'),
-          fetch('/api/permissions?page=1&size=1')
+          request({
+            url: 'system-users',
+            method: 'get',
+            params: { page: 1, size: 1 }
+          }),
+          request({
+            url: 'roles',
+            method: 'get',
+            params: { page: 1, size: 1 }
+          }),
+          request({
+            url: 'permissions',
+            method: 'get',
+            params: { page: 1, size: 1 }
+          })
         ])
 
-        const usersData = await usersResponse.json()
-        const rolesData = await rolesResponse.json()
-        const permissionsData = await permissionsResponse.json()
-
         stats.value = {
-          totalUsers: usersData.total || 0,
-          activeUsers: Math.floor((usersData.total || 0) * 0.8), // 模拟活跃用户
-          totalRoles: rolesData.total || 0,
-          adminRoles: Math.floor((rolesData.total || 0) * 0.3), // 模拟管理员角色
-          totalPermissions: permissionsData.total || 0,
-          menuPermissions: Math.floor((permissionsData.total || 0) * 0.6), // 模拟菜单权限
+          totalUsers: usersResponse?.total || 0,
+          activeUsers: Math.floor((usersResponse?.total || 0) * 0.8), // 模拟活跃用户
+          totalRoles: rolesResponse?.total || 0,
+          adminRoles: Math.floor((rolesResponse?.total || 0) * 0.3), // 模拟管理员角色
+          totalPermissions: permissionsResponse?.total || 0,
+          menuPermissions: Math.floor((permissionsResponse?.total || 0) * 0.6), // 模拟菜单权限
           totalMenus: 15, // 模拟菜单数量
           topLevelMenus: 5 // 模拟顶级菜单
         }
       } catch (error) {
         console.error('加载统计数据失败:', error)
         ElMessage.error('加载统计数据失败')
+        
+        // 使用默认值
+        stats.value = {
+          totalUsers: 0,
+          activeUsers: 0,
+          totalRoles: 0,
+          adminRoles: 0,
+          totalPermissions: 0,
+          menuPermissions: 0,
+          totalMenus: 0,
+          topLevelMenus: 0
+        }
       }
     }
 
