@@ -60,38 +60,24 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:8080",
-            "http://localhost:8081", 
-            "http://localhost:3000", 
-            "http://localhost:3001", 
-            "http://localhost:3002", 
-            "http://localhost:3003", 
-            "http://localhost:3004",
-            "http://127.0.0.1:8080",
-            "http://127.0.0.1:8081",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:3001",
-            "http://127.0.0.1:3002",
-            "http://127.0.0.1:3003",
-            "http://127.0.0.1:3004"
-        ));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
+        configuration.setAllowedOrigins(Arrays.asList("http://8.137.85.158:3002"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList(
             "Authorization",
             "Content-Type",
-            "X-Requested-With",
             "Accept",
             "Origin",
             "Access-Control-Request-Method",
             "Access-Control-Request-Headers",
             "Access-Control-Allow-Origin",
-            "Access-Control-Allow-Credentials",
-            "Cache-Control",
-            "Pragma"
+            "Access-Control-Allow-Credentials"
+        ));
+        configuration.setExposedHeaders(Arrays.asList(
+            "Access-Control-Allow-Origin",
+            "Access-Control-Allow-Credentials"
         ));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // 预检请求的有效期，单位为秒
+        configuration.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

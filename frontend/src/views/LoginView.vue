@@ -39,12 +39,14 @@ const handleLogin = async () => {
 
   try {
     console.log('🔄 正在尝试登录...', { username: username.value });
-    const response = await fetch('/auth/login', {
+    const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
-      credentials: 'include',
+      mode: 'cors',
+      credentials: 'omit',
       body: JSON.stringify({
         username: username.value,
         password: password.value,
