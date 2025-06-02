@@ -229,12 +229,15 @@ public class SystemUserServiceImpl implements SystemUserService {
     }
 
     @Override
-    public void updatePassword(Long id, String newPassword) {
+    public void updatePassword(Long id, String oldPassword, String newPassword) {
         SystemUser systemUser = systemUserDao.findById(id);
         if (systemUser == null) {
             throw new RuntimeException("用户不存在，ID：" + id);
         }
-        
+        // 校验旧密码
+        if (!passwordEncoder.matches(oldPassword, systemUser.getPasswordHash())) {
+            throw new RuntimeException("当前密码错误");
+        }
         String encodedPassword = passwordEncoder.encode(newPassword);
         systemUserDao.updatePassword(id, encodedPassword);
     }
@@ -353,5 +356,33 @@ public class SystemUserServiceImpl implements SystemUserService {
     @Override
     public List<DirectorDTO> getDirectorsByOrganization(Long organizationId) {
         return systemUserDao.findDirectorsByOrganization(organizationId);
+    }
+
+    @Override
+    public SystemUserDTO updateOwnProfile(Long userId, SystemUserDTO profileUpdateDto) {
+        SystemUser existingUser = systemUserDao.findById(userId);
+        if (existingUser == null) {
+            throw new RuntimeException("用户不存在，ID：" + userId);
+        }
+
+        boolean updated = false;
+        if (profileUpdateDto.getFullName() != null && !profileUpdateDto.getFullName().equals(existingUser.getFullName())) {
+            existingUser.setFullName(profileUpdateDto.getFullName());
+            updated = true;
+        }
+        if (profileUpdateDto.getEmail() != null && !profileUpdateDto.getEmail().equals(existingUser.getEmail())) {
+            existingUser.setEmail(profileUpdateDto.getEmail());
+            updated = true;
+        }
+        if (profileUpdateDto.getPhone() != null && !profileUpdateDto.getPhone().equals(existingUser.getPhone())) {
+            existingUser.setPhone(profileUpdateDto.getPhone());
+            updated = true;
+        }
+
+        if (updated) {
+            systemUserDao.update(existingUser);
+        }
+        
+        return getById(userId); // 返回更新后的用户信息
     }
 } 

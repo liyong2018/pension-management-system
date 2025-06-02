@@ -6,17 +6,12 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: pension-backend
-    ports:
-      - "8081:8081"
+    network_mode: host
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/pension_management_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+      - SPRING_DATASOURCE_URL=jdbc:mysql://localhost:13306/pension_management_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=Htht1234
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    networks:
-      - pension-net
+      - SERVER_PORT=8081
     depends_on:
       - mysql
 
@@ -25,35 +20,26 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: pension-frontend
-    ports:
-      - "3002:3002"
+    network_mode: host
     volumes:
-      - /root/pension/frontend_new_dist:/usr/share/nginx/html
-    networks:
-      - pension-net
+      - ./frontend/dist:/usr/share/nginx/html
     depends_on:
       - backend
 
   mysql:
     image: mysql:8.0
     container_name: pension-mysql
+    network_mode: host
     environment:
       - MYSQL_ROOT_PASSWORD=Htht1234
       - MYSQL_DATABASE=pension_management_system
-    ports:
-      - "13306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-    networks:
-      - pension-net
+    command: --port=13306
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-P", "13306"]
       timeout: 5s
       retries: 10
 
 volumes:
   mysql_data:
-
-networks:
-  pension-net:
-    driver: bridge

@@ -378,13 +378,9 @@ const getAlarmStatusClass = (status) => {
 const loadDashboardData = async () => {
   loading.value = true;
   try {
-    const result = await request({
-      url: '/dashboard/stats',
-      method: 'GET'
-    });
-    
-    if (result) {
-      dashboardData.value = result;
+    const response = await request.get('/dashboard/stats');
+    if (response && response.success) {
+      dashboardData.value = response.data;
       console.log('首页数据加载成功:', dashboardData.value);
       
       // 数据加载完成后初始化图表和地图
@@ -392,7 +388,7 @@ const loadDashboardData = async () => {
       initCharts();
       initMap();
     } else {
-      console.error('加载首页数据失败: 返回数据为空');
+      console.error('加载首页数据失败:', response ? response.message : '未知错误');
       // 使用模拟数据
       loadMockData();
     }
@@ -601,13 +597,37 @@ const loadMockData = () => {
 const loadAlarmData = async () => {
   alarmLoading.value = true;
   try {
-    const result = await request({
-      url: '/dashboard/alarms/recent',
-      method: 'GET'
-    });
-    
-    if (result) {
-      alarmList.value = result;
+    const response = await fetch('/api/dashboard/alarms/recent');
+    if (response.ok) {
+      const result = await response.json();
+      if (result.success) {
+        alarmList.value = result.data;
+      } else {
+        // 使用模拟告警数据
+        alarmList.value = [
+          {
+            type: 'SOS报警',
+            location: '朝阳公园社区 张建国',
+            time: '2025-01-26 15:30:22',
+            status: '未处理',
+            level: '紧急'
+          },
+          {
+            type: '烟感报警',
+            location: '中关村社区 李秀英',
+            time: '2025-01-26 14:45:15',
+            status: '处理中',
+            level: '高'
+          },
+          {
+            type: '跌倒报警',
+            location: '东直门社区 王福寿',
+            time: '2025-01-26 13:20:08',
+            status: '未处理',
+            level: '中'
+          }
+        ];
+      }
     } else {
       // 使用模拟告警数据
       alarmList.value = [

@@ -33,7 +33,7 @@ public interface SystemUserService {
 
     void batchDelete(List<Long> ids);
 
-    void updatePassword(Long id, String newPassword);
+    void updatePassword(Long id, String oldPassword, String newPassword);
 
     void updateLastLoginTime(Long id);
 
@@ -75,4 +75,6 @@ public interface SystemUserService {
     void toggleUserStatus(Long id);
 
     List<Map<String, Object>> getUserRoles(Long id);
+
+    SystemUserDTO updateOwnProfile(Long userId, SystemUserDTO profileUpdateDto);
 } 

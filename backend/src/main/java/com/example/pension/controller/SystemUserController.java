@@ -9,9 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 @Slf4j
 @RestController
@@ -111,11 +115,22 @@ public class SystemUserController {
      * 更新用户密码
      */
     @PutMapping("/{id}/password")
-    public ResponseEntity<Void> updatePassword(
+    public ResponseEntity<?> updatePassword(
             @PathVariable Long id,
-            @RequestParam String newPassword) {
-        systemUserService.updatePassword(id, newPassword);
-        return ResponseEntity.ok().build();
+            @RequestBody Map<String, String> pwdMap) {
+        String oldPassword = pwdMap.get("oldPassword");
+        String newPassword = pwdMap.get("newPassword");
+        try {
+            systemUserService.updatePassword(id, oldPassword, newPassword);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            if ("当前密码错误".equals(e.getMessage())) {
+                Map<String, Object> resp = new HashMap<>();
+                resp.put("message", "当前密码错误");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resp);
+            }
+            throw e;
+        }
     }
 
     /**
@@ -254,5 +269,42 @@ public class SystemUserController {
             log.error("根据机构获取负责人列表失败", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    /**
+     * 获取当前登录用户基本信息
+     */
+    @GetMapping("/me")
+    public ResponseEntity<SystemUserDTO> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal() instanceof String) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        SystemUserDTO user = systemUserService.getByUsername(userDetails.getUsername());
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        // 确保不返回密码等敏感信息，DTO转换时应已处理
+        return ResponseEntity.ok(user);
+    }
+
+    /**
+     * 更新当前登录用户基本信息（姓名、邮箱、手机号）
+     */
+    @PutMapping("/me/profile")
+    public ResponseEntity<SystemUserDTO> updateCurrentUserProfile(@RequestBody SystemUserDTO profileUpdateDto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal() instanceof String) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        SystemUserDTO currentUser = systemUserService.getByUsername(userDetails.getUsername());
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 或 UNAUTHORIZED
+        }
+
+        SystemUserDTO updatedUser = systemUserService.updateOwnProfile(currentUser.getId(), profileUpdateDto);
+        return ResponseEntity.ok(updatedUser);
     }
 } 

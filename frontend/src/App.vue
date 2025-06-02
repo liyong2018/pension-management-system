@@ -111,14 +111,14 @@
             <el-dropdown>
               <div class="user-info">
                 <el-avatar :size="32" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
-                <span class="username">管理员</span>
+                <span class="username">{{ currentUserDisplayName }}</span>
                 <el-icon><ArrowDown /></el-icon>
               </div>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item>个人中心</el-dropdown-item>
-                  <el-dropdown-item>修改密码</el-dropdown-item>
-                  <el-dropdown-item divided>退出登录</el-dropdown-item>
+                  <el-dropdown-item @click="openProfileDialog">个人中心</el-dropdown-item>
+                  <el-dropdown-item @click="showChangePwdDialog = true">修改密码</el-dropdown-item>
+                  <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -139,6 +139,40 @@
       @click="handleMaskClick"
     ></div>
   </el-container>
+  <el-dialog v-model="showChangePwdDialog" title="修改密码" width="400px" :close-on-click-modal="false">
+    <el-form :model="changePwdForm" :rules="changePwdRules" ref="changePwdFormRef" label-width="100px" status-icon size="large">
+      <el-form-item label="当前密码" prop="oldPassword" style="margin-bottom: 18px;">
+        <el-input v-model="changePwdForm.oldPassword" type="password" autocomplete="off" clearable />
+      </el-form-item>
+      <el-form-item label="新密码" prop="newPassword" style="margin-bottom: 18px;">
+        <el-input v-model="changePwdForm.newPassword" type="password" autocomplete="off" clearable />
+      </el-form-item>
+      <el-form-item label="确认新密码" prop="confirmPassword" style="margin-bottom: 18px;">
+        <el-input v-model="changePwdForm.confirmPassword" type="password" autocomplete="off" clearable />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="showChangePwdDialog = false">取消</el-button>
+      <el-button type="primary" @click="submitChangePwd">确定</el-button>
+    </template>
+  </el-dialog>
+  <el-dialog v-model="showProfileDialog" title="个人信息" width="400px" :close-on-click-modal="false">
+    <el-form :model="profileFormData" :rules="profileFormRules" ref="profileFormModalRef" label-width="100px" status-icon size="large">
+      <el-form-item label="姓名" prop="fullName" style="margin-bottom: 18px;">
+        <el-input v-model="profileFormData.fullName" />
+      </el-form-item>
+      <el-form-item label="电子邮箱" prop="email" style="margin-bottom: 18px;">
+        <el-input v-model="profileFormData.email" />
+      </el-form-item>
+      <el-form-item label="手机号" prop="phone" style="margin-bottom: 18px;">
+        <el-input v-model="profileFormData.phone" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="showProfileDialog = false">取消</el-button>
+      <el-button type="primary" @click="handleProfileUpdate">确定</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
@@ -159,6 +193,55 @@ const menuLoading = ref(false);
 const menuData = ref([]);
 const isCollapsed = ref(true); // 默认收起状态
 const showMask = ref(false);
+const showChangePwdDialog = ref(false);
+const showProfileDialog = ref(false);
+const changePwdForm = ref({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+});
+const changePwdFormRef = ref(null);
+const changePwdRules = {
+  oldPassword: [{ required: true, message: '请输入当前密码', trigger: 'blur' }],
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, message: '新密码至少6位', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请再次输入新密码', trigger: 'blur' },
+    { validator: (rule, value, callback) => {
+        if (value !== changePwdForm.value.newPassword) {
+          callback(new Error('两次输入的新密码不一致'));
+        } else {
+          callback();
+        }
+      }, trigger: 'blur'
+    }
+  ]
+};
+
+const profileFormData = ref({
+  fullName: '',
+  email: '',
+  phone: ''
+});
+const profileFormModalRef = ref(null);
+const profileModalLoading = ref(false);
+
+const profileFormRules = {
+  fullName: [
+    { required: true, message: '姓名不能为空', trigger: 'blur' },
+    { min: 2, max: 50, message: '姓名长度在 2 到 50 个字符', trigger: 'blur' }
+  ],
+  email: [
+    { required: true, message: '电子邮箱不能为空', trigger: 'blur' },
+    { type: 'email', message: '请输入有效的电子邮箱地址', trigger: ['blur', 'change'] }
+  ],
+  phone: [
+    { required: true, message: '手机号不能为空', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的中国大陆手机号码', trigger: 'blur' }
+  ]
+};
 
 // 添加token监听
 const checkToken = () => {
@@ -243,6 +326,16 @@ const currentRouteName = computed(() => {
   return route.meta.title || route.name || '首页';
 });
 
+// 用于在头部动态显示用户名
+const currentUserDisplayName = computed(() => {
+  const storedUserInfo = localStorage.getItem('userInfo');
+  if (storedUserInfo) {
+    const parsedInfo = JSON.parse(storedUserInfo);
+    return parsedInfo.fullName || parsedInfo.username || '用户';
+  }
+  return '用户';
+});
+
 // 点击Logo返回首页
 const goHome = () => {
   router.push('/');
@@ -311,10 +404,8 @@ const loadMenuData = async () => {
     console.error('❌ 错误详情:', error.response);
     
     if (error.response?.status === 403) {
-      console.log('🔒 权限被拒绝，检查token:', localStorage.getItem('authToken'));
-      ElMessage.error('没有权限访问菜单，请重新登录');
-      localStorage.removeItem('authToken');
-      router.push('/login');
+      console.warn('🔒 加载菜单权限被拒绝 (403). Token:', localStorage.getItem('authToken'));
+      ElMessage.error('无法加载用户菜单，您可能没有足够的权限。如果问题持续，请联系管理员。');
     } else if (error.response?.status === 401) {
       console.log('🔑 未授权，需要重新登录');
       ElMessage.error('登录已过期，请重新登录');
@@ -577,6 +668,112 @@ onMounted(() => {
 window.refreshTopMenu = () => {
   console.log('🔄 手动刷新菜单...');
   loadMenuData();
+};
+
+const handleLogout = () => {
+  localStorage.removeItem('authToken');
+  sessionStorage.removeItem('authToken');
+  router.push('/login');
+};
+
+const fetchCurrentUserForModal = async () => {
+  profileModalLoading.value = true;
+  try {
+    const response = await request.get('/system-users/me');
+    if (response) {
+      profileFormData.value.fullName = response.fullName || '';
+      profileFormData.value.email = response.email || '';
+      profileFormData.value.phone = response.phone || '';
+    }
+  } catch (error) {
+    console.error("获取用户信息失败:", error);
+    ElMessage.error(error.response?.data?.message || '获取用户信息失败，请稍后再试');
+    showProfileDialog.value = false; // 获取失败则关闭弹窗
+  } finally {
+    profileModalLoading.value = false;
+  }
+};
+
+const openProfileDialog = () => {
+  fetchCurrentUserForModal();
+  showProfileDialog.value = true;
+};
+
+const handleProfileUpdate = async () => {
+  if (!profileFormModalRef.value) return;
+  await profileFormModalRef.value.validate(async (valid) => {
+    if (valid) {
+      profileModalLoading.value = true;
+      try {
+        const payload = {
+          fullName: profileFormData.value.fullName,
+          email: profileFormData.value.email,
+          phone: profileFormData.value.phone
+        };
+        const response = await request.put('/system-users/me/profile', payload);
+        ElMessage.success('个人信息更新成功！');
+        
+        // 更新 localStorage 中的 userInfo
+        const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        storedUserInfo.fullName = response.fullName;
+        storedUserInfo.email = response.email;
+        storedUserInfo.phone = response.phone;
+        localStorage.setItem('userInfo', JSON.stringify(storedUserInfo));
+        
+        // 触发计算属性更新 (虽然 currentUserDisplayName 应该自动更新，显式调用可忽略)
+        // currentUserDisplayName.value; // No need, computed property will react
+
+        showProfileDialog.value = false;
+      } catch (error) {
+        console.error("更新个人信息失败:", error);
+        ElMessage.error(error.response?.data?.message || '更新个人信息失败，请稍后再试');
+      } finally {
+        profileModalLoading.value = false;
+      }
+    } else {
+      ElMessage.error('表单校验失败，请检查输入项。');
+      return false;
+    }
+  });
+};
+
+const resetProfileFormInModal = () => {
+  // Re-fetch or reset to originally fetched data if needed, 
+  // for now, just clears validation and keeps current form values
+  // or better, call fetchCurrentUserForModal() again to reset to DB state.
+  fetchCurrentUserForModal(); //  重新获取数据以重置
+  if (profileFormModalRef.value) {
+    profileFormModalRef.value.clearValidate();
+  }
+};
+
+const submitChangePwd = () => {
+  changePwdFormRef.value.validate(async (valid) => {
+    if (!valid) return;
+    try {
+      const userId = getCurrentUserId();
+      await request.put(`/system-users/${userId}/password`, {
+        oldPassword: changePwdForm.value.oldPassword,
+        newPassword: changePwdForm.value.newPassword
+      });
+      ElMessage.success('密码修改成功，请重新登录');
+      showChangePwdDialog.value = false;
+      handleLogout();
+    } catch (e) {
+      if (e?.response?.status === 400) {
+        ElMessage.error('当前密码错误，请重新输入');
+      } else {
+        ElMessage.error(e?.response?.data?.message || '密码修改失败');
+      }
+    }
+  });
+};
+
+// 获取当前用户ID（假设token里有，或从用户信息接口获取）
+const getCurrentUserId = () => {
+  // 这里请根据你的项目实际情况获取用户ID
+  // 例如：return JSON.parse(localStorage.getItem('userInfo')).id;
+  return JSON.parse(localStorage.getItem('userInfo')).id;
 };
 
 </script>

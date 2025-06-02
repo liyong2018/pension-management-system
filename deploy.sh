@@ -39,14 +39,9 @@ ssh $REMOTE_SERVER << 'EOF'
     cd /root/pension
     tar -xzf pension-project.tar.gz
     docker-compose down
-    docker-compose build --no-cache
-    docker-compose up -d
-    rm pension-project.tar.gz
+    docker-compose up --build -d
+    rm -f pension-project.tar.gz
 EOF
-
-# 清理本地临时文件
-echo "清理本地临时文件..."
-rm pension-project.tar.gz
 
 echo "部署完成！"
 echo "前端访问地址: http://8.137.85.158:3002"

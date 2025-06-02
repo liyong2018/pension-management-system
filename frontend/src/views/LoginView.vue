@@ -38,7 +38,20 @@ const handleLogin = async () => {
   errorMessage.value = '';
 
   try {
-    console.log('🔄 正在尝试登录...', { username: username.value });
+    console.log('🔄 正在尝试登录...', { 
+      username: username.value, 
+      password: password.value,
+      usernameLength: username.value.length,
+      passwordLength: password.value.length 
+    });
+    
+    const requestBody = {
+      username: username.value,
+      password: password.value,
+    };
+    
+    console.log('📤 发送的请求体:', requestBody);
+    
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: {
@@ -47,10 +60,7 @@ const handleLogin = async () => {
       },
       mode: 'cors',
       credentials: 'omit',
-      body: JSON.stringify({
-        username: username.value,
-        password: password.value,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     console.log('📡 登录响应状态:', response.status);
@@ -72,6 +82,7 @@ const handleLogin = async () => {
       if (data.token) {
         console.log('✅ 登录成功，保存 token');
         localStorage.setItem('authToken', data.token);
+        localStorage.removeItem('token');
         if (data.user) {
           localStorage.setItem('userInfo', JSON.stringify(data.user));
         }
@@ -90,7 +101,21 @@ const handleLogin = async () => {
         errorMessage.value = '登录成功但未收到 token，请联系管理员。';
       }
     } else {
-      errorMessage.value = data.message || data.error || '用户名或密码错误';
+      // 改进错误处理，显示验证错误的详细信息
+      if (response.status === 400 && data && typeof data === 'object') {
+        // 处理验证错误
+        const validationErrors = [];
+        if (data.username) validationErrors.push(`用户名: ${data.username}`);
+        if (data.password) validationErrors.push(`密码: ${data.password}`);
+        
+        if (validationErrors.length > 0) {
+          errorMessage.value = validationErrors.join(', ');
+        } else {
+          errorMessage.value = '请求格式错误';
+        }
+      } else {
+        errorMessage.value = data.message || data.error || '用户名或密码错误';
+      }
     }
   } catch (error) {
     console.error('❌ 登录错误:', error);

@@ -4,34 +4,35 @@ import { useRouter } from 'vue-router';
 
 // 创建 axios 实例
 const service = axios.create({
-  baseURL: 'http://localhost:3002/api', // 使用完整的后端地址
+  baseURL: '/api', // 使用相对路径，让 nginx 处理代理
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
   },
-  withCredentials: true // 允许跨域请求携带凭证
+  withCredentials: false // 在主机网络模式下不需要跨域凭证
 });
 
 // 请求拦截器
 service.interceptors.request.use(
   config => {
-    // 从 localStorage 获取 token
-    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
-    console.log('🔑 当前token:', token);
-    console.log('🌐 请求URL:', config.url);
+    // 统一从 localStorage 获取 token，优先使用 'authToken'
+    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+    console.log('🔑 当前token:', token ? `${token.substring(0, 20)}...` : 'null');
+    console.log('🌐 请求URL:', config.baseURL + config.url);
     console.log('📝 请求方法:', config.method);
-    console.log('📦 请求数据:', config.data);
     
     if (token) {
       // 移除可能存在的 Bearer 前缀
       const tokenValue = token.startsWith('Bearer ') ? token.slice(7) : token;
       config.headers['Authorization'] = `Bearer ${tokenValue}`;
+      console.log('🔒 已添加认证头');
+    } else {
+      console.log('⚠️ 未找到token');
     }
     
     // 添加请求时间戳，用于日志记录
     config.metadata = { startTime: new Date() };
     
-    console.log('📋 完整请求头:', config.headers);
     return config;
   },
   error => {
@@ -81,8 +82,9 @@ service.interceptors.response.use(
           break;
         case 401:
           // 未授权，清除token并跳转到登录页
-      localStorage.removeItem('token');
+          localStorage.removeItem('token');
           localStorage.removeItem('authToken');
+          localStorage.removeItem('userInfo');
           const router = useRouter();
           router.push('/login');
           ElMessage.error('登录已过期，请重新登录');

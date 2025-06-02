@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -22,6 +23,7 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -34,13 +36,17 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/login", "/swagger-ui/**", "/v3/api-docs/**", "/error").permitAll()
-                .requestMatchers("/api/database-fix/**").permitAll()
-                .requestMatchers("/api/debug/**").permitAll()
-                .requestMatchers("/api/dashboard/**").permitAll()
-                .requestMatchers("/api/permissions/user-menu-tree").authenticated()
-                .requestMatchers("/api/**").authenticated()
-                .anyRequest().permitAll()
+                .requestMatchers("/api/auth/**", "/error").permitAll()
+                .requestMatchers("/api/dashboard/**").hasAnyRole("ADMIN", "USER")
+                .requestMatchers("/api/permissions/**").hasRole("ADMIN")
+                .requestMatchers("/api/roles/**").hasRole("ADMIN")
+                .requestMatchers("/api/system-users/**").hasRole("ADMIN")
+                .requestMatchers("/api/organizations/**").hasAnyRole("ADMIN", "USER")
+                .requestMatchers("/api/elderly-profiles/**").hasAnyRole("ADMIN", "USER")
+                .requestMatchers("/api/smart-devices/**").hasAnyRole("ADMIN", "USER")
+                .requestMatchers("/api/device-alarms/**").hasAnyRole("ADMIN", "USER")
+                .requestMatchers("/api/debug/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
@@ -60,7 +66,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://8.137.85.158:3002"));
+        configuration.setAllowedOrigins(Arrays.asList("http://8.137.85.158:3002","http://localhost:3002"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList(
             "Authorization",
