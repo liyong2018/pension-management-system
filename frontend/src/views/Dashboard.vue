@@ -695,11 +695,23 @@ const initMap = () => {
     attributionControl: true
   }).setView([39.9042, 116.4074], 11);
 
-  // 添加OpenStreetMap瓦片图层
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors',
+  const tiandituKey = '0252639b1589bd33a54817f48d982093'; // 用户提供的天地图Key
+
+  // 天地图矢量图层
+  L.tileLayer(`https://t{s}.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=vec&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${tiandituKey}`, {
+    subdomains: ['0', '1', '2', '3', '4', '5', '6', '7'],
+    attribution: '天地图 - 矢量地图',
     maxZoom: 18,
-    opacity: 0.8
+    opacity: 1.0
+  }).addTo(mapInstance.value);
+
+  // 天地图矢量注记图层
+  L.tileLayer(`https://t{s}.tianditu.gov.cn/cva_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=cva&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${tiandituKey}`, {
+    subdomains: ['0', '1', '2', '3', '4', '5', '6', '7'],
+    attribution: '天地图 - 注记',
+    maxZoom: 18,
+    opacity: 1.0,
+    pane: 'overlayPane' // 确保注记在其他图层之上
   }).addTo(mapInstance.value);
 
   // 创建图层组
@@ -1518,7 +1530,7 @@ const loadWeatherData = async () => {
 .legend-panel {
   position: fixed;
   left: 80px;
-  bottom: 5px;
+  bottom: 20px;
   width: 160px;
   z-index: 20;
   background: rgba(0, 0, 0, 0.6);
@@ -1590,7 +1602,7 @@ const loadWeatherData = async () => {
   position: fixed;
   right: 20px;
   top: 5px;
-  bottom: 5px;
+  bottom: 20px;
   width: 280px;
   z-index: 10;
   display: flex;
@@ -1656,7 +1668,7 @@ const loadWeatherData = async () => {
 /* 底部控制栏 */
 .bottom-controls {
   position: fixed;
-  bottom: 8px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 15;
