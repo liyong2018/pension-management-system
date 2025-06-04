@@ -53,13 +53,13 @@ jobs:
             git pull origin "\$target_branch" || { echo "❌ Failed to pull changes from origin \$target_branch."; exit 1; }
             # git stash pop # 如果之前 stash 了
 
-            echo "🐳 Stopping and removing old Docker containers..."
+            echo "🐳 Stopping and removing old Docker containers...."
             docker-compose down --remove-orphans
 
-            echo "🏗️ Building and starting new Docker containers..."
+            echo "🏗️ Building and starting new Docker containers...."
             docker-compose up -d --build
 
-            echo "🧹 (Optional) Pruning unused Docker images..."
+            echo "🧹 (Optional) Pruning unused Docker images...."
             docker image prune -af
 
             echo "🎉 Deployment to http://${SERVER_HOST_ENV}:3002 (frontend) and http://${SERVER_HOST_ENV}:8081 (backend) successful!"
