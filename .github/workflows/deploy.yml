@@ -1,66 +1,130 @@
-name: Deploy to Server via SSH and Docker Compose
+name: Deploy to Server (Build & Package First)
 
 on:
   push:
     branches:
-      - main  # 当推送到 main 分支时触发
+      - main # 当推送到 main 分支时触发
 
 jobs:
-  deploy:
-    name: Deploy
+  build-and-deploy:
+    name: Build, Package, and Deploy
     runs-on: ubuntu-latest # 使用 GitHub 提供的最新版 Ubuntu runner
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4 # 检出您的代码到 runner
+        uses: actions/checkout@v4
+
+      - name: Set up Java (for backend build)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # Eclipse Temurin (formerly AdoptOpenJDK)
+          java-version: '17'      # 与您后端 Dockerfile 中使用的版本一致
+          cache: 'maven'          # 缓存 Maven 依赖
+
+      - name: Set up Node.js (for frontend build)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # 或者您前端项目需要的 Node.js 版本
+          cache: 'npm'       # 缓存 npm 依赖 (位于 frontend 目录)
+          cache-dependency-path: frontend/package-lock.json # 指定 lock 文件路径
+
+      - name: Build backend project
+        run: |
+          echo "🚀 Building backend project..."
+          cd backend
+          mvn clean package -DskipTests
+          # 检查 JAR 文件是否生成
+          if [ ! -f target/*.jar ]; then
+            echo "❌ Backend JAR file not found after build!"
+            exit 1
+          fi
+          echo "✅ Backend project built successfully."
+          cd ..
+
+      - name: Build frontend project
+        run: |
+          echo "🚀 Building frontend project..."
+          cd frontend
+          npm config set registry https://registry.npmmirror.com # 设置淘宝镜像源
+          npm install
+          npm run build
+          # 检查 dist 目录是否生成
+          if [ ! -d dist ]; then
+            echo "❌ Frontend dist directory not found after build!"
+            exit 1
+          fi
+          echo "✅ Frontend project built successfully."
+          cd ..
+
+      - name: Create deployment package
+        run: |
+          echo "📦 Creating deployment package: pension-project.tar.gz"
+          # 确保 frontend/nginx.conf 存在，如果需要的话
+          # 如果 frontend/nginx.conf 不是必需的，或者您的前端 Dockerfile 自己处理 Nginx 配置，可以从下面移除
+          # 如果没有 nginx.conf，tar 命令会报错。这里假设它存在。
+          # 如果 deploy.sh 脚本中的 frontend/nginx.conf 是必须的，你需要确保它在仓库中。
+          # 如果它不存在，可以从下面的 tar 命令中移除。
+          # 确保后端 JAR 文件存在
+          ls -l backend/target/
+          # 确保前端 dist 目录存在
+          ls -l frontend/
+          
+          tar -czvf pension-project.tar.gz \
+            backend/target/*.jar \
+            backend/Dockerfile \
+            frontend/dist \
+            frontend/Dockerfile \
+            docker-compose.yml \
+            # 如果 frontend/nginx.conf 文件存在于仓库中并且是必需的:
+            # frontend/nginx.conf
 
       - name: Set up SSH key for server access
-        uses: webfactory/ssh-agent@v0.9.0 # 设置 SSH agent 并加载私钥
+        uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
 
       - name: Add server to known_hosts
-        run: ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts # 避免 SSH 首次连接时的交互式主机密钥验证提示
+        run: ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy to server
-        env: # 将 secrets 传递为环境变量，方便在脚本中使用
+      - name: Upload package to server and deploy
+        env:
           SERVER_USER_ENV: ${{ secrets.SERVER_USER }}
           SERVER_HOST_ENV: ${{ secrets.SERVER_HOST }}
           SERVER_PROJECT_PATH_ENV: ${{ secrets.SERVER_PROJECT_PATH }}
-          GIT_BRANCH_NAME_ENV: ${{ github.ref_name }} # 获取触发工作流程的分支名
         run: |
-          # 通过 SSH 连接到服务器并执行部署命令
-          ssh ${SERVER_USER_ENV}@${SERVER_HOST_ENV} << EOF
-            echo "🚀 Connected to server: ${SERVER_HOST_ENV} as ${SERVER_USER_ENV}"
-            echo " Navigating to project directory: ${SERVER_PROJECT_PATH_ENV}"
-            cd "${SERVER_PROJECT_PATH_ENV}" || { echo "❌ Failed to cd into project directory. Ensure project is cloned at ${SERVER_PROJECT_PATH_ENV}."; exit 1; }
+          echo "⬆️ Uploading pension-project.tar.gz to server..."
+          scp pension-project.tar.gz ${SERVER_USER_ENV}@${SERVER_HOST_ENV}:${SERVER_PROJECT_PATH_ENV}/
 
-            echo "🔄 Pulling latest changes for branch '${GIT_BRANCH_NAME_ENV}' from origin..."
+          echo "🚀 Deploying on server..."
+          ssh ${SERVER_USER_ENV}@${SERVER_HOST_ENV} << 'EOF'
+            echo "➡️ Navigating to project directory: ${{ secrets.SERVER_PROJECT_PATH }}"
+            cd "${{ secrets.SERVER_PROJECT_PATH }}" || { echo "❌ Failed to cd into project directory"; exit 1; }
+
+            echo "📦 Unpacking deployment package..."
+            tar -xzf pension-project.tar.gz
             
-            # 确保服务器上的 git 仓库在正确的分支
-            # 如果您的部署总是基于 'main' 分支，可以简化如下：
-            current_branch=\$(git rev-parse --abbrev-ref HEAD)
-            target_branch="main" # 或者您固定的部署分支
-            
-            if [ "\$current_branch" != "\$target_branch" ]; then
-              echo "Switching to \$target_branch branch..."
-              git checkout "\$target_branch" || { echo "❌ Failed to checkout branch \$target_branch."; exit 1; }
-            fi
-            
-            echo "Pulling from origin \$target_branch..."
-            # 可以考虑先 stash 服务器上的本地改动 (如果有)
-            # git stash push -m "Auto-stash before CI/CD pull"
-            git pull origin "\$target_branch" || { echo "❌ Failed to pull changes from origin \$target_branch."; exit 1; }
-            # git stash pop # 如果之前 stash 了
+            # 清理旧的构建产物目录（如果存在）以避免冲突
+            # Docker build 时会使用新的 Dockerfile 和 dist/jar，但为了明确，可以清理
+            # 例如：rm -rf backend/target frontend/dist 等（根据实际解压后的结构）
 
             echo "🐳 Stopping and removing old Docker containers..."
-            docker-compose down --remove-orphans
+            # 注意：这里的 docker-compose down 应该在项目文件已经更新之后执行
+            # 如果 docker-compose.yml 本身有变化，老的容器可能无法被正确识别
+            # 通常 docker-compose down --remove-orphans 能处理好
+            docker-compose down --remove-orphans 
 
             echo "🏗️ Building and starting new Docker containers..."
-            docker-compose up -d --build
+            # --force-recreate 确保即使镜像没有变化也重建容器，以应用新的环境变量或卷挂载（如果 docker-compose.yml 变了）
+            # --build 确保基于新的 Dockerfile 和构建产物（如 jar, dist）重新构建镜像
+            docker-compose up --build -d --force-recreate
 
             echo "🧹 (Optional) Pruning unused Docker images..."
             docker image prune -af
 
-            echo "🎉 Deployment to http://${SERVER_HOST_ENV}:3002 (frontend) and http://${SERVER_HOST_ENV}:8081 (backend) successful!"
+            echo "🧼 Cleaning up uploaded package..."
+            rm -f pension-project.tar.gz
+
+            echo "🎉 Deployment successful!"
+            echo "Frontend should be accessible at http://${{ secrets.SERVER_HOST }}:3002" # 确保端口与 docker-compose.yml 一致
+            echo "Backend should be accessible at http://${{ secrets.SERVER_HOST }}:8081" # 确保端口与 docker-compose.yml 一致
           EOF
