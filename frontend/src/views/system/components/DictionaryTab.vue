@@ -1,7 +1,7 @@
 <template>
   <div class="dictionary-tab">
     <!-- 搜索栏 -->
-    <el-row :gutter="20" class="search-bar">
+    <el-row :gutter="20" class="search-bar" type="flex" align="middle">
       <el-col :span="6">
         <el-input
           v-model="searchForm.dictCode"
@@ -32,7 +32,7 @@
           />
         </el-select>
       </el-col>
-      <el-col :span="8">
+      <el-col :span="6">
         <el-button type="primary" @click="handleSearch">
           <el-icon><Search /></el-icon>
           搜索
@@ -45,6 +45,8 @@
           <el-icon><Plus /></el-icon>
           新增
         </el-button>
+      </el-col>
+      <el-col :span="2" style="margin-left:auto;display:flex;justify-content:flex-end;align-items:center;">
         <el-button 
           type="danger" 
           :disabled="selectedRows.length === 0"

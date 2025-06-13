@@ -1,5 +1,6 @@
 package com.example.pension.controller;
 
+import com.example.pension.annotation.Loggable;
 import com.example.pension.dto.LoginRequest;
 import com.example.pension.dto.LoginResponse;
 import com.example.pension.service.UserService;
@@ -18,6 +19,7 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/login")
+    @Loggable(module = "认证管理", operationType = "用户登录", description = "用户登录系统")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
             LoginResponse response = userService.login(loginRequest);

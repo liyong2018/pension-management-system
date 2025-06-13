@@ -61,16 +61,6 @@
     <!-- 搜索区域 -->
     <el-card class="search-card">
       <el-form :model="searchForm" label-width="auto" :inline="true">
-        <el-form-item class="table-operations-left">
-          <el-button type="danger" :disabled="!multipleSelection.length" @click="handleBatchDelete">
-            批量删除
-          </el-button>
-          <el-button type="warning" @click="handleExport">
-            <el-icon><Download /></el-icon>
-            导出日志
-          </el-button>
-        </el-form-item>
-
         <el-form-item label="操作用户">
           <el-input 
             v-model="searchForm.username" 
@@ -111,6 +101,15 @@
         <el-form-item class="search-buttons-left">
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
+        </el-form-item>
+        <el-form-item class="table-operations-left">
+          <el-button type="warning" @click="handleExport">
+            <el-icon><Download /></el-icon>
+            导出日志
+          </el-button>
+          <el-button type="danger" :disabled="!multipleSelection.length" @click="handleBatchDelete">
+            批量删除
+          </el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -672,6 +671,7 @@ export default {
 }
 
 .table-operations-left {
+  float: right;
   margin-right: auto;
 }
 

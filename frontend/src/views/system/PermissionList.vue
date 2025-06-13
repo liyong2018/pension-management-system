@@ -61,20 +61,6 @@
     <!-- 搜索区域 -->
     <el-card class="search-card">
       <el-form :model="searchForm" label-width="auto" :inline="true">
-        <el-form-item class="table-operations-left">
-          <el-button type="danger" :disabled="!multipleSelection.length" @click="handleBatchDelete">
-            批量删除
-          </el-button>
-          <el-button type="warning" @click="expandAll">
-            <el-icon><Expand /></el-icon>
-            展开全部
-          </el-button>
-          <el-button type="info" @click="collapseAll">
-            <el-icon><Fold /></el-icon>
-            收起全部
-          </el-button>
-        </el-form-item>
-
         <el-form-item label="权限名称">
           <el-input 
             v-model="searchForm.name" 
@@ -122,6 +108,19 @@
           <el-button type="primary" @click="showCreateDialog">
             <el-icon><Plus /></el-icon>
             添加权限
+          </el-button>
+        </el-form-item>
+        <el-form-item class="table-operations-left">
+          <el-button type="warning" @click="expandAll">
+            <el-icon><Expand /></el-icon>
+            展开全部
+          </el-button>
+          <el-button type="info" @click="collapseAll">
+            <el-icon><Fold /></el-icon>
+            收起全部
+          </el-button>
+          <el-button type="danger" :disabled="!multipleSelection.length" @click="handleBatchDelete">
+            批量删除
           </el-button>
         </el-form-item>
       </el-form>

@@ -1,12 +1,15 @@
 package com.example.pension.service;
 
 import com.example.pension.dao.DashboardStatsDao;
+import com.example.pension.dao.SmartDeviceDao;
 import com.example.pension.dto.DashboardStatsDTO;
+import com.example.pension.dto.DeviceTypeDetailedStatDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 首页数据服务
@@ -16,6 +19,9 @@ public class DashboardService {
     
     @Autowired
     private DashboardStatsDao dashboardStatsDao;
+    
+    @Autowired
+    private SmartDeviceDao smartDeviceDao;
     
     /**
      * 获取首页统计数据
@@ -151,21 +157,19 @@ public class DashboardService {
             Long offlineCount = dashboardStatsDao.countDevicesByStatus("离线");
             Long faultCount = dashboardStatsDao.countDevicesByStatus("故障");
             
-            // 获取设备运行状态详细信息
-            List<Map<String, Object>> deviceStatusData = dashboardStatsDao.getDeviceStatusDetails();
+            // 获取设备运行状态详细信息 - 改为从SmartDeviceDao获取
+            List<DeviceTypeDetailedStatDTO> deviceStatusData = smartDeviceDao.getDeviceStatisticsGroupedByType();
             List<DashboardStatsDTO.DeviceStatusDetailDTO> deviceStatusDetails = new ArrayList<>();
             
             if (deviceStatusData != null) {
-                for (Map<String, Object> data : deviceStatusData) {
-                    String deviceName = (String) data.get("deviceName");
-                    Long totalCount = ((Number) data.get("totalCount")).longValue();
-                    Long deviceFaultCount = ((Number) data.get("faultCount")).longValue();
-                    Long deviceOnlineCount = ((Number) data.get("onlineCount")).longValue();
-                    
-                    deviceStatusDetails.add(new DashboardStatsDTO.DeviceStatusDetailDTO(
-                        deviceName, totalCount, deviceFaultCount, deviceOnlineCount
-                    ));
-                }
+                deviceStatusDetails = deviceStatusData.stream()
+                        .map(stat -> new DashboardStatsDTO.DeviceStatusDetailDTO(
+                                stat.getDeviceType(),
+                                stat.getTotalCount(),
+                                0L, // faultCount is not available in DeviceTypeDetailedStatDTO, default to 0
+                                stat.getOnlineCount()
+                        ))
+                        .collect(Collectors.toList());
             }
             
             DashboardStatsDTO.DeviceStatsDTO deviceStats = new DashboardStatsDTO.DeviceStatsDTO();

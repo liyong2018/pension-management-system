@@ -61,12 +61,6 @@
     <!-- 搜索区域 -->
     <el-card class="search-card">
       <el-form :model="searchForm" label-width="auto" :inline="true">
-        <el-form-item class="table-operations-left">
-          <el-button type="danger" :disabled="!multipleSelection.length" @click="handleBatchDelete">
-            批量删除
-          </el-button>
-        </el-form-item>
-
         <el-form-item label="用户名">
           <el-input 
             v-model="searchForm.username" 
@@ -94,6 +88,23 @@
             <el-option label="禁用" :value="false" />
           </el-select>
         </el-form-item>
+        <el-form-item label="所属机构">
+          <el-select 
+            v-model="searchForm.organizationId" 
+            placeholder="请选择机构" 
+            clearable
+            filterable
+            style="width: 180px"
+            :loading="organizationsLoading" 
+          >
+            <el-option 
+              v-for="org in organizations"
+              :key="org.id" 
+              :label="org.name" 
+              :value="org.id"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item class="search-buttons-left">
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
@@ -102,6 +113,11 @@
           <el-button type="primary" @click="showCreateDialog">
             <el-icon><Plus /></el-icon>
             添加用户
+          </el-button>
+        </el-form-item>
+        <el-form-item class="table-operations-left">
+          <el-button type="danger" :disabled="!multipleSelection.length" @click="handleBatchDelete">
+            批量删除
           </el-button>
         </el-form-item>
       </el-form>
@@ -610,6 +626,7 @@ export default {
     const editLoading = ref(false)
     const roleAssignLoading = ref(false)
     const logsLoading = ref(false)
+    const organizationsLoading = ref(false)
     const users = ref([])
     const selectedUser = ref(null)
     const multipleSelection = ref([])
@@ -628,7 +645,8 @@ export default {
     const searchForm = reactive({
       username: '',
       fullName: '',
-      isActive: null
+      isActive: null,
+      organizationId: '' // 新增：机构ID搜索条件
     })
 
     // 分页信息
@@ -715,15 +733,31 @@ export default {
           size: pagination.pageSize
         }
         
+        let hasSearchParams = false;
         // 添加搜索条件
-        if (searchForm.username) queryParams.username = searchForm.username
-        if (searchForm.fullName) queryParams.fullName = searchForm.fullName
-        if (searchForm.isActive !== null) queryParams.isActive = searchForm.isActive
+        if (searchForm.username) {
+          queryParams.username = searchForm.username
+          hasSearchParams = true;
+        }
+        if (searchForm.fullName) {
+          queryParams.fullName = searchForm.fullName
+          hasSearchParams = true;
+        }
+        if (searchForm.isActive !== null) {
+          queryParams.isActive = searchForm.isActive
+          hasSearchParams = true;
+        }
+        if (searchForm.organizationId) {
+          queryParams.organizationId = searchForm.organizationId
+          hasSearchParams = true;
+        }
         
         console.log('正在加载用户数据，请求参数:', queryParams)
         
+        const requestUrl = hasSearchParams ? 'system-users/search' : 'system-users';
+
         const data = await request({
-          url: 'system-users',
+          url: requestUrl, // 使用动态URL
           method: 'get',
           params: queryParams
         })
@@ -842,6 +876,7 @@ export default {
 
     // 加载机构列表
     const loadOrganizations = async () => {
+      organizationsLoading.value = true // 新增：开始加载时设置loading为true
       try {
         console.log('开始加载机构数据...')
         
@@ -879,6 +914,8 @@ export default {
         console.error('加载机构列表异常:', error)
         ElMessage.error('加载机构数据失败: ' + error.message)
         organizations.value = []
+      } finally {
+        organizationsLoading.value = false // 新增：加载结束或失败时设置loading为false
       }
     }
 
@@ -936,6 +973,7 @@ export default {
       Object.keys(searchForm).forEach(key => {
         searchForm[key] = key === 'isActive' ? null : ''
       })
+      searchForm.organizationId = '' // 新增：重置时清空机构ID
       pagination.page = 1
       loadUsers()
     }
@@ -1414,6 +1452,7 @@ export default {
       editLoading,
       roleAssignLoading,
       logsLoading,
+      organizationsLoading,
       users,
       selectedUser,
       multipleSelection,
@@ -1488,7 +1527,8 @@ export default {
   margin-bottom: 20px;
 }
 
-.table-operations-left {
+.table-operations-left { 
+  float:right;
   margin-right: auto;
 }
 

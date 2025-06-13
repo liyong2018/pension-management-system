@@ -61,12 +61,6 @@
     <!-- 搜索区域 -->
     <el-card class="search-card">
       <el-form :model="searchForm" label-width="auto" :inline="true">
-        <el-form-item class="table-operations-left">
-          <el-button type="danger" :disabled="!multipleSelection.length" @click="handleBatchDelete">
-            批量删除
-          </el-button>
-        </el-form-item>
-
         <el-form-item label="角色名称">
           <el-input 
             v-model="searchForm.name" 
@@ -102,6 +96,11 @@
           <el-button type="primary" @click="showCreateDialog">
             <el-icon><Plus /></el-icon>
             添加角色
+          </el-button>
+        </el-form-item>
+        <el-form-item class="table-operations-left">
+          <el-button type="danger" :disabled="!multipleSelection.length" @click="handleBatchDelete">
+            批量删除
           </el-button>
         </el-form-item>
       </el-form>
@@ -1220,6 +1219,7 @@ export default {
 }
 
 .table-operations-left {
+  float:right;
   margin-right: auto;
 }
 

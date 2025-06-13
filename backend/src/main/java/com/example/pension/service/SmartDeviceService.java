@@ -1,6 +1,7 @@
 package com.example.pension.service;
 
 import com.example.pension.dto.SmartDeviceDTO;
+import com.example.pension.dto.DeviceTypeDetailedStatDTO;
 import com.github.pagehelper.PageInfo;
 
 import java.util.List;
@@ -44,4 +45,6 @@ public interface SmartDeviceService {
     void updateDeviceBatteryLevel(Long deviceId, Integer batteryLevel);
 
     void updateDeviceRealTimeData(Long deviceId, String realTimeData);
+
+    List<DeviceTypeDetailedStatDTO> getDeviceDetailedStatistics();
 } 

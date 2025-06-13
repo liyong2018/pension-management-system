@@ -26,7 +26,7 @@ jobs:
         with:
           node-version: '18' # 或者您前端项目需要的 Node.js 版本
           cache: 'npm'       # 缓存 npm 依赖 (位于 frontend 目录)
-          cache-dependency-path: frontend/package-lock.json # 指定 lock 文件路径
+          # cache-dependency-path: frontend/package-lock.json # 暂时移除，让 action 自动查找
 
       - name: Build backend project
         run: |

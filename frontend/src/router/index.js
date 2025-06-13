@@ -31,7 +31,7 @@ const routes = [
     path: '/organization-management',
     name: 'OrganizationManagement',
     component: () => import('@/views/organization/OrganizationIndex.vue'), // 懒加载机构管理视图
-    meta: { title: '机构管理', requiresAuth: true } // 示例：添加路由元信息，如标题和是否需要认证
+    meta: { title: '服务管理', requiresAuth: true } // 示例：添加路由元信息，如标题和是否需要认证
   },
   {
     path: '/elderly-profiles',

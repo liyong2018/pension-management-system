@@ -3,12 +3,6 @@
     <!-- 搜索区域 -->
     <el-card class="search-card">
       <el-form :model="searchForm" label-width="auto" :inline="true">
-        <el-form-item class="table-operations-left">
-          <el-button type="danger" :disabled="!multipleSelection.length" @click="handleBatchDelete">
-            批量删除
-          </el-button>
-        </el-form-item>
-
         <el-form-item label="姓名">
           <el-input 
             v-model="searchForm.name" 
@@ -43,6 +37,11 @@
           <el-button type="success" @click="updateAllStats" :loading="updatingStats">
             <el-icon><TrendCharts /></el-icon>
             更新统计数据
+          </el-button>
+        </el-form-item>
+        <el-form-item class="table-operations-left">
+          <el-button type="danger" :disabled="!multipleSelection.length" @click="handleBatchDelete">
+            批量删除
           </el-button>
         </el-form-item>
         <el-form-item class="add-button-right">
@@ -846,7 +845,8 @@ onMounted(() => {
 }
 
 .table-operations-left {
-  margin-right: auto;
+  margin-right: 5px;
+  float: right;
 }
 
 .search-buttons-left {
@@ -854,7 +854,8 @@ onMounted(() => {
 }
 
 .add-button-right {
-  margin-left: auto;
+  margin-right: 15px;
+  float: right;
 }
 
 .statistics-cards {

@@ -1,6 +1,7 @@
 package com.example.pension.dao;
 
 import com.example.pension.model.SmartDevice;
+import com.example.pension.dto.DeviceTypeDetailedStatDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -42,4 +43,6 @@ public interface SmartDeviceDao {
     Long countByElderlyId(@Param("elderlyId") Long elderlyId);
 
     List<SmartDevice> findDevicesNeedMaintenance();
+
+    List<DeviceTypeDetailedStatDTO> getDeviceStatisticsGroupedByType();
 } 

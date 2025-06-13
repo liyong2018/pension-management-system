@@ -21,7 +21,91 @@
       <div ref="mapContainer" id="leafletMap" class="leaflet-map"></div>
     </div>
 
-    <!-- 顶部数据统计卡片 -->
+    <!-- Draggable Panels -->
+    <div
+      v-for="panel in draggablePanels"
+      :key="panel.id"
+      class="dashboard-card draggable-panel"
+      :style="{ top: panel.top + 'px', left: panel.left + 'px', width: panel.width + 'px', height: panel.height + 'px' }"
+      :data-panel-id="panel.id"
+    >
+      <div class="card-header" @mousedown="onDragStart($event, panel.id)">
+        <h3>{{ panel.title }}</h3>
+        <div v-if="panel.id === 'alarms'" class="alarm-controls">
+          <span class="alarm-count">{{ formatNumber(dashboardData?.alarmStats?.unhandledCount) }}条</span>
+          <button class="control-btn" @click="loadAlarmData">🔄</button>
+        </div>
+      </div>
+      <div class="card-content" :style="{ height: `calc(100% - 53px)` }">
+        <!-- Elderly Type Chart -->
+        <div v-if="panel.id === 'elderlyType'" :ref="el => setPanelContentRef(el, 'elderlyType')" class="chart-container" style="height: 100%;"></div>
+        
+        <!-- Ability Assessment -->
+        <div v-if="panel.id === 'ability'" class="ability-stats" style="height: 100%; overflow-y: auto;">
+            <div class="ability-item">
+              <div class="ability-bar">
+                <div class="bar-fill green" :style="{ width: getAbilityPercentage('能力完好') + '%' }"></div>
+              </div>
+              <div class="ability-label">能力完好</div>
+              <div class="ability-value">{{ getAbilityCount('能力完好') }}人</div>
+            </div>
+            <div class="ability-item">
+              <div class="ability-bar">
+                <div class="bar-fill blue" :style="{ width: getAbilityPercentage('轻度失能') + '%' }"></div>
+              </div>
+              <div class="ability-label">轻度失能</div>
+              <div class="ability-value">{{ getAbilityCount('轻度失能') }}人</div>
+            </div>
+            <div class="ability-item">
+              <div class="ability-bar">
+                <div class="bar-fill orange" :style="{ width: getAbilityPercentage('中度失能') + '%' }"></div>
+              </div>
+              <div class="ability-label">中度失能</div>
+              <div class="ability-value">{{ getAbilityCount('中度失能') }}人</div>
+            </div>
+            <div class="ability-item">
+              <div class="ability-bar">
+                <div class="bar-fill red" :style="{ width: getAbilityPercentage('重度失能') + '%' }"></div>
+              </div>
+              <div class="ability-label">重度失能</div>
+              <div class="ability-value">{{ getAbilityCount('重度失能') }}人</div>
+            </div>
+        </div>
+
+        <!-- Device Status Chart -->
+        <div v-if="panel.id === 'deviceStatus'" :ref="el => setPanelContentRef(el, 'deviceStatus')" class="chart-container" style="height: 100%;"></div>
+        
+        <!-- Unhandled Alarms -->
+        <div v-if="panel.id === 'alarms'" class="alarm-list alarm-list-auto" v-loading="alarmLoading" style="height: 100%;">
+            <div v-for="alarm in alarmList" :key="alarm.time" class="alarm-item">
+              <div class="alarm-type" :class="getAlarmLevelClass(alarm.level)">
+                {{ alarm.type }}
+              </div>
+              <div class="alarm-content">
+                <div class="alarm-location">{{ alarm.location }}</div>
+                <div class="alarm-time">{{ alarm.time }}</div>
+              </div>
+            </div>
+            <div v-if="!alarmList.length && !alarmLoading" class="no-alarm">
+              <div class="no-alarm-icon">✅</div>
+              <div class="no-alarm-text">暂无未处理告警</div>
+              <div class="no-alarm-desc">系统运行正常</div>
+            </div>
+        </div>
+      </div>
+      
+      <!-- Resize Handles -->
+      <div class="resizable-handle resizable-handle-l" @mousedown.stop="onResizeStart($event, panel.id, 'left')"></div>
+      <div class="resizable-handle resizable-handle-r" @mousedown.stop="onResizeStart($event, panel.id, 'right')"></div>
+      <div class="resizable-handle resizable-handle-t" @mousedown.stop="onResizeStart($event, panel.id, 'top')"></div>
+      <div class="resizable-handle resizable-handle-b" @mousedown.stop="onResizeStart($event, panel.id, 'bottom')"></div>
+      <div class="resizable-handle resizable-handle-tl" @mousedown.stop="onResizeStart($event, panel.id, 'top-left')"></div>
+      <div class="resizable-handle resizable-handle-tr" @mousedown.stop="onResizeStart($event, panel.id, 'top-right')"></div>
+      <div class="resizable-handle resizable-handle-bl" @mousedown.stop="onResizeStart($event, panel.id, 'bottom-left')"></div>
+      <div class="resizable-handle resizable-handle-br" @mousedown.stop="onResizeStart($event, panel.id, 'bottom-right')"></div>
+    </div>
+
+    <!-- Top Stats Cards (Non-draggable or differently handled) -->
     <div class="top-stats" ref="topStatsRef">
       <div class="stat-card blue">
         <div class="stat-icon">👥</div>
@@ -52,111 +136,8 @@
         </div>
       </div>
     </div>
-
-    <!-- 左侧面板 -->
-    <div class="left-panel" ref="leftPanelRef">
-      <!-- 老人类型统计 -->
-      <div class="dashboard-card">
-        <div class="card-header">
-          <h3>老人类型分析</h3>
-        </div>
-        <div class="card-content">
-          <div ref="elderlyTypeChart" class="chart-container"></div>
-        </div>
-      </div>
-
-      <!-- 能力评估统计 -->
-      <div class="dashboard-card">
-        <div class="card-header">
-          <h3>能力评估</h3>
-        </div>
-        <div class="card-content">
-          <div class="ability-stats">
-            <div class="ability-item">
-              <div class="ability-bar">
-                <div class="bar-fill green" :style="{ width: getAbilityPercentage('能力完好') + '%' }"></div>
-              </div>
-              <div class="ability-label">能力完好</div>
-              <div class="ability-value">{{ getAbilityCount('能力完好') }}人</div>
-            </div>
-            <div class="ability-item">
-              <div class="ability-bar">
-                <div class="bar-fill blue" :style="{ width: getAbilityPercentage('轻度失能') + '%' }"></div>
-              </div>
-              <div class="ability-label">轻度失能</div>
-              <div class="ability-value">{{ getAbilityCount('轻度失能') }}人</div>
-            </div>
-            <div class="ability-item">
-              <div class="ability-bar">
-                <div class="bar-fill orange" :style="{ width: getAbilityPercentage('中度失能') + '%' }"></div>
-              </div>
-              <div class="ability-label">中度失能</div>
-              <div class="ability-value">{{ getAbilityCount('中度失能') }}人</div>
-            </div>
-            <div class="ability-item">
-              <div class="ability-bar">
-                <div class="bar-fill red" :style="{ width: getAbilityPercentage('重度失能') + '%' }"></div>
-              </div>
-              <div class="ability-label">重度失能</div>
-              <div class="ability-value">{{ getAbilityCount('重度失能') }}人</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 右侧面板 -->
-    <div class="right-panel" ref="rightPanelRef">
-      <!-- SOS报警设备 -->
-      <div class="dashboard-card">
-        <div class="card-header">
-          <h3>SOS设备</h3>
-          <div class="device-count">{{ formatNumber(dashboardData?.deviceStats?.sosDeviceCount) }}台</div>
-        </div>
-        <div class="card-content">
-          <div class="device-status-ring">
-            <div class="ring-chart">
-              <div class="ring-progress" :style="{ '--progress': getSosProgress() + '%' }"></div>
-              <div class="ring-center">
-                <div class="ring-value">{{ getSosProgress() }}%</div>
-                <div class="ring-label">在线率</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-                <!-- 未处理告警 -->
-          <div class="dashboard-card alarm-card-auto">
-            <div class="card-header">
-              <h3>未处理告警</h3>
-              <div class="alarm-controls">
-                <span class="alarm-count">{{ formatNumber(dashboardData?.alarmStats?.unhandledCount) }}条</span>
-                <button class="control-btn" @click="loadAlarmData">🔄</button>
-              </div>
-            </div>
-            <div class="card-content alarm-card-content">
-              <div class="alarm-list alarm-list-auto" v-loading="alarmLoading">
-                <div v-for="alarm in alarmList" :key="alarm.time" class="alarm-item">
-                  <div class="alarm-type" :class="getAlarmLevelClass(alarm.level)">
-                    {{ alarm.type }}
-                  </div>
-                  <div class="alarm-content">
-                    <div class="alarm-location">{{ alarm.location }}</div>
-                    <div class="alarm-time">{{ alarm.time }}</div>
-                  </div>
-                </div>
-                <!-- 如果没有告警数据 -->
-                <div v-if="!alarmList.length && !alarmLoading" class="no-alarm">
-                  <div class="no-alarm-icon">✅</div>
-                  <div class="no-alarm-text">暂无未处理告警</div>
-                  <div class="no-alarm-desc">系统运行正常</div>
-                </div>
-              </div>
-            </div>
-          </div>
-    </div>
-    <!-- 图例面板 -->
+    
+    <!-- Legend Panel -->
     <div class="legend-panel">
       <div class="legend-title">图例</div>
       <div class="legend-items">
@@ -174,10 +155,10 @@
         </div>
       </div>
     </div>
-    <!-- 底部控制栏 -->
+
+    <!-- Bottom Controls -->
     <div class="bottom-controls">
-      
-      <!-- 地图控制按钮 -->
+      <!-- Map Controls -->
       <div class="map-controls">
         <button class="control-icon-btn" @click="toggleLayer('communities')" :class="{ active: showCommunities }" title="社区">
           🏘️
@@ -191,17 +172,214 @@
         <button class="control-icon-btn" @click="resetMapView" title="重置">
           🎯
         </button>
+        <button class="control-icon-btn" @click="restoreLayout" title="还原布局">
+          🔄
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, onUnmounted, computed } from 'vue';
+import { ref, onMounted, nextTick, onUnmounted, computed, inject, watch } from 'vue';
 import * as echarts from 'echarts';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import request from '@/utils/request';
+import { ElMessage } from 'element-plus';
+
+const isCollapsed = inject('isCollapsed', ref(false)); // a default value is provided
+
+// Draggable Panels State
+const draggablePanels = ref([]);
+
+const getDefaultPanelsLayout = () => {
+  const sidebarWidth = isCollapsed.value ? 64 : 250;
+  return [
+    { id: 'elderlyType', title: '老人类型分析', top: 120, left: sidebarWidth + 10, width: 280, height: 260 },
+    { id: 'ability', title: '能力评估', top: 400, left: sidebarWidth + 10, width: 280, height: 260 },
+    { id: 'deviceStatus', title: '设备状态概览', top: 120, left: window.innerWidth - 300, width: 280, height: 300 },
+    { id: 'alarms', title: '未处理告警', top: 440, left: window.innerWidth - 300, width: 280, height: 300 },
+  ];
+};
+
+watch(isCollapsed, (isNowCollapsed, wasPreviouslyCollapsed) => {
+  const oldSidebarWidth = wasPreviouslyCollapsed ? 64 : 250;
+  const newSidebarWidth = isNowCollapsed ? 64 : 250;
+  const widthDifference = newSidebarWidth - oldSidebarWidth;
+
+  if (widthDifference === 0) return;
+
+  const leftPanelIds = ['elderlyType', 'ability'];
+
+  draggablePanels.value.forEach(panel => {
+    if (leftPanelIds.includes(panel.id)) {
+      // Only adjust panels that are positioned relative to the sidebar
+      // Using a threshold to decide. 250 (expanded width) + 10 (margin) + 40 (buffer) = 300
+      if (panel.left < 300) {
+        panel.left += widthDifference;
+      }
+    }
+  });
+  saveLayout();
+});
+
+const initPanels = () => {
+  const savedLayout = JSON.parse(localStorage.getItem('dashboard-layout'));
+  const defaultLayout = getDefaultPanelsLayout();
+  
+  if (savedLayout) {
+    const savedIds = savedLayout.map(p => p.id);
+    const defaultIds = defaultLayout.map(p => p.id);
+    if (savedIds.length === defaultIds.length && defaultIds.every(id => savedIds.includes(id))) {
+       draggablePanels.value = savedLayout;
+    } else {
+       draggablePanels.value = defaultLayout;
+    }
+  } else {
+    draggablePanels.value = defaultLayout;
+  }
+};
+
+const saveLayout = () => {
+  localStorage.setItem('dashboard-layout', JSON.stringify(draggablePanels.value));
+};
+
+const restoreLayout = () => {
+  localStorage.removeItem('dashboard-layout');
+  draggablePanels.value = getDefaultPanelsLayout();
+  ElMessage.success('布局已还原');
+};
+
+// Drag and Drop Logic
+let dragState = {
+  dragging: false,
+  panelId: null,
+  startX: 0,
+  startY: 0,
+  panelStartX: 0,
+  panelStartY: 0
+};
+
+const onDragStart = (event, panelId) => {
+  if (event.button !== 0) return;
+  const panel = draggablePanels.value.find(p => p.id === panelId);
+  if (!panel) return;
+  
+  dragState = {
+    dragging: true,
+    panelId: panelId,
+    startX: event.clientX,
+    startY: event.clientY,
+    panelStartX: panel.left,
+    panelStartY: panel.top
+  };
+
+  document.addEventListener('mousemove', onDragging);
+  document.addEventListener('mouseup', onDragEnd);
+};
+
+const onDragging = (event) => {
+  if (!dragState.dragging) return;
+  
+  const dx = event.clientX - dragState.startX;
+  const dy = event.clientY - dragState.startY;
+  
+  const panel = draggablePanels.value.find(p => p.id === dragState.panelId);
+  if (panel) {
+    panel.left = dragState.panelStartX + dx;
+    panel.top = dragState.panelStartY + dy;
+  }
+};
+
+const onDragEnd = () => {
+  if (!dragState.dragging) return;
+  
+  dragState.dragging = false;
+  saveLayout();
+
+  document.removeEventListener('mousemove', onDragging);
+  document.removeEventListener('mouseup', onDragEnd);
+};
+
+// Resize Logic
+let resizeState = {
+  resizing: false,
+  panelId: null,
+  direction: null,
+  startX: 0,
+  startY: 0,
+  startWidth: 0,
+  startHeight: 0,
+  startLeft: 0,
+  startTop: 0
+};
+
+const onResizeStart = (event, panelId, direction) => {
+  if (event.button !== 0) return;
+  event.preventDefault();
+
+  const panel = draggablePanels.value.find(p => p.id === panelId);
+  if (!panel) return;
+  
+  resizeState = {
+    resizing: true,
+    panelId: panelId,
+    direction: direction,
+    startX: event.clientX,
+    startY: event.clientY,
+    startWidth: panel.width,
+    startHeight: panel.height,
+    startLeft: panel.left,
+    startTop: panel.top
+  };
+
+  document.addEventListener('mousemove', onResizing);
+  document.addEventListener('mouseup', onResizeEnd);
+};
+
+const onResizing = (event) => {
+  if (!resizeState.resizing) return;
+  
+  const panel = draggablePanels.value.find(p => p.id === resizeState.panelId);
+  if (!panel) return;
+  
+  const dx = event.clientX - resizeState.startX;
+  const dy = event.clientY - resizeState.startY;
+
+  const minWidth = 250;
+  const minHeight = 200;
+
+  // Handle horizontal resizing
+  if (resizeState.direction.includes('right')) {
+    panel.width = Math.max(minWidth, resizeState.startWidth + dx);
+  }
+  if (resizeState.direction.includes('left')) {
+    const newWidth = Math.max(minWidth, resizeState.startWidth - dx);
+    panel.width = newWidth;
+    panel.left = resizeState.startLeft + dx;
+  }
+  
+  // Handle vertical resizing
+  if (resizeState.direction.includes('bottom')) {
+    panel.height = Math.max(minHeight, resizeState.startHeight + dy);
+  }
+  if (resizeState.direction.includes('top')) {
+    const newHeight = Math.max(minHeight, resizeState.startHeight - dy);
+    panel.height = newHeight;
+    panel.top = resizeState.startTop + dy;
+  }
+};
+
+const onResizeEnd = () => {
+  if (!resizeState.resizing) return;
+  
+  resizeState.resizing = false;
+  saveLayout();
+
+  document.removeEventListener('mousemove', onResizing);
+  document.removeEventListener('mouseup', onResizeEnd);
+};
 
 // 响应式数据
 const dashboardData = ref(null);
@@ -217,24 +395,29 @@ const weatherData = ref({
 // 地图相关状态
 const showCommunities = ref(true);
 const showOrganizations = ref(true);
-// const showElderly = ref(false); // 移除老人数据展示
 const showAlarms = ref(true);
 const mapInstance = ref(null);
 const mapLayers = ref({
   communities: null,
   organizations: null,
-  // elderly: null, // 移除老人图层
   alarms: null
 });
 
 const topStatsRef = ref(null);
-const leftPanelRef = ref(null);
-const rightPanelRef = ref(null);
+const mapContainer = ref(null);
+
+// New ref handling for dynamic components
+const panelContentRefs = ref({});
+const setPanelContentRef = (el, id) => {
+    if (el) {
+        panelContentRefs.value[id] = el;
+    }
+};
 
 // 图表引用
 const elderlyTypeChart = ref(null);
 const ageChart = ref(null);
-const mapContainer = ref(null);
+const deviceTypeStatChart = ref(null); // Added ref for the new chart
 
 // 时间更新定时器
 let timeInterval = null;
@@ -258,7 +441,6 @@ const getMapDataCount = (type) => {
   switch (type) {
     case 'communities': return mapData.communities?.length || 0;
     case 'organizations': return mapData.organizations?.length || 0;
-    // case 'elderly': return mapData.elderly?.length || 0; // 移除老人数据计数
     case 'alarms': return mapData.alarms?.length || 0;
     default: return 0;
   }
@@ -355,22 +537,13 @@ const getDeviceStatusDetails = () => {
 
 // 获取告警级别样式类
 const getAlarmLevelClass = (level) => {
-  const levelMap = {
-    '紧急': 'emergency',
-    '高': 'high',
-    '中': 'medium',
-    '低': 'low'
-  };
+  const levelMap = { '紧急': 'emergency', '高': 'high', '中': 'medium', '低': 'low' };
   return levelMap[level] || 'low';
 };
 
 // 获取告警状态样式类
 const getAlarmStatusClass = (status) => {
-  const statusMap = {
-    '未处理': 'pending',
-    '处理中': 'processing',
-    '已处理': 'completed'
-  };
+  const statusMap = { '未处理': 'pending', '处理中': 'processing', '已处理': 'completed' };
   return statusMap[status] || 'pending';
 };
 
@@ -383,18 +556,15 @@ const loadDashboardData = async () => {
       dashboardData.value = response.data;
       console.log('首页数据加载成功:', dashboardData.value);
       
-      // 数据加载完成后初始化图表和地图
       await nextTick();
-      initCharts();
       initMap();
+      initCharts();
     } else {
       console.error('加载首页数据失败:', response ? response.message : '未知错误');
-      // 使用模拟数据
       loadMockData();
     }
   } catch (error) {
     console.error('加载首页数据异常:', error);
-    // 使用模拟数据
     loadMockData();
   } finally {
     loading.value = false;
@@ -586,10 +756,9 @@ const loadMockData = () => {
     }
   };
   
-  // 初始化图表和地图
   nextTick(() => {
-    initCharts();
     initMap();
+    initCharts();
   });
 };
 
@@ -687,9 +856,11 @@ const loadAlarmData = async () => {
 
 // 初始化地图
 const initMap = () => {
+  if (mapInstance.value) { // If map already exists, just return
+      return;
+  }
   if (!mapContainer.value || !dashboardData.value?.mapData) return;
 
-  // 创建地图实例（以北京为中心）
   mapInstance.value = L.map('leafletMap', {
     zoomControl: true,
     attributionControl: true
@@ -697,7 +868,6 @@ const initMap = () => {
 
   const tiandituKey = '0252639b1589bd33a54817f48d982093'; // 用户提供的天地图Key
 
-  // 天地图矢量图层
   L.tileLayer(`https://t{s}.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=vec&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${tiandituKey}`, {
     subdomains: ['0', '1', '2', '3', '4', '5', '6', '7'],
     attribution: '天地图 - 矢量地图',
@@ -705,7 +875,6 @@ const initMap = () => {
     opacity: 1.0
   }).addTo(mapInstance.value);
 
-  // 天地图矢量注记图层
   L.tileLayer(`https://t{s}.tianditu.gov.cn/cva_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=cva&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${tiandituKey}`, {
     subdomains: ['0', '1', '2', '3', '4', '5', '6', '7'],
     attribution: '天地图 - 注记',
@@ -714,74 +883,53 @@ const initMap = () => {
     pane: 'overlayPane' // 确保注记在其他图层之上
   }).addTo(mapInstance.value);
 
-  // 创建图层组
   mapLayers.value.communities = L.layerGroup().addTo(mapInstance.value);
   mapLayers.value.organizations = L.layerGroup().addTo(mapInstance.value);
-  // mapLayers.value.elderly = L.layerGroup(); // 移除老人图层
   mapLayers.value.alarms = L.layerGroup().addTo(mapInstance.value);
 
-  // 添加各类标记
   addCommunityMarkers();
   addOrganizationMarkers();
-  // addElderlyMarkers(); // 移除老人标记
   addAlarmMarkers();
 
   mapInstance.value.on('popupopen', (e) => {
     const popup = e.popup;
-    const mapContainerElement = mapInstance.value.getContainer(); // Renamed to avoid conflict
+    const mapContainerElement = mapInstance.value.getContainer();
     const popupElement = popup.getElement();
 
-    if (!popupElement || !topStatsRef.value || !leftPanelRef.value || !rightPanelRef.value || !mapContainerElement) {
-      return;
-    }
+    if (!popupElement || !mapContainerElement) return;
 
-    // 等待DOM更新，确保获取到正确的尺寸
     nextTick(() => {
       const mapRect = mapContainerElement.getBoundingClientRect();
       const popupRect = popupElement.getBoundingClientRect();
-      
-      const topStatsRect = topStatsRef.value.getBoundingClientRect();
-      const leftPanelRect = leftPanelRef.value.getBoundingClientRect();
-      const rightPanelRect = rightPanelRef.value.getBoundingClientRect();
-
-      const safetyMargin = 20; // 20px的安全边距
+      const safetyMargin = 20;
 
       let panX = 0;
       let panY = 0;
 
-      // 检查顶部遮挡
-      // 计算 topStats 面板底部相对于地图容器顶部的 Y 坐标
-      const topStatsBottomRelativeToMap = topStatsRect.bottom - mapRect.top;
-      // 计算弹出框顶部相对于地图容器顶部的 Y 坐标
-      const popupTopRelativeToMap = popupRect.top - mapRect.top;
-      if (popupTopRelativeToMap < topStatsBottomRelativeToMap + safetyMargin) {
-        panY = (topStatsBottomRelativeToMap + safetyMargin) - popupTopRelativeToMap;
+      const topStatsRect = topStatsRef.value.getBoundingClientRect();
+      if (popupRect.top < topStatsRect.bottom + safetyMargin) {
+        panY = topStatsRect.bottom - popupRect.top + safetyMargin;
       }
 
-      // 检查左侧遮挡
-      // 计算 leftPanel 面板右侧相对于地图容器左侧的 X 坐标
-      const leftPanelRightRelativeToMap = leftPanelRect.right - mapRect.left;
-      // 计算弹出框左侧相对于地图容器左侧的 X 坐标
-      const popupLeftRelativeToMap = popupRect.left - mapRect.left;
-      if (popupLeftRelativeToMap < leftPanelRightRelativeToMap + safetyMargin) {
-        panX = (leftPanelRightRelativeToMap + safetyMargin) - popupLeftRelativeToMap;
-      }
+      draggablePanels.value.forEach(panel => {
+        const panelEl = document.querySelector(`[data-panel-id='${panel.id}']`);
+        if (!panelEl) return;
+        
+        const panelRect = panelEl.getBoundingClientRect();
 
-      // 检查右侧遮挡
-      // 计算 rightPanel 面板左侧相对于地图容器左侧的 X 坐标
-      const rightPanelLeftRelativeToMap = rightPanelRect.left - mapRect.left;
-      // 计算弹出框右侧相对于地图容器左侧的 X 坐标
-      const popupRightRelativeToMap = popupRect.right - mapRect.left;
-      if (popupRightRelativeToMap > rightPanelLeftRelativeToMap - safetyMargin) {
-        // 如果 panX 已经因为左侧面板有了值，我们优先处理左侧的遮挡，避免冲突
-        // 这里简单处理，如果左侧已经需要向右移动，就不再因为右侧遮挡而向左移动
-        // 更完善的逻辑可能需要判断哪边遮挡更多，或者是否同时遮挡
-        if (panX <= 0) { 
-          panX = - (popupRightRelativeToMap - (rightPanelLeftRelativeToMap - safetyMargin));
+        if (popupRect.bottom > panelRect.top && popupRect.top < panelRect.bottom &&
+            popupRect.right > panelRect.left && popupRect.left < panelRect.right) {
+          
+          if ((popupRect.left + popupRect.right) / 2 < (panelRect.left + panelRect.right) / 2) {
+            const rightPush = panelRect.right - popupRect.left + safetyMargin;
+            if (rightPush > panX) panX = rightPush;
+          } else {
+            const leftPush = panelRect.left - popupRect.right - safetyMargin;
+            if (leftPush < panX) panX = leftPush;
+          }
         }
-      }
+      });
       
-      // 如果有需要平移的量
       if (panX !== 0 || panY !== 0) {
         mapInstance.value.panBy([panX, panY], { animate: true });
       }
@@ -908,75 +1056,6 @@ const addOrganizationMarkers = () => {
   });
 };
 
-// 添加老人分布标记
-const addElderlyMarkers = () => {
-  if (!dashboardData.value?.mapData?.elderly) return;
-
-  dashboardData.value.mapData.elderly.forEach(elderly => {
-    let iconColor = '#2ed573';
-    let iconHtml = '👤';
-    
-    // 根据老人类型设置图标
-    switch (elderly.elderlyType) {
-      case 'empty_nest':
-        iconColor = '#ff6b35';
-        iconHtml = '🏠';
-        break;
-      case 'living_alone':
-        iconColor = '#7b68ee';
-        iconHtml = '👤';
-        break;
-      case 'disabled':
-        iconColor = '#ff4757';
-        iconHtml = '♿';
-        break;
-      case 'elderly':
-        iconColor = '#ffa502';
-        iconHtml = '👴';
-        break;
-      case 'low_income':
-        iconColor = '#ff6348';
-        iconHtml = '💰';
-        break;
-      case 'special_care':
-        iconColor = '#ff9ff3';
-        iconHtml = '🏥';
-        break;
-      default:
-        iconColor = '#2ed573';
-        iconHtml = '👤';
-        break;
-    }
-
-    const customIcon = L.divIcon({
-      html: `<div style="background: ${iconColor}; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">${iconHtml}</div>`,
-      className: 'elderly-marker',
-      iconSize: [25, 25],
-      iconAnchor: [12.5, 12.5]
-    });
-
-    const marker = L.marker([elderly.latitude, elderly.longitude], { icon: customIcon })
-      .bindPopup(`
-        <div style="color: #333; font-family: 'Microsoft YaHei';">
-          <h4 style="margin: 0 0 8px 0; color: ${iconColor};">${elderly.elderlyName}</h4>
-          <p style="margin: 0; font-size: 12px;">社区: ${elderly.community}</p>
-          <p style="margin: 4px 0 0 0; font-size: 12px;">地址: ${elderly.address || '未填写'}</p>
-          <p style="margin: 4px 0 0 0; font-size: 12px;">年龄: ${elderly.age}岁</p>
-          <p style="margin: 4px 0 0 0; font-size: 12px;">性别: ${elderly.gender}</p>
-          <p style="margin: 4px 0 0 0; font-size: 12px;">老人类型: ${getElderlyTypeLabel(elderly.elderlyType)}</p>
-          <p style="margin: 4px 0 0 0; font-size: 12px;">能力评估: ${elderly.abilityAssessment || '未评估'}</p>
-        </div>
-      `, {
-        maxWidth: 320,
-        className: 'custom-popup-wrapper',
-        offset: [10, 10],
-        autoPan: false
-      });
-
-    mapLayers.value.elderly.addLayer(marker);
-  });
-};
-
 // 添加告警标记
 const addAlarmMarkers = () => {
   if (!dashboardData.value?.mapData?.alarms) return;
@@ -1066,14 +1145,6 @@ const toggleLayer = (layerType) => {
         mapInstance.value.removeLayer(layer);
       }
       break;
-    // case 'elderly': // 移除老人图层切换逻辑
-    //   showElderly.value = !showElderly.value;
-    //   if (showElderly.value) {
-    //     mapInstance.value.addLayer(layer);
-    //   } else {
-    //     mapInstance.value.removeLayer(layer);
-    //   }
-    //   break;
     case 'alarms':
       showAlarms.value = !showAlarms.value;
       if (showAlarms.value) {
@@ -1096,11 +1167,42 @@ const resetMapView = () => {
 const initCharts = () => {
   if (!dashboardData.value) return;
   
-  // 老人类型统计饼图
-  if (elderlyTypeChart.value) {
-    const elderlyChart = echarts.init(elderlyTypeChart.value);
-    const elderlyData = dashboardData.value.elderlyTypeStats;
-    elderlyChart.setOption({
+  initElderlyTypeChart();
+  initDeviceTypeStatChart();
+};
+
+const initElderlyTypeChart = () => {
+  const container = panelContentRefs.value['elderlyType'];
+  const elderlyData = dashboardData.value?.elderlyTypeStats;
+
+  if (!container || !elderlyData) {
+    console.warn('老人类型分析图表容器或数据不可用。');
+    return;
+  }
+
+  const chartInstance = echarts.getInstanceByDom(container) || echarts.init(container);
+  
+  const colors = ['#00d4ff', '#ff6b35', '#7b68ee', '#ff4757', '#2ed573', '#ffa502', '#ff6348'];
+  const rawData = [
+      { value: elderlyData?.normalCount || 0, name: '普通老人' },
+      { value: elderlyData?.emptyNestCount || 0, name: '空巢老人' },
+      { value: elderlyData?.livingAloneCount || 0, name: '独居老人' },
+      { value: elderlyData?.disabledCount || 0, name: '失能老人' },
+      { value: elderlyData?.elderlyCount || 0, name: '高龄老人' },
+      { value: elderlyData?.lowIncomeCount || 0, name: '低收入老人' },
+      { value: elderlyData?.specialCareCount || 0, name: '特殊照护' }
+  ];
+  
+  const chartData = rawData
+    .map((item, index) => ({
+      ...item,
+      itemStyle: {
+        color: colors[index % colors.length]
+      }
+    }))
+    .filter(d => d.value > 0);
+
+  const option = {
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'item',
@@ -1119,127 +1221,244 @@ const initCharts = () => {
           color: '#fff'
         },
         itemWidth: 12,
-        itemHeight: 12
+        itemHeight: 12,
+        data: chartData.map(item => item.name)
       },
       series: [{
         name: '老人类型',
         type: 'pie',
         radius: ['40%', '70%'],
         center: ['65%', '50%'],
-        data: [
-          { value: elderlyData?.normalCount || 0, name: '普通老人', itemStyle: { color: '#00d4ff' } },
-          { value: elderlyData?.emptyNestCount || 0, name: '空巢老人', itemStyle: { color: '#ff6b35' } },
-          { value: elderlyData?.livingAloneCount || 0, name: '独居老人', itemStyle: { color: '#7b68ee' } },
-          { value: elderlyData?.disabledCount || 0, name: '失能老人', itemStyle: { color: '#ff4757' } },
-          { value: elderlyData?.elderlyCount || 0, name: '高龄老人', itemStyle: { color: '#2ed573' } },
-          { value: elderlyData?.lowIncomeCount || 0, name: '低收入老人', itemStyle: { color: '#ffa502' } },
-          { value: elderlyData?.specialCareCount || 0, name: '特殊照护', itemStyle: { color: '#ff6348' } }
-        ],
+        avoidLabelOverlap: false,
+        label: { show: false },
         emphasis: {
-          itemStyle: {
-            shadowBlur: 10,
-            shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
-          }
+            itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.5)'
+            }
         },
-        label: {
-          show: false
-        }
+        labelLine: { show: false },
+        data: chartData
       }]
+  };
+
+  chartInstance.setOption(option, true);
+  
+   const resizeChart = () => chartInstance.resize();
+   window.addEventListener('resize', resizeChart);
+   onUnmounted(() => {
+     window.removeEventListener('resize', resizeChart);
+      if (chartInstance && !chartInstance.isDisposed()) {
+        chartInstance.dispose();
+     }
+   });
+};
+
+const initDeviceTypeStatChart = () => {
+  const container = panelContentRefs.value['deviceStatus'];
+  if (!container) return;
+
+  const chartInstance = echarts.getInstanceByDom(container) || echarts.init(container);
+  
+  const aggregatedDeviceStats = getDeviceStatusDetails(); // This is already aggregated data
+  console.log('Aggregated Device Stats for Chart:', JSON.stringify(aggregatedDeviceStats));
+
+  let categories = [];
+  let onlineData = [];
+  let offlineData = [];
+  let totalData = [];
+  
+  if (Array.isArray(aggregatedDeviceStats) && aggregatedDeviceStats.length > 0 && aggregatedDeviceStats.some(item => item.totalCount > 0)) {
+    aggregatedDeviceStats.forEach(item => {
+      // Prefer a dedicated deviceType field if available, otherwise use deviceName as category
+      const categoryName = item.deviceType || item.deviceName || '未知类型'; 
+      categories.push(categoryName);
+      
+      const total = parseInt(item.totalCount, 10) || 0;
+      const online = parseInt(item.onlineCount, 10) || 0;
+      const offline = total - online;
+
+      onlineData.push(online);
+      offlineData.push(offline);
+      totalData.push(total);
     });
+  } else {
+    // Fallback or example data if aggregatedDeviceStats is empty or not in expected format
+    categories = ['健康监测', '智能家居', '安全', '定位'];
+    onlineData = [9, 6, 4, 2];
+    offlineData = [1, 0, 0, 0];
+    totalData = [10, 6, 4, 2];
+    console.warn('Using fallback data for deviceTypeStatChart as aggregatedDeviceStats is empty or invalid.');
   }
 
-  // 年龄分布柱状图
-  if (ageChart.value) {
-    const ageChartInstance = echarts.init(ageChart.value);
-    
-    // 使用真实的年龄分布数据
-    const ageData = dashboardData.value?.ageDistribution;
-    const maleData = [
-      Math.round((ageData?.age60to69Count || 0) * 0.48), // 假设男性占48%
-      Math.round((ageData?.age70to79Count || 0) * 0.47),
-      Math.round((ageData?.age80to89Count || 0) * 0.45),
-      Math.round((ageData?.age90PlusCount || 0) * 0.42)
-    ];
-    const femaleData = [
-      Math.round((ageData?.age60to69Count || 0) * 0.52), // 假设女性占52%
-      Math.round((ageData?.age70to79Count || 0) * 0.53),
-      Math.round((ageData?.age80to89Count || 0) * 0.55),
-      Math.round((ageData?.age90PlusCount || 0) * 0.58)
-    ];
-    
-    ageChartInstance.setOption({
-      backgroundColor: 'transparent',
-      tooltip: {
-        trigger: 'axis',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        borderColor: '#00d4ff',
-        borderWidth: 1,
-        textStyle: { color: '#fff' }
+  const option = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow'
       },
-      legend: {
-        data: ['男', '女'],
-        textStyle: { color: '#fff' },
-        top: 10
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        top: '15%',
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        data: ['60-69岁', '70-79岁', '80-89岁', '90岁以上'],
-        axisLine: { lineStyle: { color: '#00d4ff' } },
-        axisLabel: { color: '#fff', fontSize: 10 }
-      },
-      yAxis: {
-        type: 'value',
-        axisLine: { lineStyle: { color: '#00d4ff' } },
-        axisLabel: { color: '#fff', fontSize: 10 },
-        splitLine: { lineStyle: { color: 'rgba(0, 212, 255, 0.2)' } }
-      },
-      series: [
-        {
-          name: '男',
-          type: 'bar',
-          data: maleData,
-          itemStyle: { color: '#00d4ff' }
+      formatter: function (params) {
+        const categoryName = params[0].name;
+        let online = 0;
+        let offline = 0;
+
+        params.forEach(param => {
+          if (param.seriesName === '在线') {
+            online = param.value;
+          } else if (param.seriesName === '离线') {
+            offline = param.value;
+          }
+        });
+        const total = online + offline;
+        return `${categoryName}<br/>正常: ${online}<br/>异常: ${offline}<br/>总数: ${total}`;
+      }
+    },
+    legend: {
+        data: ['在线', '离线'],
+        bottom: 5,
+        textStyle: {
+            color: '#CFD3DC'
         },
-        {
-          name: '女',
-          type: 'bar',
-          data: femaleData,
-          itemStyle: { color: '#ff6b35' }
+        itemWidth: 14,
+        itemHeight: 14,
+        icon: 'rect',
+        formatter: name => name === '在线' ? '正常' : '异常'
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '12%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: categories,
+      axisLine: {
+        lineStyle: {
+          color: '#86909C'
         }
-      ]
-    });
-  }
+      },
+      axisLabel: {
+        color: '#CFD3DC',
+        interval: 0, 
+        rotate: categories.length > 5 ? 30 : (categories.length > 3 ? 15 : 0), // Adjust rotation based on label count
+        formatter: function (value) {
+            // Attempt to remove trailing '设备' if present for cleaner labels
+            let label = value;
+            if (typeof value === 'string' && value.endsWith('设备') && value.length > 2) {
+                label = value.substring(0, value.length - 2);
+            }
+            return label.length > 6 ? label.substring(0, 5) + '...' : label;
+        }
+      }
+    },
+    yAxis: {
+      type: 'value',
+      axisLine: {
+        show: true,
+        lineStyle: {
+          color: '#86909C'
+        }
+      },
+      axisLabel: {
+        color: '#CFD3DC'
+      },
+      splitLine: {
+        lineStyle: {
+          color: '#3E4658',
+          type: 'dashed'
+        }
+      }
+    },
+    series: [
+      {
+        name: '在线',
+        type: 'bar',
+        stack: 'total',
+        barWidth: '40%',
+        data: onlineData, 
+        itemStyle: {
+          color: '#2ed573' // Green for 'online'
+        },
+      },
+      {
+        name: '离线',
+        type: 'bar',
+        stack: 'total',
+        barWidth: '40%',
+        data: offlineData, 
+        itemStyle: {
+          color: '#ff4757', // Red for 'offline'
+          borderRadius: [4, 4, 0, 0],
+        },
+        // Put label on the top-most stack item
+        label: {
+          show: true,
+          position: 'top',
+          color: '#CFD3DC',
+          fontSize: 12,
+          formatter: function(params) {
+            const total = totalData[params.dataIndex];
+            const online = onlineData[params.dataIndex];
+            if (total > 0) {
+              return `${online}/${total}`;
+            }
+            return '';
+          }
+        }
+      }
+    ]
+  };
+  chartInstance.setOption(option);
+  
+   const resizeChart = () => chartInstance.resize();
+   window.addEventListener('resize', resizeChart);
+   onUnmounted(() => {
+     window.removeEventListener('resize', resizeChart);
+     if (chartInstance && !chartInstance.isDisposed()) {
+        chartInstance.dispose();
+     }
+   });
 };
 
 // 组件挂载
-onMounted(() => {
+onMounted(async () => {
+  initPanels();
   updateTime();
   timeInterval = setInterval(updateTime, 1000);
-  loadWeatherData();
   loadDashboardData();
+  loadWeatherData();
   loadAlarmData();
+  window.addEventListener('resize', handleResize);
 });
 
-// 组件卸载
 onUnmounted(() => {
-  if (timeInterval) {
-    clearInterval(timeInterval);
-  }
-  
-  // 清理地图实例
+  if (timeInterval) clearInterval(timeInterval);
   if (mapInstance.value) {
     mapInstance.value.remove();
     mapInstance.value = null;
   }
+  window.removeEventListener('resize', handleResize);
+  // Cleanup all potential global listeners
+  document.removeEventListener('mousemove', onDragging);
+  document.removeEventListener('mouseup', onDragEnd);
+  document.removeEventListener('mousemove', onResizing);
+  document.removeEventListener('mouseup', onResizeEnd);
 });
+
+const handleResize = () => {
+    draggablePanels.value.forEach(panel => {
+        if (panel.left + panel.width > window.innerWidth) {
+            panel.left = window.innerWidth - panel.width - 20;
+        }
+        if (panel.top + panel.height > window.innerHeight) {
+            panel.top = window.innerHeight - panel.height - 20;
+        }
+    });
+    saveLayout();
+};
 
 // 获取天气信息
 const loadWeatherData = async () => {
@@ -1265,7 +1484,6 @@ const loadWeatherData = async () => {
     // 保持默认值
   }
 };
-
 
 </script>
 
@@ -2489,4 +2707,112 @@ const loadWeatherData = async () => {
     box-shadow: 0 0 0 0 rgba(255, 56, 56, 0);
       }
   }
+
+/* New Draggable Panel Styles */
+.draggable-panel {
+  position: fixed; /* Use fixed to position relative to the viewport */
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow: hidden; /* This was on the card, now on the panel */
+  transition: all 0.3s ease;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  min-width: 250px;
+  min-height: 200px;
+}
+
+.draggable-panel .card-header {
+  cursor: move; /* Indicate that the header is draggable */
+  background: rgba(0, 212, 255, 0.1);
+}
+
+.draggable-panel .card-content {
+  flex-grow: 1; /* Allow content to fill available space */
+  padding: 20px;
+  overflow-y: auto; /* Add scroll if content overflows */
+}
+
+/* Remove old panel containers as they are no longer used */
+.left-panel,
+.right-panel {
+  display: none;
+}
+
+.resizable-handle {
+  position: absolute;
+  z-index: 20; /* Higher than content, lower than other UI elements if needed */
+}
+
+.resizable-handle-r {
+  top: 0;
+  right: -5px;
+  bottom: 0;
+  width: 10px;
+  cursor: ew-resize;
+}
+
+.resizable-handle-b {
+  left: 0;
+  right: 0;
+  bottom: -5px;
+  height: 10px;
+  cursor: ns-resize;
+}
+
+.resizable-handle-br {
+  right: -5px;
+  bottom: -5px;
+  width: 20px;
+  height: 20px;
+  cursor: nwse-resize;
+  z-index: 21;
+}
+
+.resizable-handle-l {
+  top: 0;
+  left: -5px;
+  bottom: 0;
+  width: 10px;
+  cursor: ew-resize;
+}
+
+.resizable-handle-t {
+  left: 0;
+  right: 0;
+  top: -5px;
+  height: 10px;
+  cursor: ns-resize;
+}
+
+.resizable-handle-tl {
+  left: -5px;
+  top: -5px;
+  width: 20px;
+  height: 20px;
+  cursor: nwse-resize;
+  z-index: 21;
+}
+
+.resizable-handle-tr {
+  right: -5px;
+  top: -5px;
+  width: 20px;
+  height: 20px;
+  cursor: nesw-resize;
+  z-index: 21;
+}
+
+.resizable-handle-bl {
+  left: -5px;
+  bottom: -5px;
+  width: 20px;
+  height: 20px;
+  cursor: nesw-resize;
+  z-index: 21;
+}
+
 </style> 

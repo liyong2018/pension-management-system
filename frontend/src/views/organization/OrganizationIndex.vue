@@ -1,39 +1,25 @@
 <template>
   <div class="organization-index">
-    <el-card class="box-card">
-      <template #header>
-        <div class="card-header">
-          <div class="left">
-          <span>机构列表</span>
-            <el-button 
-              type="danger" 
-              :disabled="selectedOrganizations.length === 0"
-              @click="handleBatchDelete"
-            >
-              批量删除
-            </el-button>
-          </div>
-          <el-button type="primary" @click="handleCreate">新增机构</el-button>
-        </div>
-      </template>
-
+    <el-card class="box-card" style="margin-bottom: 20px;">
       <!-- 搜索区域 -->
-      <el-form :inline="true" :model="searchParams" @submit.prevent="handleSearch">
+      <el-form :inline="true" :model="searchParams" @submit.prevent="handleSearch" class="search-bar-flex">
         <el-form-item label="机构名称">
           <el-input v-model="searchParams.name" placeholder="请输入机构名称" clearable></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSearch">查询</el-button>
+          <el-button type="primary" @click="handleSearch">搜索</el-button>
         </el-form-item>
+        <div style="margin-left:auto; display:flex; gap:12px; align-items:center;">
+          <el-button type="primary" @click="handleCreate">新增机构</el-button>
+          <el-button type="danger" :disabled="selectedOrganizations.length === 0" @click="handleBatchDelete">
+            批量删除
+          </el-button>
+        </div>
       </el-form>
-
+    </el-card>
+    <el-card class="box-card">
       <!-- 表格区域 -->
-      <el-table 
-        :data="organizations" 
-        style="width: 100%" 
-        v-loading="loading"
-        @selection-change="handleSelectionChange"
-      >
+      <el-table :data="organizations" style="width: 100%" v-loading="loading" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="45"></el-table-column>
         <el-table-column prop="id" label="ID" width="60"></el-table-column>
         <el-table-column prop="name" label="机构名称" min-width="140" show-overflow-tooltip></el-table-column>
@@ -55,35 +41,19 @@
       </el-table>
 
       <!-- 分页组件 -->
-      <el-pagination
-        style="margin-top: 20px;"
-        background
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="totalElements"
-        :page-sizes="[10, 20, 50, 100]"
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      ></el-pagination>
+      <el-pagination style="margin-top: 20px;" background layout="total, sizes, prev, pager, next, jumper"
+        :total="totalElements" :page-sizes="[10, 20, 50, 100]" v-model:current-page="currentPage"
+        v-model:page-size="pageSize" @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"></el-pagination>
     </el-card>
 
     <!-- 新增/编辑对话框 -->
-    <OrganizationForm
-      v-if="dialogVisible"
-      :visible="dialogVisible"
-      :organization-id="selectedOrganizationId"
-      @close="handleCloseDialog"
-      @success="handleFormSuccess"
-    />
+    <OrganizationForm v-if="dialogVisible" :visible="dialogVisible" :organization-id="selectedOrganizationId"
+      @close="handleCloseDialog" @success="handleFormSuccess" />
 
     <!-- 详情对话框 -->
-    <OrganizationDetail
-      v-if="detailDialogVisible"
-      :visible="detailDialogVisible"
-      :organization-id="selectedOrganizationId"
-      @close="handleCloseDetailDialog"
-    />
+    <OrganizationDetail v-if="detailDialogVisible" :visible="detailDialogVisible"
+      :organization-id="selectedOrganizationId" @close="handleCloseDetailDialog" />
   </div>
 </template>
 
@@ -272,14 +242,22 @@ const handleCloseDetailDialog = () => {
 .organization-index {
   padding: 20px;
 }
+
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
 .left {
   display: flex;
   align-items: center;
   gap: 16px;
 }
-</style> 
+
+.search-bar-flex {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+</style>

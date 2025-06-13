@@ -3,12 +3,6 @@
     <!-- 搜索区域 -->
     <el-card class="search-card">
       <el-form :model="searchForm" label-width="auto" :inline="true">
-        <el-form-item class="table-operations-left">
-          <el-button type="danger" :disabled="!selectedIds.length" @click="handleBatchDelete">
-            批量删除
-          </el-button>
-        </el-form-item>
-
         <el-form-item label="老人姓名">
           <el-input 
             v-model="searchForm.elderlyName" 
@@ -61,6 +55,11 @@
         <el-form-item class="search-buttons-left">
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
+        </el-form-item>
+        <el-form-item class="table-operations-left">
+          <el-button type="danger" :disabled="!selectedIds.length" @click="handleBatchDelete">
+            批量删除
+          </el-button>
         </el-form-item>
         <el-form-item class="add-button-right">
           <el-button type="primary" @click="handleAdd">新增服务记录</el-button>
@@ -396,7 +395,8 @@ onMounted(() => {
 }
 
 .table-operations-left {
-  margin-right: auto;
+  margin-right: 5px;
+  float: right;
 }
 
 .search-buttons-left {
@@ -404,7 +404,8 @@ onMounted(() => {
 }
 
 .add-button-right {
-  margin-left: auto;
+  margin-right: 15px;
+  float: right;
 }
 
 .statistics-cards {

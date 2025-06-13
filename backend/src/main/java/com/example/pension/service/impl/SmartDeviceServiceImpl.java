@@ -4,6 +4,7 @@ import com.example.pension.dao.SmartDeviceDao;
 import com.example.pension.dao.ElderlyProfileDao;
 import com.example.pension.dao.OrganizationDao;
 import com.example.pension.dto.SmartDeviceDTO;
+import com.example.pension.dto.DeviceTypeDetailedStatDTO;
 import com.example.pension.mapper.SmartDeviceMapper;
 import com.example.pension.model.SmartDevice;
 import com.example.pension.model.ElderlyProfile;
@@ -254,8 +255,12 @@ public class SmartDeviceServiceImpl implements SmartDeviceService {
             throw new RuntimeException("设备不存在，ID：" + deviceId);
         }
         smartDevice.setRealTimeData(realTimeData);
-        smartDevice.setLastCommunicationTime(LocalDateTime.now());
         smartDevice.setUpdateTime(LocalDateTime.now());
         smartDeviceDao.update(smartDevice);
+    }
+
+    @Override
+    public List<DeviceTypeDetailedStatDTO> getDeviceDetailedStatistics() {
+        return smartDeviceDao.getDeviceStatisticsGroupedByType();
     }
 } 

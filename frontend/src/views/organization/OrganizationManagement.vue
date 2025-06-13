@@ -3,7 +3,7 @@
     <el-card class="box-card">
       <template #header>
         <div class="card-header">
-          <span>机构管理</span>
+          <span>服务管理</span>
           <el-button type="primary" @click="handleAddNewOrganization">新增机构</el-button>
         </div>
       </template>

@@ -9,12 +9,6 @@
     <!-- 搜索区域 -->
     <el-card class="search-card">
       <el-form :model="searchForm" label-width="auto" :inline="true">
-        <el-form-item class="table-operations-left">
-          <el-button type="danger" :disabled="!selectedIds.length" @click="handleBatchDelete">
-            批量删除
-          </el-button>
-        </el-form-item>
-
         <el-form-item label="姓名">
           <el-input v-model="searchForm.name" placeholder="请输入姓名" clearable></el-input>
         </el-form-item>
@@ -47,6 +41,11 @@
         <el-form-item class="add-button-right">
           <el-button type="primary" @click="handleAdd">新增人员</el-button>
         </el-form-item>
+        <el-form-item class="table-operations-left">
+          <el-button type="danger" :disabled="!selectedIds.length" @click="handleBatchDelete">
+            批量删除
+          </el-button>
+        </el-form-item>
       </el-form>
     </el-card>
 
@@ -67,10 +66,10 @@
         <el-table-column type="selection" width="55"></el-table-column>
         <el-table-column prop="name" label="姓名" min-width="100"></el-table-column>
         <el-table-column prop="gender" label="性别" width="80"></el-table-column>
-        <el-table-column prop="addressDetail" label="住址" min-width="200"></el-table-column>
+        <el-table-column prop="addressDetail" label="住址" min-width="150"></el-table-column>
         <el-table-column prop="phone" label="联系电话" width="120"></el-table-column>
         <el-table-column prop="community" label="所属社区" width="120"></el-table-column>
-        <el-table-column prop="pensionType" label="养老类型" width="150">
+        <el-table-column prop="pensionType" label="养老类型" width="200">
           <template #default="{ row }">
             <el-tag :type="getPensionTypeTag(row.pensionType)">{{ row.pensionType }}</el-tag>
           </template>

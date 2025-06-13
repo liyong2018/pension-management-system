@@ -1,5 +1,6 @@
 package com.example.pension.controller;
 
+import com.example.pension.annotation.Loggable;
 import com.example.pension.dto.ElderlyProfileDTO;
 import com.example.pension.service.ElderlyProfileService;
 import com.github.pagehelper.PageInfo;
@@ -21,6 +22,7 @@ public class ElderlyProfileController {
     private final ElderlyProfileService elderlyProfileService;
     
     @GetMapping
+    @Loggable(module = "人员档案", operationType = "查询列表", description = "查询人员档案列表")
     public ResponseEntity<PageInfo<ElderlyProfileDTO>> getAllOrSearch(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String idCardNumber,
@@ -49,16 +51,19 @@ public class ElderlyProfileController {
     }
     
     @GetMapping("/{id}")
+    @Loggable(module = "人员档案", operationType = "查询详情", description = "查询人员档案详情")
     public ResponseEntity<ElderlyProfileDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(elderlyProfileService.getById(id));
     }
     
     @PostMapping
+    @Loggable(module = "人员档案", operationType = "新增", description = "新增人员档案")
     public ResponseEntity<ElderlyProfileDTO> create(@Valid @RequestBody ElderlyProfileDTO elderlyProfileDTO) {
         return new ResponseEntity<>(elderlyProfileService.create(elderlyProfileDTO), HttpStatus.CREATED);
     }
     
     @PutMapping("/{id}")
+    @Loggable(module = "人员档案", operationType = "修改", description = "修改人员档案")
     public ResponseEntity<ElderlyProfileDTO> update(
             @PathVariable Long id,
             @Valid @RequestBody ElderlyProfileDTO elderlyProfileDTO) {
@@ -66,28 +71,33 @@ public class ElderlyProfileController {
     }
     
     @DeleteMapping("/{id}")
+    @Loggable(module = "人员档案", operationType = "删除", description = "删除人员档案")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         elderlyProfileService.delete(id);
         return ResponseEntity.noContent().build();
     }
     
     @DeleteMapping("/batch")
+    @Loggable(module = "人员档案", operationType = "批量删除", description = "批量删除人员档案")
     public ResponseEntity<Void> batchDelete(@RequestBody List<Long> ids) {
         elderlyProfileService.batchDelete(ids);
         return ResponseEntity.noContent().build();
     }
     
     @GetMapping("/pension-type-statistics")
+    @Loggable(module = "人员档案", operationType = "统计查询", description = "查询养老类型统计")
     public ResponseEntity<Map<String, Long>> getPensionTypeStatistics() {
         return ResponseEntity.ok(elderlyProfileService.getPensionTypeStatistics());
     }
     
     @GetMapping("/ability-assessment-statistics")
+    @Loggable(module = "人员档案", operationType = "统计查询", description = "查询能力评估统计")
     public ResponseEntity<Map<String, Long>> getAbilityAssessmentStatistics() {
         return ResponseEntity.ok(elderlyProfileService.getAbilityAssessmentStatistics());
     }
     
     @GetMapping("/by-organization/{organizationId}")
+    @Loggable(module = "人员档案", operationType = "查询列表", description = "根据机构查询人员档案")
     public ResponseEntity<List<ElderlyProfileDTO>> getByOrganizationId(@PathVariable Long organizationId) {
         return ResponseEntity.ok(elderlyProfileService.getByOrganizationId(organizationId));
     }

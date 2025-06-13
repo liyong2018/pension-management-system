@@ -234,4 +234,19 @@
         ORDER BY sd.next_maintenance_date ASC
     </select>
 
+    <!-- 新增：按设备类型分组统计设备数量和在线数量 -->
+    <select id="getDeviceStatisticsGroupedByType" resultType="com.example.pension.dto.DeviceTypeDetailedStatDTO">
+        SELECT
+            device_type AS deviceType,
+            COUNT(*) AS totalCount,
+            SUM(CASE WHEN device_status = '在线' THEN 1 ELSE 0 END) AS onlineCount
+        FROM
+            smart_device
+        WHERE is_deleted = 0
+        GROUP BY
+            device_type
+        ORDER BY
+            totalCount DESC
+    </select>
+
 </mapper> 

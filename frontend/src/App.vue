@@ -176,7 +176,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed, onUnmounted } from 'vue';
+import { ref, watch, onMounted, computed, onUnmounted, provide } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { 
@@ -192,6 +192,7 @@ const activeIndex = ref(route.path);
 const menuLoading = ref(false);
 const menuData = ref([]);
 const isCollapsed = ref(true); // 默认收起状态
+provide('isCollapsed', isCollapsed);
 const showMask = ref(false);
 const showChangePwdDialog = ref(false);
 const showProfileDialog = ref(false);

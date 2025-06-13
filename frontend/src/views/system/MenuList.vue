@@ -60,21 +60,7 @@
 
     <!-- 搜索区域 -->
     <el-card class="search-card">
-      <el-form :model="searchForm" label-width="auto" :inline="true">
-        <el-form-item class="table-operations-left">
-          <el-button type="danger" :disabled="!multipleSelection.length" @click="handleBatchDelete">
-            批量删除
-          </el-button>
-          <el-button type="warning" @click="expandAll">
-            <el-icon><Expand /></el-icon>
-            展开全部
-          </el-button>
-          <el-button type="info" @click="collapseAll">
-            <el-icon><Fold /></el-icon>
-            收起全部
-          </el-button>
-        </el-form-item>
-
+      <el-form :model="searchForm" label-width="auto" :inline="true" class="search-bar-flex">
         <el-form-item label="菜单名称">
           <el-input 
             v-model="searchForm.name" 
@@ -115,7 +101,20 @@
             <el-icon><Plus /></el-icon>
             添加菜单
           </el-button>
+          <el-button type="warning" @click="expandAll">
+            <el-icon><Expand /></el-icon>
+            展开全部
+          </el-button>
+          <el-button type="info" @click="collapseAll">
+            <el-icon><Fold /></el-icon>
+            收起全部
+          </el-button>
         </el-form-item>
+        <div style="margin-left:auto; display:flex; align-items:center;margin-bottom: 18px;">
+          <el-button type="danger" :disabled="!multipleSelection.length" @click="handleBatchDelete">
+            批量删除
+          </el-button>
+        </div>
       </el-form>
     </el-card>
 
@@ -1280,6 +1279,12 @@ export default {
 
 .search-card {
   margin-bottom: 20px;
+}
+
+.search-bar-flex {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .table-operations-left {
