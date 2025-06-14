@@ -342,6 +342,46 @@
               </div> -->
           </div>
         </el-tab-pane>
+
+        <!-- 服务记录 -->
+        <el-tab-pane label="服务记录" name="serviceRecords" v-if="mode === 'view' && form.id">
+          <div v-loading="serviceRecordLoading">
+            <el-table :data="elderlyServiceRecords" border style="width: 100%">
+              <el-table-column prop="serviceContent" label="服务内容" min-width="150"></el-table-column>
+              <el-table-column prop="serviceTime" label="服务时间" width="160">
+                <template #default="{ row }">
+                  {{ formatDateTime(row.serviceTime) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="serviceAddress" label="服务地址" min-width="150"></el-table-column>
+              <el-table-column prop="serviceType" label="服务类型" width="120">
+                <template #default="{ row }">
+                  <el-tag :type="getServiceTypeTag(row.serviceType)">{{ row.serviceType }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="serviceDuration" label="服务时长" width="100">
+                <template #default="{ row }">
+                  {{ row.serviceDuration }}小时
+                </template>
+              </el-table-column>
+              <el-table-column prop="serviceProviderType" label="服务提供者类型" width="120"></el-table-column>
+              <el-table-column prop="serviceProviderName" label="服务提供者" min-width="120"></el-table-column>
+              <el-table-column prop="workOrderPrice" label="费用" width="100">
+                <template #default="{ row }">
+                  ¥{{ row.workOrderPrice }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="status" label="状态" width="100">
+                <template #default="{ row }">
+                  <el-tag :type="getServiceStatusTag(row.status)">{{ row.status }}</el-tag>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div v-if="elderlyServiceRecords.length === 0" class="empty-data">
+              <el-empty description="暂无服务记录"></el-empty>
+            </div>
+          </div>
+        </el-tab-pane>
       </el-tabs>
     </el-form>
 
@@ -362,6 +402,7 @@ import organizationService from '@/services/organizationService'
 import { Plus } from '@element-plus/icons-vue'
 import { dictionaryApi } from '@/api/dictionary'
 import { smartDeviceApi } from '@/api/smartDevice'
+import { serviceRecordApi } from '@/api/serviceRecord'
 console.log('--- ElderlyProfileDialog.vue SCRIPT SETUP EXECUTING --- v2');
 const props = defineProps({
   modelValue: Boolean,
@@ -457,6 +498,10 @@ const familyMemberErrors = ref([])
 // 设备信息相关
 const elderlyDevices = ref([])
 const deviceLoading = ref(false)
+
+// 服务记录相关
+const elderlyServiceRecords = ref([])
+const serviceRecordLoading = ref(false)
 
 // 对话框标题
 const dialogTitle = computed(() => {
@@ -727,10 +772,38 @@ const fetchElderlyDevices = async () => {
   }
 }
 
+// 获取老人的服务记录
+const fetchElderlyServiceRecords = async () => {
+  if (!form.value.id || props.mode !== 'view') return // 仅在查看模式且有老人ID时加载
+  serviceRecordLoading.value = true
+  try {
+    const response = await serviceRecordApi.getByElderlyId(form.value.id)
+    if (Array.isArray(response)) {
+      elderlyServiceRecords.value = response
+    } else if (response && Array.isArray(response.list)) {
+      elderlyServiceRecords.value = response.list
+    } else if (response && Array.isArray(response.data)) {
+      elderlyServiceRecords.value = response.data
+    } else {
+      elderlyServiceRecords.value = []
+      console.warn('获取服务记录列表的响应格式不符合预期:', response)
+    }
+  } catch (error) {
+    console.error('获取服务记录列表失败:', error)
+    ElMessage.error('获取服务记录列表失败')
+    elderlyServiceRecords.value = []
+  } finally {
+    serviceRecordLoading.value = false
+  }
+}
+
 // Tab切换处理
 const handleTabClick = (tab) => {
   if (tab.props.name === 'devices' && props.mode === 'view' && form.value.id && elderlyDevices.value.length === 0) {
     fetchElderlyDevices()
+  }
+  if (tab.props.name === 'serviceRecords' && props.mode === 'view' && form.value.id && elderlyServiceRecords.value.length === 0) {
+    fetchElderlyServiceRecords()
   }
 }
 
@@ -796,6 +869,29 @@ const getBatteryStatus = (level) => {
   if (level <= 20) return 'exception'
   if (level <= 50) return 'warning'
   return 'success'
+}
+
+// 服务记录相关的辅助函数
+const getServiceTypeTag = (type) => {
+  const map = {
+    '生活照料': 'primary',
+    '医疗护理': 'success',
+    '精神慰藉': 'info',
+    '紧急救助': 'danger',
+    '康复训练': 'warning',
+    '其他': ''
+  }
+  return map[type] || ''
+}
+
+const getServiceStatusTag = (status) => {
+  const map = {
+    '已完成': 'success',
+    '进行中': 'primary',
+    '已取消': 'info',
+    '待开始': 'warning'
+  }
+  return map[status] || ''
 }
 
 const formatDateTime = (dateTime) => {
@@ -926,4 +1022,9 @@ watch([() => props.modelValue, () => props.elderlyId], async ([newVisible, newEl
 .is-error .el-select__wrapper {
   border-color: var(--el-color-danger) !important;
 }
-</style> 
+
+.empty-data {
+  padding: 40px 0;
+  text-align: center;
+}
+</style>
