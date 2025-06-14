@@ -39,6 +39,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         // 添加具体权限
         if (permissions != null) {
             authorities.addAll(permissions.stream()
+                .filter(permission -> permission.getPermissionKey() != null && !permission.getPermissionKey().trim().isEmpty())
                 .map(permission -> new SimpleGrantedAuthority(permission.getPermissionKey()))
                 .collect(Collectors.toList()));
         }
@@ -53,4 +54,4 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .disabled(!user.isActive())
                 .build();
     }
-} 
+}

@@ -464,22 +464,31 @@ const form = ref({
 })
 
 // 表单验证规则
-const rules = {
-  name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-  gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
-  birthDate: [{ required: true, message: '请选择出生日期', trigger: 'change' }],
-  idCardNumber: [
-    { required: true, message: '请输入身份证号', trigger: 'blur' },
-    { pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/, message: '请输入正确的身份证号', trigger: 'blur' }
-  ],
-  phone: [
-    { required: true, message: '请输入联系电话', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
-  ],
-  addressDetail: [{ required: true, message: '请输入家庭住址', trigger: 'blur' }],
-  community: [{ required: true, message: '请选择所属社区', trigger: 'change' }],
-  pensionType: [{ required: true, message: '请选择养老类型', trigger: 'change' }]
-}
+const rules = computed(() => {
+  const baseRules = {
+    name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+    gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
+    birthDate: [{ required: true, message: '请选择出生日期', trigger: 'change' }],
+    idCardNumber: [
+      { required: true, message: '请输入身份证号', trigger: 'blur' },
+      { pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/, message: '请输入正确的身份证号', trigger: 'blur' }
+    ],
+    phone: [
+      { required: true, message: '请输入联系电话', trigger: 'blur' },
+      { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+    ],
+    addressDetail: [{ required: true, message: '请输入家庭住址', trigger: 'blur' }],
+    community: [{ required: true, message: '请选择所属社区', trigger: 'change' }],
+    pensionType: [{ required: true, message: '请选择养老类型', trigger: 'change' }]
+  }
+  
+  // 如果选择了机构养老，则机构ID为必填
+  if (form.value.pensionType === '机构养老（养老院）') {
+    baseRules.organizationId = [{ required: true, message: '请选择所属机构', trigger: 'change' }]
+  }
+  
+  return baseRules
+})
 
 // 字典选项数据
 const communityOptions = ref([])
@@ -809,11 +818,20 @@ const handleTabClick = (tab) => {
 
 // 提交表单
 const handleSubmit = async () => {
-  if (!formRef.value) return
+  if (!formRef.value) {
+    ElMessage.error('表单引用不存在')
+    return
+  }
   
   try {
     // 验证基本表单
     await formRef.value.validate()
+    
+    // 额外验证：如果选择机构养老，必须选择机构
+    if (form.value.pensionType === '机构养老（养老院）' && !form.value.organizationId) {
+      ElMessage.error('请选择所属机构')
+      return
+    }
     
     // 验证家属信息
     if (!validateAllFamilyMembers()) {
@@ -823,23 +841,48 @@ const handleSubmit = async () => {
       return
     }
     
+    // 构建提交数据
+    const submitData = {
+      ...form.value,
+      // 确保日期格式正确
+      birthDate: form.value.birthDate ? new Date(form.value.birthDate).toISOString().split('T')[0] : null,
+      // 确保数字类型字段正确
+      organizationId: form.value.organizationId ? Number(form.value.organizationId) : null
+    }
+    
+    console.log('提交数据:', submitData)
+    
     if (props.mode === 'add') {
-      await elderlyProfileApi.create(form.value)
+      const response = await elderlyProfileApi.create(submitData)
+      console.log('创建响应:', response)
       ElMessage.success('添加成功')
     } else {
-      await elderlyProfileApi.update(props.elderlyId, form.value)
+      const response = await elderlyProfileApi.update(props.elderlyId, submitData)
+      console.log('更新响应:', response)
       ElMessage.success('更新成功')
     }
     
     visible.value = false
     emit('success')
   } catch (error) {
-    if (error.message) {
+    console.error('提交失败详细信息:', error)
+    
+    // 处理不同类型的错误
+    if (error.response) {
+      // 服务器响应错误
+      const errorMsg = error.response.data?.message || error.response.data?.error || '服务器错误'
+      ElMessage.error(`${props.mode === 'add' ? '添加' : '更新'}失败: ${errorMsg}`)
+      console.error('服务器错误响应:', error.response.data)
+    } else if (error.request) {
+      // 网络错误
+      ElMessage.error('网络连接失败，请检查网络连接')
+      console.error('网络错误:', error.request)
+    } else if (error.message) {
+      // 其他错误
       ElMessage.error(error.message)
     } else {
       ElMessage.error(props.mode === 'add' ? '添加失败' : '更新失败')
     }
-    console.error(props.mode === 'add' ? '添加失败:' : '更新失败:', error)
   }
 }
 

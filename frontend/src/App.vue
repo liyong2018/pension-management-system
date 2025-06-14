@@ -53,7 +53,7 @@
           <!-- 子菜单（手风琴样式） -->
           <el-sub-menu 
             v-else-if="menu.type === 'CATALOG' && menu.children && menu.children.length > 0"
-            :index="menu.routePath || menu.permissionKey || `sub-menu-${index}`" 
+            :index="`catalog-${menu.id}-${index}`" 
             :disabled="!menu.status"
             class="custom-sub-menu"
             :popper-class="'dark-theme-popper'"
@@ -273,50 +273,61 @@ const isAuthRoute = computed(() => {
   return route.name === 'Login'; // Add other auth route names if needed, e.g., 'Register', 'ForgotPassword'
 });
 
+// 根据路由路径查找菜单项
+const findMenuByPath = (path, menus = menuData.value) => {
+  for (const menu of menus) {
+    if (menu.routePath === path) {
+      return menu;
+    }
+    if (menu.children && menu.children.length > 0) {
+      const found = findMenuByPath(path, menu.children);
+      if (found) {
+        return { parent: menu, child: found };
+      }
+    }
+  }
+  return null;
+};
+
 // 计算面包屑导航路径
 const breadcrumbItems = computed(() => {
   const path = route.path;
   const items = [];
   
-  // 根据路由路径生成面包屑
-  if (path === '/') {
-    items.push({ name: '首页', path: '/' });
-  } else if (path.startsWith('/system')) {
-    items.push({ name: '首页', path: '/' });
-    items.push({ name: '系统管理', path: '/system' });
+  // 首页
+  const homeMenu = findMenuByPath('/');
+  items.push({ 
+    name: homeMenu?.name || '首页', 
+    path: '/' 
+  });
+  
+  // 如果不是首页，查找对应的菜单项
+  if (path !== '/') {
+    const menuResult = findMenuByPath(path);
     
-    // 根据具体的系统管理子页面添加对应的面包屑
-    if (path === '/system/users') {
-      items.push({ name: '用户管理', path: '/system/users' });
-    } else if (path === '/system/roles') {
-      items.push({ name: '角色管理', path: '/system/roles' });
-    } else if (path === '/system/permissions') {
-      items.push({ name: '权限管理', path: '/system/permissions' });
-    } else if (path === '/system/menus') {
-      items.push({ name: '菜单管理', path: '/system/menus' });
-    } else if (path === '/system/logs') {
-      items.push({ name: '日志管理', path: '/system/logs' });
-    } else if (path === '/system/dictionaries') {
-      items.push({ name: '字典管理', path: '/system/dictionaries' });
-    } else if (path === '/system/dictionary-test') {
-      items.push({ name: '字典管理测试', path: '/system/dictionary-test' });
-    } else if (path === '/system/dictionary-diagnosis') {
-      items.push({ name: '字典问题诊断', path: '/system/dictionary-diagnosis' });
+    if (menuResult) {
+      if (menuResult.parent && menuResult.child) {
+        // 有父菜单的子菜单
+        items.push({ 
+          name: menuResult.parent.name, 
+          path: menuResult.parent.routePath || '#' 
+        });
+        items.push({ 
+          name: menuResult.child.name, 
+          path: menuResult.child.routePath 
+        });
+      } else {
+        // 顶级菜单
+        items.push({ 
+          name: menuResult.name, 
+          path: menuResult.routePath 
+        });
+      }
+    } else {
+      // 如果在菜单中找不到，使用路由的meta信息作为后备
+      const title = route.meta.title || route.name || '未知页面';
+      items.push({ name: title, path: path });
     }
-  } else if (path.startsWith('/smart-device') || path === '/smart-devices' || path === '/device-alarms') {
-    items.push({ name: '首页', path: '/' });
-    items.push({ name: '智能设备', path: '#' });
-    
-    if (path === '/smart-devices') {
-      items.push({ name: '设备管理', path: '/smart-devices' });
-    } else if (path === '/device-alarms') {
-      items.push({ name: '告警管理', path: '/device-alarms' });
-    }
-  } else {
-    // 其他单级页面
-    items.push({ name: '首页', path: '/' });
-    const title = route.meta.title || route.name || '未知页面';
-    items.push({ name: title, path: path });
   }
   
   return items;
@@ -1235,4 +1246,4 @@ html, body {
 .el-card__header {
     font-weight: bold;
 }
-</style> 
+</style>

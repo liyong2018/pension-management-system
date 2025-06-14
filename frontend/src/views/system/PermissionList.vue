@@ -524,6 +524,13 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 图标选择器 -->
+    <IconSelector
+      v-model="showIconSelectorDialog"
+      :current-icon="currentPermission.icon"
+      @select="handleIconSelect"
+    />
   </div>
 </template>
 
@@ -536,6 +543,7 @@ import {
   Folder, Document, View, Hide, House, OfficeBuilding, User, 
   Monitor, Warning, Setting, Key, Collection
 } from '@element-plus/icons-vue'
+import IconSelector from '@/components/IconSelector.vue'
 import request from '@/utils/request'
 
 export default {
@@ -544,7 +552,7 @@ export default {
     Lock, Menu, Operation, Avatar, Plus, CircleCheck, CircleClose,
     ArrowDown, Link, CopyDocument, Switch, Delete, Expand, Fold,
     Folder, Document, View, Hide, House, OfficeBuilding, User,
-    Monitor, Warning, Setting, Key, Collection
+    Monitor, Warning, Setting, Key, Collection, IconSelector
   },
   setup() {
     // 响应式数据
@@ -885,6 +893,7 @@ export default {
           currentPermission[key] = ''
         }
       })
+      loadPermissions() // 加载权限列表以更新父级权限选项
       dialogMode.value = 'create'
       dialogVisible.value = true
     }
@@ -954,6 +963,7 @@ export default {
       Object.keys(currentPermission).forEach(key => {
         currentPermission[key] = permission[key] || (key === 'parentId' ? null : (key === 'sortOrder' ? 0 : (key === 'isVisible' ? true : '')))
       })
+      loadPermissions() // 加载权限列表以更新父级权限选项
       dialogMode.value = 'edit'
       dialogVisible.value = true
     }
@@ -1260,9 +1270,18 @@ export default {
       }
     }
 
+    // 图标选择器相关
+    const showIconSelectorDialog = ref(false)
+    
     // 显示图标选择器
     const showIconSelector = () => {
-      ElMessage.info('图标选择功能正在开发中...')
+      showIconSelectorDialog.value = true
+    }
+    
+    // 选择图标
+    const handleIconSelect = (iconName) => {
+      currentPermission.icon = iconName
+      showIconSelectorDialog.value = false
     }
 
     // 表单提交
@@ -1340,6 +1359,8 @@ export default {
       handleToggleVisible,
       handleToggleStatus,
       showIconSelector,
+      showIconSelectorDialog,
+      handleIconSelect,
       handleSubmit,
       submitLoading,
       formRef
@@ -1818,4 +1839,4 @@ export default {
     gap: 8px;
   }
 }
-</style> 
+</style>
