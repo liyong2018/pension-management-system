@@ -105,6 +105,7 @@
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
+                  <el-dropdown-item command="serviceArchive">服务档案</el-dropdown-item>
                   <el-dropdown-item command="updateStatus">变更状态</el-dropdown-item>
                   <el-dropdown-item command="updateStats">更新统计</el-dropdown-item>
                   <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
@@ -162,11 +163,15 @@
 import { ref, onMounted, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, ArrowDown, Refresh } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
 import VolunteerDetailDialog from './components/VolunteerDetailDialog.vue'
 import VolunteerEditDialog from './components/VolunteerEditDialog.vue'
 import VolunteerStatusDialog from './components/VolunteerStatusDialog.vue'
 import VolunteerStatsDialog from './components/VolunteerStatsDialog.vue'
 import { volunteerApi } from '@/api/volunteer'
+
+// 路由
+const router = useRouter()
 
 // 响应式数据
 const loading = ref(false)
@@ -288,6 +293,16 @@ const handleAction = (command, volunteer) => {
   selectedVolunteer.value = volunteer
   
   switch (command) {
+    case 'serviceArchive':
+      // 跳转到服务档案管理页面，并传递志愿者信息
+      router.push({
+        path: '/volunteer-service-archive',
+        query: {
+          volunteerId: volunteer.id,
+          volunteerName: volunteer.name
+        }
+      })
+      break
     case 'updateStatus':
       statusDialogVisible.value = true
       break
@@ -428,4 +443,4 @@ onMounted(() => {
   margin-top: 20px;
   text-align: right;
 }
-</style> 
+</style>

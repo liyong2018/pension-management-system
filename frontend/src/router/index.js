@@ -66,6 +66,12 @@ const routes = [
     component: () => import('@/views/volunteer/VolunteerListSimple.vue'),
     meta: { title: '志愿者管理', requiresAuth: true }
   },
+  {
+    path: '/volunteer-service-archive',
+    name: 'VolunteerServiceArchive',
+    component: () => import('@/views/volunteer/VolunteerServiceArchiveList.vue'),
+    meta: { title: '志愿者服务档案管理', requiresAuth: true }
+  },
   // 系统管理模块路由
   {
     path: '/system',
@@ -126,6 +132,13 @@ const routes = [
     name: 'ApiTest',
     component: () => import('@/views/system/ApiTest.vue'),
     meta: { title: '接口测试', requiresAuth: true }
+  },
+  // 服务人员管理
+  {
+    path: '/service-staff',
+    name: 'ServiceStaffManagement',
+    component: () => import('@/views/service-staff/ServiceStaffList.vue'),
+    meta: { title: '服务人员管理', requiresAuth: true }
   }
   // ... 其他模块的路由
 ];

@@ -150,6 +150,32 @@
                 </div>
               </el-option>
             </el-select>
+            <!-- 当选择机构员工时显示下拉选择 -->
+            <el-select
+              v-else-if="form.serviceProviderType === '机构员工'"
+              v-model="form.serviceProviderId"
+              placeholder="请选择机构员工"
+              filterable
+              remote
+              :remote-method="searchServiceStaff"
+              :loading="serviceStaffLoading"
+              @change="handleServiceStaffChange"
+              style="width: 100%"
+              popper-class="service-staff-select-dropdown"
+              clearable
+            >
+              <el-option
+                v-for="staff in serviceStaffOptions"
+                :key="staff.id"
+                :label="`${staff.name} - ${staff.position || ''} - ${staff.organizationName || ''}`"
+                :value="staff.id"
+              >
+                <div class="service-staff-option">
+                  <span class="staff-name">{{ staff.name }}</span>
+                  <span class="staff-info">{{ staff.position || '' }} | {{ staff.organizationName || '' }} | {{ staff.phone || '' }}</span>
+                </div>
+              </el-option>
+            </el-select>
             <!-- 其他类型时显示输入框 -->
             <el-input 
               v-else
@@ -226,6 +252,7 @@ import { serviceRecordApi } from '@/api/serviceRecord'
 import { elderlyProfileApi } from '@/api/elderlyProfile'
 import { volunteerApi } from '@/api/volunteer'
 import { dictionaryApi } from '@/api/dictionary'
+import serviceStaffService from '@/services/serviceStaffService'
 
 const props = defineProps({
   modelValue: {
@@ -272,6 +299,10 @@ const elderlyLoading = ref(false)
 // 志愿者选择相关
 const volunteerOptions = ref([])
 const volunteerLoading = ref(false)
+
+// 服务人员选择相关
+const serviceStaffOptions = ref([])
+const serviceStaffLoading = ref(false)
 
 // 服务类型选项
 const serviceTypeOptions = ref([])
@@ -378,18 +409,53 @@ const searchVolunteers = async (query) => {
   }
 }
 
+// 搜索服务人员
+const searchServiceStaff = async (query) => {
+  try {
+    serviceStaffLoading.value = true
+    const params = {
+      pageNum: 1,
+      pageSize: 20,
+      status: 'ACTIVE' // 只搜索在职的服务人员
+    }
+    
+    if (query && query.trim() !== '') {
+      params.name = query.trim()
+    }
+    
+    const response = await serviceStaffService.getStaffList(params)
+    if (response && response.list) {
+      serviceStaffOptions.value = response.list || []
+    } else {
+      ElMessage.error('搜索服务人员失败')
+      serviceStaffOptions.value = []
+    }
+  } catch (error) {
+    console.error('搜索服务人员失败:', error)
+    ElMessage.error('搜索服务人员失败')
+    serviceStaffOptions.value = []
+  } finally {
+    serviceStaffLoading.value = false
+  }
+}
+
 // 服务提供者类型变化
 const handleProviderTypeChange = (type) => {
   // 清空相关字段
   form.value.serviceProviderId = null
   form.value.serviceProviderName = ''
   volunteerOptions.value = []
+  serviceStaffOptions.value = []
   
   console.log('服务提供者类型变化:', type)
   
   // 如果选择了志愿者，加载志愿者列表
   if (type === '志愿者') {
     searchVolunteers('')
+  }
+  // 如果选择了机构员工，加载服务人员列表
+  else if (type === '机构员工') {
+    searchServiceStaff('')
   }
 }
 
@@ -415,6 +481,28 @@ const handleVolunteerChange = (volunteerId) => {
   }
 }
 
+// 服务人员选择变化
+const handleServiceStaffChange = (staffId) => {
+  console.log('服务人员选择变化:', staffId)
+  
+  if (staffId) {
+    const selectedStaff = serviceStaffOptions.value.find(item => item.id === staffId)
+    if (selectedStaff) {
+      form.value.serviceProviderName = selectedStaff.name
+      form.value.serviceProviderId = selectedStaff.id
+      console.log('设置服务人员信息:', {
+        id: selectedStaff.id,
+        name: selectedStaff.name
+      })
+    }
+  } else {
+    // 清空选择
+    form.value.serviceProviderName = ''
+    form.value.serviceProviderId = null
+    console.log('清空服务人员选择')
+  }
+}
+
 // 重置表单
 const resetForm = () => {
   form.value = {
@@ -434,6 +522,7 @@ const resetForm = () => {
   }
   elderlyOptions.value = []
   volunteerOptions.value = []
+  serviceStaffOptions.value = []
   nextTick(() => {
     formRef.value?.clearValidate()
   })
@@ -503,6 +592,30 @@ const loadData = async () => {
           // 没有具体志愿者ID，加载志愿者列表供选择
           console.log('没有志愿者ID，加载志愿者列表')
           await searchVolunteers('')
+        }
+      }
+      // 如果是机构员工类型，处理服务人员信息
+      else if (res.serviceProviderType === '机构员工') {
+        if (res.serviceProviderId) {
+          // 有具体的服务人员ID，尝试加载服务人员详情
+          try {
+            const staffResponse = await serviceStaffService.getStaffDetail(res.serviceProviderId)
+            if (staffResponse) {
+              serviceStaffOptions.value = [staffResponse]
+              console.log('加载服务人员详情成功:', staffResponse)
+            } else {
+              console.log('服务人员详情加载失败，搜索在职服务人员')
+              await searchServiceStaff('')
+            }
+          } catch (error) {
+            console.error('加载服务人员信息失败:', error)
+            // 如果获取失败，尝试搜索在职服务人员
+            await searchServiceStaff('')
+          }
+        } else {
+          // 没有具体服务人员ID，加载服务人员列表供选择
+          console.log('没有服务人员ID，加载服务人员列表')
+          await searchServiceStaff('')
         }
       }
     } catch (error) {
@@ -614,6 +727,11 @@ const loadServiceTypeOptions = async () => {
   max-width: 400px !important;
 }
 
+.service-staff-select-dropdown {
+  min-width: 300px !important;
+  max-width: 400px !important;
+}
+
 .elderly-select-dropdown .el-select-dropdown__item,
 .provider-type-select-dropdown .el-select-dropdown__item,
 .status-select-dropdown .el-select-dropdown__item {
@@ -643,4 +761,22 @@ const loadServiceTypeOptions = async () => {
   font-size: 12px;
   color: #909399;
 }
-</style> 
+
+/* 服务人员选项样式 */
+.service-staff-option {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.staff-name {
+  font-weight: 500;
+  color: #303133;
+}
+
+.staff-info {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 2px;
+}
+</style>

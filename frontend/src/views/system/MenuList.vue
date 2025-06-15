@@ -139,13 +139,23 @@
         <el-table-column prop="name" label="菜单名称" min-width="200">
           <template #default="scope">
             <div class="menu-info">
-              <el-icon v-if="scope.row.icon" :size="20" class="menu-icon">
+              <span class="menu-name" v-if="scope.row.type === 'CATALOG'">
+                <el-icon v-if="scope.row.icon" :size="20" class="menu-icon">
                 <component :is="getIconComponent(scope.row.icon)" />
               </el-icon>
               <el-icon v-else :size="20" class="menu-icon default-icon">
                 <Menu />
               </el-icon>
-              <span class="menu-name">{{ scope.row.name }}</span>
+                {{ scope.row.name }}</span>
+              <span class="menu-name" v-else>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp; <el-icon v-if="scope.row.icon" :size="20" class="menu-icon">
+                <component :is="getIconComponent(scope.row.icon)" />
+              </el-icon>
+              <el-icon v-else :size="20" class="menu-icon default-icon">
+                <Menu />
+              </el-icon>{{ scope.row.name }}
+              </span>
             </div>
           </template>
         </el-table-column>
@@ -1345,6 +1355,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
+  float: left;
 }
 
 .menu-icon {

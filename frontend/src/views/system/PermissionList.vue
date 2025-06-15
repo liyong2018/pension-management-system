@@ -147,13 +147,23 @@
         <el-table-column prop="name" label="权限名称" min-width="200">
           <template #default="scope">
             <div class="permission-info">
-              <el-icon v-if="scope.row.icon" :size="20" class="permission-icon">
+              
+              <span class="permission-name" v-if="scope.row.type === 'CATALOG'"><el-icon v-if="scope.row.icon" :size="20" class="permission-icon">
                 <component :is="getIconComponent(scope.row.icon)" />
               </el-icon>
               <el-icon v-else :size="20" class="permission-icon default-icon">
                 <Lock />
               </el-icon>
-              <span class="permission-name">{{ scope.row.name }}</span>
+                {{ scope.row.name }}
+              </span>
+              <span class="permission-name" v-else>
+                &nbsp;&nbsp;&nbsp;&nbsp; <el-icon v-if="scope.row.icon" :size="20" class="permission-icon">
+                <component :is="getIconComponent(scope.row.icon)" />
+              </el-icon>
+              <el-icon v-else :size="20" class="permission-icon default-icon">
+                <Lock />
+              </el-icon>{{ scope.row.name }}
+              </span>
             </div>
           </template>
         </el-table-column>
@@ -1483,7 +1493,8 @@ export default {
 
 .permission-info {
   display: flex;
-  align-items: center;
+  align-items: right;
+  float: left;
 }
 
 .permission-avatar {
