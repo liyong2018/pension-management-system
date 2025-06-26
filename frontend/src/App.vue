@@ -8,13 +8,13 @@
       <div class="logo-section" @click="goHome">
         <div class="logo-title" v-show="!isCollapsed">
           <div class="logo-icon">
-            <img src="/public/logo-yunshuyinling.png" alt="logo" style="height:32px;" />
+            <img src="/public/logo-ysyl.png" alt="logo" style="height:32px;" />
           </div>
           <div class="title-text">养老信息管理系统</div>
         </div>
         <div class="logo-collapsed" v-show="isCollapsed">
           <div class="logo-icon-small">
-            <img src="/public/logo-yunshuyinling.png" alt="logo" style="height:24px;" />
+            <img src="/public/logo-ysyl.png" alt="logo" style="height:24px;" />
           </div>
         </div>
         <!-- 折叠按钮 -->
