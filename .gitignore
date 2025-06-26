@@ -94,4 +94,10 @@ yarn-error.log*
 Thumbs.db
 
 # Cursor IDE directory
-.cursor/ 
+.cursor/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

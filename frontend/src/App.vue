@@ -7,11 +7,15 @@
       <!-- 系统标题区域 -->
       <div class="logo-section" @click="goHome">
         <div class="logo-title" v-show="!isCollapsed">
-          <div class="logo-icon">🏥</div>
+          <div class="logo-icon">
+            <img src="/public/logo-yunshuyinling.png" alt="logo" style="height:32px;" />
+          </div>
           <div class="title-text">养老信息管理系统</div>
         </div>
         <div class="logo-collapsed" v-show="isCollapsed">
-          <div class="logo-icon-small">🏥</div>
+          <div class="logo-icon-small">
+            <img src="/public/logo-yunshuyinling.png" alt="logo" style="height:24px;" />
+          </div>
         </div>
         <!-- 折叠按钮 -->
         <div class="collapse-trigger" @click.stop="toggleCollapse">
@@ -1235,4 +1239,4 @@ html, body {
 .el-card__header {
     font-weight: bold;
 }
-</style> 
+</style>

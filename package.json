@@ -1,0 +1,23 @@
+{
+  "name": "pension-management-system",
+  "version": "1.0.0",
+  "description": "这是一个基于Spring Boot和Vue.js的养老信息管理系统。\r ## 整体需求\r 首页、机构管理、人员档案、健康监测、服务记录、智能设备、志愿者管理、系统管理",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liyong2018/pension-management-system.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/liyong2018/pension-management-system/issues"
+  },
+  "homepage": "https://github.com/liyong2018/pension-management-system#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.53.0",
+    "@types/node": "^24.0.1"
+  }
+}
