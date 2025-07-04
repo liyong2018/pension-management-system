@@ -1103,48 +1103,72 @@ docker-compose up -d
 - ✅ **安全性提升** - 删除不必要的临时测试端点
 - ✅ **性能优化** - 减少无用的日志输出，提升系统响应速度
 
+## 环境要求
+
+### 开发环境
+- **Java**: JDK 17 或更高版本
+- **Node.js**: 16.x 或更高版本
+- **MySQL**: 8.0 或更高版本
+- **Maven**: 3.6 或更高版本
+- **Git**: 用于版本控制
+
+### 推荐IDE
+- **后端**: IntelliJ IDEA 或 Eclipse
+- **前端**: VS Code 或 WebStorm
+- **数据库**: MySQL Workbench 或 Navicat
+
 ## 快速开始
 
-### 后端启动
+### 1. 克隆项目
+```bash
+git clone <repository-url>
+cd pension-management-system
+```
+
+### 2. 数据库配置
 1. 确保已安装MySQL 8.x
 2. 创建数据库：
 ```sql
 CREATE DATABASE pension_management_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- 初始化机构数据
-INSERT INTO institutions (name, address, contact_person, contact_phone, bed_count, staff_count, establishment_date, license_number, status)
-VALUES 
-('阳光养老院', '北京市朝阳区阳光路123号', '张三', '13800138001', 100, 30, '2020-01-01', 'L2020001', 1),
-('康乐养老中心', '北京市海淀区康乐街45号', '李四', '13800138002', 150, 45, '2019-06-15', 'L2019002', 1),
--- ... 其他测试数据 ...
-;
 ```
 
-3. 修改数据库配置（如需要）：
+3. 执行数据库初始化脚本：
+```bash
+# 在项目根目录执行
+mysql -u root -p pension_management_system < database/init.sql
+mysql -u root -p pension_management_system < database/test_data.sql
+```
+
+4. 修改数据库配置：
 ```properties
 # backend/src/main/resources/application.properties
 spring.datasource.url=jdbc:mysql://localhost:3306/pension_management_system
 spring.datasource.username=root
-spring.datasource.password=Htht1234
+spring.datasource.password=your_password
 ```
 
-4. 启动后端服务：
+### 3. 后端启动
 ```bash
 cd backend
+mvn clean install
 mvn spring-boot:run
 ```
 
-### 前端启动
-1. 安装依赖：
+后端服务将在 `http://localhost:8085` 启动
+
+### 4. 前端启动
 ```bash
 cd frontend
 npm install
-```
-
-2. 启动开发服务器：
-```bash
 npm run serve
 ```
+
+前端服务将在 `http://localhost:3000` 启动
+
+### 5. 访问系统
+- 前端地址: http://localhost:3000
+- 后端API: http://localhost:8085
+- API文档: http://localhost:8085/swagger-ui.html
 
 ## 默认账号
 
@@ -1445,21 +1469,140 @@ pension/
     └── package.json
 ```
 
-## 已知问题
+## 生产环境部署
 
-- Chrome扩展相关的连接错误（调查中）
-- 后端API连接错误：
-  - 症状：ECONNREFUSED错误
-  - 可能原因：
-    1. 后端服务未启动
-    2. 端口配置不匹配
-    3. 代理配置问题
-  - 解决方案：
-    1. 确保后端服务正常运行
-    2. 检查vite.config.js中的代理配置
-    3. 验证API路径是否正确（/api/organizations）
-- 前端JavaScript类型错误（修复中）
-- 内容脚本错误（修复中）
+### Docker部署（推荐）
+
+1. **构建并启动所有服务**：
+```bash
+docker-compose up --build -d
+```
+
+2. **查看服务状态**：
+```bash
+docker-compose ps
+```
+
+3. **查看日志**：
+```bash
+docker-compose logs -f
+```
+
+### 远程服务器部署
+
+项目提供了自动化部署脚本 `deploy.sh`，支持一键部署到远程服务器：
+
+```bash
+# 执行部署脚本
+./deploy.sh
+```
+
+部署流程：
+1. 构建后端项目（Maven）
+2. 构建前端项目（npm build）
+3. 打包项目文件
+4. 上传到远程服务器（8.137.85.158）
+5. 在远程服务器执行Docker部署
+
+### 服务端口说明
+
+- **前端服务**: 3000端口（开发环境）/ 80端口（生产环境）
+- **后端服务**: 8085端口
+- **MySQL数据库**: 3306端口
+- **Redis缓存**: 6379端口（如果启用）
+
+## 故障排除
+
+### 常见问题
+
+#### 1. 后端服务启动失败
+**症状**: 无法访问后端API，ECONNREFUSED错误
+
+**解决方案**:
+```bash
+# 检查Java版本
+java -version
+
+# 检查端口占用
+netstat -ano | findstr :8085
+
+# 重新启动后端服务
+cd backend
+mvn clean install
+mvn spring-boot:run
+```
+
+#### 2. 数据库连接失败
+**症状**: 后端启动时报数据库连接错误
+
+**解决方案**:
+```bash
+# 检查MySQL服务状态
+net start mysql80
+
+# 测试数据库连接
+mysql -u root -p -h localhost -P 3306
+
+# 检查数据库配置
+# 确认application.properties中的数据库配置正确
+```
+
+#### 3. 前端页面空白或加载失败
+**症状**: 前端页面无法正常显示
+
+**解决方案**:
+```bash
+# 清除npm缓存
+npm cache clean --force
+
+# 重新安装依赖
+rm -rf node_modules package-lock.json
+npm install
+
+# 检查代理配置
+# 确认vite.config.js中的代理配置指向正确的后端地址
+```
+
+#### 4. Docker容器启动失败
+**症状**: docker-compose up失败
+
+**解决方案**:
+```bash
+# 清理Docker资源
+docker-compose down
+docker system prune -f
+
+# 重新构建镜像
+docker-compose build --no-cache
+docker-compose up -d
+
+# 查看容器日志
+docker-compose logs [service-name]
+```
+
+### 性能优化建议
+
+1. **数据库优化**:
+   - 为常用查询字段添加索引
+   - 定期清理过期数据
+   - 配置合适的连接池大小
+
+2. **前端优化**:
+   - 启用Gzip压缩
+   - 使用CDN加速静态资源
+   - 实现懒加载和分页
+
+3. **后端优化**:
+   - 配置Redis缓存
+   - 使用连接池管理数据库连接
+   - 实现API响应缓存
+
+### 监控和日志
+
+- **应用日志**: `backend/logs/`
+- **访问日志**: Nginx访问日志
+- **错误日志**: 查看Docker容器日志
+- **性能监控**: 可集成Prometheus + Grafana
 
 ## 贡献指南
 
@@ -1471,4 +1614,4 @@ pension/
 
 ## 许可证
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情 
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
