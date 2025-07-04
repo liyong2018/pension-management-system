@@ -36,8 +36,10 @@ public class MenuPermissionServiceImpl implements MenuPermissionService {
 
     @Override
     public MenuPermissionDTO create(MenuPermissionDTO menuPermissionDTO) {
-        // 验证权限标识是否重复
-        if (menuPermissionDao.existsByPermissionKey(menuPermissionDTO.getPermissionKey())) {
+        // 验证权限标识是否重复（只有当权限标识不为空时才检查）
+        if (menuPermissionDTO.getPermissionKey() != null && 
+            !menuPermissionDTO.getPermissionKey().trim().isEmpty() &&
+            menuPermissionDao.existsByPermissionKey(menuPermissionDTO.getPermissionKey())) {
             throw new RuntimeException("权限标识已存在：" + menuPermissionDTO.getPermissionKey());
         }
 
@@ -134,8 +136,10 @@ public class MenuPermissionServiceImpl implements MenuPermissionService {
             throw new RuntimeException("权限不存在，ID：" + id);
         }
 
-        // 验证权限标识是否重复（排除当前权限）
-        if (menuPermissionDao.existsByPermissionKeyExcludeId(menuPermissionDTO.getPermissionKey(), id)) {
+        // 验证权限标识是否重复（排除当前记录，只有当权限标识不为空时才检查）
+        if (menuPermissionDTO.getPermissionKey() != null && 
+            !menuPermissionDTO.getPermissionKey().trim().isEmpty() &&
+            menuPermissionDao.existsByPermissionKeyExcludeId(menuPermissionDTO.getPermissionKey(), id)) {
             throw new RuntimeException("权限标识已存在：" + menuPermissionDTO.getPermissionKey());
         }
 
@@ -299,4 +303,4 @@ public class MenuPermissionServiceImpl implements MenuPermissionService {
         }
         menuPermissionDao.updateVisible(id, isVisible);
     }
-} 
+}

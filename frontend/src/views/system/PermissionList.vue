@@ -147,13 +147,23 @@
         <el-table-column prop="name" label="权限名称" min-width="200">
           <template #default="scope">
             <div class="permission-info">
-              <el-icon v-if="scope.row.icon" :size="20" class="permission-icon">
+              
+              <span class="permission-name" v-if="scope.row.type === 'CATALOG'"><el-icon v-if="scope.row.icon" :size="20" class="permission-icon">
                 <component :is="getIconComponent(scope.row.icon)" />
               </el-icon>
               <el-icon v-else :size="20" class="permission-icon default-icon">
                 <Lock />
               </el-icon>
-              <span class="permission-name">{{ scope.row.name }}</span>
+                {{ scope.row.name }}
+              </span>
+              <span class="permission-name" v-else>
+                &nbsp;&nbsp;&nbsp;&nbsp; <el-icon v-if="scope.row.icon" :size="20" class="permission-icon">
+                <component :is="getIconComponent(scope.row.icon)" />
+              </el-icon>
+              <el-icon v-else :size="20" class="permission-icon default-icon">
+                <Lock />
+              </el-icon>{{ scope.row.name }}
+              </span>
             </div>
           </template>
         </el-table-column>
@@ -524,6 +534,13 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 图标选择器 -->
+    <IconSelector
+      v-model="showIconSelectorDialog"
+      :current-icon="currentPermission.icon"
+      @select="handleIconSelect"
+    />
   </div>
 </template>
 
@@ -536,6 +553,7 @@ import {
   Folder, Document, View, Hide, House, OfficeBuilding, User, 
   Monitor, Warning, Setting, Key, Collection
 } from '@element-plus/icons-vue'
+import IconSelector from '@/components/IconSelector.vue'
 import request from '@/utils/request'
 
 export default {
@@ -544,7 +562,7 @@ export default {
     Lock, Menu, Operation, Avatar, Plus, CircleCheck, CircleClose,
     ArrowDown, Link, CopyDocument, Switch, Delete, Expand, Fold,
     Folder, Document, View, Hide, House, OfficeBuilding, User,
-    Monitor, Warning, Setting, Key, Collection
+    Monitor, Warning, Setting, Key, Collection, IconSelector
   },
   setup() {
     // 响应式数据
@@ -885,6 +903,7 @@ export default {
           currentPermission[key] = ''
         }
       })
+      loadPermissions() // 加载权限列表以更新父级权限选项
       dialogMode.value = 'create'
       dialogVisible.value = true
     }
@@ -954,6 +973,7 @@ export default {
       Object.keys(currentPermission).forEach(key => {
         currentPermission[key] = permission[key] || (key === 'parentId' ? null : (key === 'sortOrder' ? 0 : (key === 'isVisible' ? true : '')))
       })
+      loadPermissions() // 加载权限列表以更新父级权限选项
       dialogMode.value = 'edit'
       dialogVisible.value = true
     }
@@ -1260,9 +1280,18 @@ export default {
       }
     }
 
+    // 图标选择器相关
+    const showIconSelectorDialog = ref(false)
+    
     // 显示图标选择器
     const showIconSelector = () => {
-      ElMessage.info('图标选择功能正在开发中...')
+      showIconSelectorDialog.value = true
+    }
+    
+    // 选择图标
+    const handleIconSelect = (iconName) => {
+      currentPermission.icon = iconName
+      showIconSelectorDialog.value = false
     }
 
     // 表单提交
@@ -1340,6 +1369,8 @@ export default {
       handleToggleVisible,
       handleToggleStatus,
       showIconSelector,
+      showIconSelectorDialog,
+      handleIconSelect,
       handleSubmit,
       submitLoading,
       formRef
@@ -1462,7 +1493,8 @@ export default {
 
 .permission-info {
   display: flex;
-  align-items: center;
+  align-items: right;
+  float: left;
 }
 
 .permission-avatar {
@@ -1818,4 +1850,4 @@ export default {
     gap: 8px;
   }
 }
-</style> 
+</style>

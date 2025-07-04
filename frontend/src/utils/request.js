@@ -57,8 +57,17 @@ service.interceptors.response.use(
     });
     
     // 处理不同的响应格式
-    if (response.data && (response.data.code === 0 || response.data.code === 200)) {
-      return response.data.data || response.data;
+    if (response.data && typeof response.data === 'object') {
+      // 如果有code字段，按照标准格式处理
+      if (response.data.code === 0 || response.data.code === 200) {
+        return response.data.data || response.data;
+      }
+      // 如果没有code字段但有data字段，直接返回
+      if (response.data.data !== undefined) {
+        return response.data;
+      }
+      // 其他情况直接返回data
+      return response.data;
     }
     
     return response.data;
@@ -115,4 +124,4 @@ service.interceptors.response.use(
   }
 );
 
-export default service; 
+export default service;

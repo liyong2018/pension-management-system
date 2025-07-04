@@ -342,6 +342,46 @@
               </div> -->
           </div>
         </el-tab-pane>
+
+        <!-- 服务记录 -->
+        <el-tab-pane label="服务记录" name="serviceRecords" v-if="mode === 'view' && form.id">
+          <div v-loading="serviceRecordLoading">
+            <el-table :data="elderlyServiceRecords" border style="width: 100%">
+              <el-table-column prop="serviceContent" label="服务内容" min-width="150"></el-table-column>
+              <el-table-column prop="serviceTime" label="服务时间" width="160">
+                <template #default="{ row }">
+                  {{ formatDateTime(row.serviceTime) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="serviceAddress" label="服务地址" min-width="150"></el-table-column>
+              <el-table-column prop="serviceType" label="服务类型" width="120">
+                <template #default="{ row }">
+                  <el-tag :type="getServiceTypeTag(row.serviceType)">{{ row.serviceType }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="serviceDuration" label="服务时长" width="100">
+                <template #default="{ row }">
+                  {{ row.serviceDuration }}小时
+                </template>
+              </el-table-column>
+              <el-table-column prop="serviceProviderType" label="服务提供者类型" width="120"></el-table-column>
+              <el-table-column prop="serviceProviderName" label="服务提供者" min-width="120"></el-table-column>
+              <el-table-column prop="workOrderPrice" label="费用" width="100">
+                <template #default="{ row }">
+                  ¥{{ row.workOrderPrice }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="status" label="状态" width="100">
+                <template #default="{ row }">
+                  <el-tag :type="getServiceStatusTag(row.status)">{{ row.status }}</el-tag>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div v-if="elderlyServiceRecords.length === 0" class="empty-data">
+              <el-empty description="暂无服务记录"></el-empty>
+            </div>
+          </div>
+        </el-tab-pane>
       </el-tabs>
     </el-form>
 
@@ -362,6 +402,7 @@ import organizationService from '@/services/organizationService'
 import { Plus } from '@element-plus/icons-vue'
 import { dictionaryApi } from '@/api/dictionary'
 import { smartDeviceApi } from '@/api/smartDevice'
+import { serviceRecordApi } from '@/api/serviceRecord'
 console.log('--- ElderlyProfileDialog.vue SCRIPT SETUP EXECUTING --- v2');
 const props = defineProps({
   modelValue: Boolean,
@@ -423,22 +464,31 @@ const form = ref({
 })
 
 // 表单验证规则
-const rules = {
-  name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-  gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
-  birthDate: [{ required: true, message: '请选择出生日期', trigger: 'change' }],
-  idCardNumber: [
-    { required: true, message: '请输入身份证号', trigger: 'blur' },
-    { pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/, message: '请输入正确的身份证号', trigger: 'blur' }
-  ],
-  phone: [
-    { required: true, message: '请输入联系电话', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
-  ],
-  addressDetail: [{ required: true, message: '请输入家庭住址', trigger: 'blur' }],
-  community: [{ required: true, message: '请选择所属社区', trigger: 'change' }],
-  pensionType: [{ required: true, message: '请选择养老类型', trigger: 'change' }]
-}
+const rules = computed(() => {
+  const baseRules = {
+    name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+    gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
+    birthDate: [{ required: true, message: '请选择出生日期', trigger: 'change' }],
+    idCardNumber: [
+      { required: true, message: '请输入身份证号', trigger: 'blur' },
+      { pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/, message: '请输入正确的身份证号', trigger: 'blur' }
+    ],
+    phone: [
+      { required: true, message: '请输入联系电话', trigger: 'blur' },
+      { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+    ],
+    addressDetail: [{ required: true, message: '请输入家庭住址', trigger: 'blur' }],
+    community: [{ required: true, message: '请选择所属社区', trigger: 'change' }],
+    pensionType: [{ required: true, message: '请选择养老类型', trigger: 'change' }]
+  }
+  
+  // 如果选择了机构养老，则机构ID为必填
+  if (form.value.pensionType === '机构养老（养老院）') {
+    baseRules.organizationId = [{ required: true, message: '请选择所属机构', trigger: 'change' }]
+  }
+  
+  return baseRules
+})
 
 // 字典选项数据
 const communityOptions = ref([])
@@ -457,6 +507,10 @@ const familyMemberErrors = ref([])
 // 设备信息相关
 const elderlyDevices = ref([])
 const deviceLoading = ref(false)
+
+// 服务记录相关
+const elderlyServiceRecords = ref([])
+const serviceRecordLoading = ref(false)
 
 // 对话框标题
 const dialogTitle = computed(() => {
@@ -727,20 +781,57 @@ const fetchElderlyDevices = async () => {
   }
 }
 
+// 获取老人的服务记录
+const fetchElderlyServiceRecords = async () => {
+  if (!form.value.id || props.mode !== 'view') return // 仅在查看模式且有老人ID时加载
+  serviceRecordLoading.value = true
+  try {
+    const response = await serviceRecordApi.getByElderlyId(form.value.id)
+    if (Array.isArray(response)) {
+      elderlyServiceRecords.value = response
+    } else if (response && Array.isArray(response.list)) {
+      elderlyServiceRecords.value = response.list
+    } else if (response && Array.isArray(response.data)) {
+      elderlyServiceRecords.value = response.data
+    } else {
+      elderlyServiceRecords.value = []
+      console.warn('获取服务记录列表的响应格式不符合预期:', response)
+    }
+  } catch (error) {
+    console.error('获取服务记录列表失败:', error)
+    ElMessage.error('获取服务记录列表失败')
+    elderlyServiceRecords.value = []
+  } finally {
+    serviceRecordLoading.value = false
+  }
+}
+
 // Tab切换处理
 const handleTabClick = (tab) => {
   if (tab.props.name === 'devices' && props.mode === 'view' && form.value.id && elderlyDevices.value.length === 0) {
     fetchElderlyDevices()
   }
+  if (tab.props.name === 'serviceRecords' && props.mode === 'view' && form.value.id && elderlyServiceRecords.value.length === 0) {
+    fetchElderlyServiceRecords()
+  }
 }
 
 // 提交表单
 const handleSubmit = async () => {
-  if (!formRef.value) return
+  if (!formRef.value) {
+    ElMessage.error('表单引用不存在')
+    return
+  }
   
   try {
     // 验证基本表单
     await formRef.value.validate()
+    
+    // 额外验证：如果选择机构养老，必须选择机构
+    if (form.value.pensionType === '机构养老（养老院）' && !form.value.organizationId) {
+      ElMessage.error('请选择所属机构')
+      return
+    }
     
     // 验证家属信息
     if (!validateAllFamilyMembers()) {
@@ -750,23 +841,48 @@ const handleSubmit = async () => {
       return
     }
     
+    // 构建提交数据
+    const submitData = {
+      ...form.value,
+      // 确保日期格式正确
+      birthDate: form.value.birthDate ? new Date(form.value.birthDate).toISOString().split('T')[0] : null,
+      // 确保数字类型字段正确
+      organizationId: form.value.organizationId ? Number(form.value.organizationId) : null
+    }
+    
+    console.log('提交数据:', submitData)
+    
     if (props.mode === 'add') {
-      await elderlyProfileApi.create(form.value)
+      const response = await elderlyProfileApi.create(submitData)
+      console.log('创建响应:', response)
       ElMessage.success('添加成功')
     } else {
-      await elderlyProfileApi.update(props.elderlyId, form.value)
+      const response = await elderlyProfileApi.update(props.elderlyId, submitData)
+      console.log('更新响应:', response)
       ElMessage.success('更新成功')
     }
     
     visible.value = false
     emit('success')
   } catch (error) {
-    if (error.message) {
+    console.error('提交失败详细信息:', error)
+    
+    // 处理不同类型的错误
+    if (error.response) {
+      // 服务器响应错误
+      const errorMsg = error.response.data?.message || error.response.data?.error || '服务器错误'
+      ElMessage.error(`${props.mode === 'add' ? '添加' : '更新'}失败: ${errorMsg}`)
+      console.error('服务器错误响应:', error.response.data)
+    } else if (error.request) {
+      // 网络错误
+      ElMessage.error('网络连接失败，请检查网络连接')
+      console.error('网络错误:', error.request)
+    } else if (error.message) {
+      // 其他错误
       ElMessage.error(error.message)
     } else {
       ElMessage.error(props.mode === 'add' ? '添加失败' : '更新失败')
     }
-    console.error(props.mode === 'add' ? '添加失败:' : '更新失败:', error)
   }
 }
 
@@ -796,6 +912,29 @@ const getBatteryStatus = (level) => {
   if (level <= 20) return 'exception'
   if (level <= 50) return 'warning'
   return 'success'
+}
+
+// 服务记录相关的辅助函数
+const getServiceTypeTag = (type) => {
+  const map = {
+    '生活照料': 'primary',
+    '医疗护理': 'success',
+    '精神慰藉': 'info',
+    '紧急救助': 'danger',
+    '康复训练': 'warning',
+    '其他': ''
+  }
+  return map[type] || ''
+}
+
+const getServiceStatusTag = (status) => {
+  const map = {
+    '已完成': 'success',
+    '进行中': 'primary',
+    '已取消': 'info',
+    '待开始': 'warning'
+  }
+  return map[status] || ''
 }
 
 const formatDateTime = (dateTime) => {
@@ -926,4 +1065,9 @@ watch([() => props.modelValue, () => props.elderlyId], async ([newVisible, newEl
 .is-error .el-select__wrapper {
   border-color: var(--el-color-danger) !important;
 }
-</style> 
+
+.empty-data {
+  padding: 40px 0;
+  text-align: center;
+}
+</style>

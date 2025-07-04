@@ -307,4 +307,4 @@ public class SystemUserController {
         SystemUserDTO updatedUser = systemUserService.updateOwnProfile(currentUser.getId(), profileUpdateDto);
         return ResponseEntity.ok(updatedUser);
     }
-} 
+}

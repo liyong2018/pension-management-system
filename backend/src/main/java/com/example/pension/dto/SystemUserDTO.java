@@ -25,6 +25,8 @@ public class SystemUserDTO {
 
     private String organizationName;
 
+    private Long serviceStaffId;
+
     private Boolean isAdmin = false;
 
     private Boolean isActive = true;
@@ -43,4 +45,4 @@ public class SystemUserDTO {
 
     // 角色信息列表（用于前端展示）
     private List<RoleDTO> roles;
-} 
+}

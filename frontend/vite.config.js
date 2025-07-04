@@ -11,11 +11,11 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3002, // 更新为当前使用的端口
+    port: 3000, // 更新为当前使用的端口
     proxy: {
       // 配置代理，解决跨域问题
       '/api': { // 将匹配到 /api 的请求代理到后端服务器
-        target: 'http://localhost:8081', // 后端服务实际地址
+        target: 'http://localhost:8080', // 后端服务实际地址
         changeOrigin: true, // 是否改变源地址
         secure: false, // 禁用 SSL 证书验证
         ws: true, // 支持 websocket
@@ -35,7 +35,7 @@ export default defineConfig({
       },
       // Add proxy for /auth path
       '/auth': {
-        target: 'http://localhost:8081',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {

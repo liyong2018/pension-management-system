@@ -125,6 +125,6 @@ jobs:
             rm -f pension-project.tar.gz
 
             echo "🎉 Deployment successful!"
-            echo "Frontend should be accessible at http://${{ secrets.SERVER_HOST }}:3002" # 确保端口与 docker-compose.yml 一致
-            echo "Backend should be accessible at http://${{ secrets.SERVER_HOST }}:8081" # 确保端口与 docker-compose.yml 一致
+            echo "Frontend should be accessible at http://${{ secrets.SERVER_HOST }}:3000" # 确保端口与 docker-compose.yml 一致
+            echo "Backend should be accessible at http://${{ secrets.SERVER_HOST }}:8080" # 确保端口与 docker-compose.yml 一致
           EOF

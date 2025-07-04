@@ -31,7 +31,7 @@ const routes = [
     path: '/organization-management',
     name: 'OrganizationManagement',
     component: () => import('@/views/organization/OrganizationIndex.vue'), // 懒加载机构管理视图
-    meta: { title: '服务管理', requiresAuth: true } // 示例：添加路由元信息，如标题和是否需要认证
+    meta: { title: '机构管理', requiresAuth: true } // 示例：添加路由元信息，如标题和是否需要认证
   },
   {
     path: '/elderly-profiles',
@@ -65,6 +65,12 @@ const routes = [
     name: 'Volunteers',
     component: () => import('@/views/volunteer/VolunteerListSimple.vue'),
     meta: { title: '志愿者管理', requiresAuth: true }
+  },
+  {
+    path: '/volunteer-service-archive',
+    name: 'VolunteerServiceArchive',
+    component: () => import('@/views/volunteer/VolunteerServiceArchiveList.vue'),
+    meta: { title: '志愿者服务档案管理', requiresAuth: true }
   },
   // 系统管理模块路由
   {
@@ -126,6 +132,13 @@ const routes = [
     name: 'ApiTest',
     component: () => import('@/views/system/ApiTest.vue'),
     meta: { title: '接口测试', requiresAuth: true }
+  },
+  // 服务人员管理
+  {
+    path: '/service-staff',
+    name: 'ServiceStaffManagement',
+    component: () => import('@/views/service-staff/ServiceStaffList.vue'),
+    meta: { title: '服务人员管理', requiresAuth: true }
   }
   // ... 其他模块的路由
 ];
@@ -163,4 +176,4 @@ router.beforeEach((to, from, next) => {
   next();
 });
 
-export default router; 
+export default router;

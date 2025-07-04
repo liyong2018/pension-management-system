@@ -1,7 +1,510 @@
 # 养老信息管理系统
 这是一个基于Spring Boot和Vue.js的养老信息管理系统。
-## 整体需求
-首页、机构管理、人员档案、健康监测、服务记录、智能设备、志愿者管理、系统管理
+
+## 目录结构
+
+### 后端结构 (backend)
+```
+backend/
+├── src/
+│   └── main/
+│       └── java/
+│           └── com/
+│               └── example/
+│                   └── pension/
+│                       ├── annotation/      # 自定义注解
+│                       ├── aspect/         # AOP切面
+│                       ├── config/         # 配置类
+│                       ├── controller/     # 控制器
+│                       ├── dao/            # 数据访问层
+│                       ├── dto/            # 数据传输对象
+│                       ├── entity/         # 实体类
+│                       ├── exception/      # 异常处理
+│                       ├── mapper/         # MyBatis映射
+│                       ├── model/          # 模型类
+│                       ├── security/       # 安全配置
+│                       ├── service/        # 服务层
+│                       └── util/           # 工具类
+├── docs/               # 文档
+├── uploads/            # 文件上传目录
+├── Dockerfile          # Docker构建文件
+└── pom.xml             # Maven配置
+```
+
+### 前端结构 (frontend)
+```
+frontend/
+├── public/             # 静态资源
+└── src/
+    ├── api/            # API接口
+    │   ├── dashboard.js        # 仪表板API
+    │   ├── deviceAlarm.js      # 设备告警API
+    │   ├── dictionary.js      # 数据字典API
+    │   ├── elderlyProfile.js  # 老人档案API
+    │   └── ...
+    ├── assets/         # 静态资源
+    ├── components/      # 公共组件
+    ├── constants/       # 常量定义
+    ├── router/          # 路由配置
+    ├── services/        # 服务
+    ├── store/           # 状态管理
+    ├── utils/           # 工具函数
+    ├── views/           # 页面组件
+    ├── App.vue          # 根组件
+    └── main.js          # 入口文件
+```
+
+## API接口文档
+
+### 1. 认证授权
+
+#### 登录
+- **URL**: `/api/auth/login`
+- **方法**: POST
+- **参数**:
+  ```json
+  {
+    "username": "string",
+    "password": "string"
+  }
+  ```
+- **响应**:
+  ```json
+  {
+    "token": "string",
+    "username": "string",
+    "roles": ["string"]
+  }
+  ```
+
+### 2. 老人档案管理
+
+#### 获取老人列表
+- **URL**: `/api/elderly`
+- **方法**: GET
+- **参数**: 
+  - page: 页码
+  - size: 每页数量
+  - name: 姓名(可选)
+  - community: 社区(可选)
+
+#### 获取老人详情
+- **URL**: `/api/elderly/{id}`
+- **方法**: GET
+
+### 3. 智能设备管理
+
+#### 获取设备列表
+- **URL**: `/api/devices`
+- **方法**: GET
+- **参数**:
+  - type: 设备类型(可选)
+  - status: 状态(在线/离线/故障)
+  - page: 页码
+  - size: 每页数量
+
+#### 创建设备
+- **URL**: `/api/devices`
+- **方法**: POST
+- **请求体**:
+  ```json
+  {
+    "deviceCode": "string",
+    "deviceName": "string",
+    "deviceType": "HEALTH|SAFETY|ENVIRONMENT",
+    "brand": "string",
+    "model": "string",
+    "status": "ONLINE|OFFLINE|FAULT",
+    "installationLocation": "string",
+    "purchaseDate": "2025-06-14"
+  }
+  ```
+
+#### 更新设备信息
+- **URL**: `/api/devices/{id}`
+- **方法**: PUT
+- **请求体**: 同创建设备
+
+#### 删除设备
+- **URL**: `/api/devices/{id}`
+- **方法**: DELETE
+
+### 4. 设备告警管理
+
+#### 获取告警列表
+- **URL**: `/api/device-alarms`
+- **方法**: GET
+- **参数**:
+  - deviceId: 设备ID(可选)
+  - alarmType: 告警类型(可选)
+  - status: 处理状态(未处理/处理中/已处理)
+  - startTime: 开始时间(可选)
+  - endTime: 结束时间(可选)
+  - page: 页码
+  - size: 每页数量
+
+#### 处理告警
+- **URL**: `/api/device-alarms/{id}/handle`
+- **方法**: PUT
+- **请求体**:
+  ```json
+  {
+    "handlerId": "string",
+    "handleResult": "string",
+    "remark": "string"
+  }
+  ```
+
+### 5. 服务记录管理
+
+#### 获取服务记录列表
+- **URL**: `/api/service-records`
+- **方法**: GET
+- **参数**:
+  - elderId: 老人ID(可选)
+  - serviceType: 服务类型(可选)
+  - status: 状态(待服务/服务中/已完成/已取消)
+  - startTime: 开始时间(可选)
+  - endTime: 结束时间(可选)
+  - page: 页码
+  - size: 每页数量
+
+#### 创建服务记录
+- **URL**: `/api/service-records`
+- **方法**: POST
+- **请求体**:
+  ```json
+  {
+    "elderId": "string",
+    "serviceType": "string",
+    "serviceContent": "string",
+    "serviceTime": "2025-06-14 14:00:00",
+    "address": "string",
+    "workerId": "string",
+    "estimatedDuration": 60,
+    "remark": "string"
+  }
+  ```
+
+### 6. 志愿者管理
+
+#### 获取志愿者列表
+- **URL**: `/api/volunteers`
+- **方法**: GET
+- **参数**:
+  - name: 姓名(可选)
+  - skill: 技能(可选)
+  - status: 状态(活跃/非活跃)
+  - page: 页码
+  - size: 每页数量
+
+#### 获取志愿者详情
+- **URL**: `/api/volunteers/{id}`
+- **方法**: GET
+
+#### 创建志愿者
+- **URL**: `/api/volunteers`
+- **方法**: POST
+- **请求体**:
+  ```json
+  {
+    "name": "string",
+    "gender": "MALE|FEMALE",
+    "idCard": "string",
+    "phone": "string",
+    "email": "string",
+    "address": "string",
+    "skills": ["string"],
+    "availableTime": "string",
+    "status": "ACTIVE|INACTIVE"
+  }
+  ```
+
+### 7. 数据统计
+
+#### 获取首页统计数据
+- **URL**: `/api/dashboard/summary`
+- **方法**: GET
+- **响应**:
+  ```json
+  {
+    "elderlyCount": 120,
+    "institutionCount": 5,
+    "workerCount": 45,
+    "serviceCount": 356,
+    "deviceStatus": {
+      "online": 85,
+      "offline": 12,
+      "fault": 3
+    },
+    "alarmStats": {
+      "unhandled": 5,
+      "handling": 2,
+      "handled": 28
+    }
+  }
+  ```
+
+#### 获取老人年龄分布
+- **URL**: `/api/statistics/elderly/age-distribution`
+- **方法**: GET
+- **响应**:
+  ```json
+  [
+    {"ageRange": "60-69", "count": 45},
+    {"ageRange": "70-79", "count": 52},
+    {"ageRange": "80-89", "count": 18},
+    {"ageRange": "90+", "count": 5}
+  ]
+  ```
+
+### 8. 文件上传下载
+
+#### 上传文件
+- **URL**: `/api/files/upload`
+- **方法**: POST
+- **Content-Type**: multipart/form-data
+- **参数**:
+  - file: 文件
+  - type: 文件类型(AVATAR|DOCUMENT|OTHER)
+  - relatedId: 关联ID(可选)
+- **响应**:
+  ```json
+  {
+    "id": "string",
+    "fileName": "string",
+    "fileUrl": "string",
+    "fileType": "string",
+    "fileSize": 1024
+  }
+  ```
+
+#### 下载文件
+- **URL**: `/api/files/download/{fileId}`
+- **方法**: GET
+
+## 数据字典
+
+### 1. 设备类型(DeviceType)
+- HEALTH: 健康监测设备
+- SAFETY: 安全设备
+- ENVIRONMENT: 环境监测设备
+- OTHER: 其他设备
+
+### 2. 告警级别(AlarmLevel)
+- CRITICAL: 严重
+- WARNING: 警告
+- INFO: 提示
+
+### 3. 服务状态(ServiceStatus)
+- PENDING: 待服务
+- IN_PROGRESS: 服务中
+- COMPLETED: 已完成
+- CANCELLED: 已取消
+
+### 4. 志愿者状态(VolunteerStatus)
+- ACTIVE: 活跃
+- INACTIVE: 非活跃
+- SUSPENDED: 暂停
+
+## 错误码说明
+
+| 错误码 | 说明 |
+|--------|------|
+| 200 | 请求成功 |
+| 400 | 请求参数错误 |
+| 401 | 未授权，请先登录 |
+| 403 | 权限不足 |
+| 404 | 资源不存在 |
+| 500 | 服务器内部错误 |
+
+## 接口调用示例
+
+### 1. 登录
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "123456"
+}
+```
+
+### 2. 获取老人列表
+```http
+GET /api/elderly?page=1&size=10&name=张&community=朝阳区
+Authorization: Bearer {token}
+```
+
+### 3. 创建设备
+```http
+POST /api/devices
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "deviceCode": "DEV20230615001",
+  "deviceName": "智能手环",
+  "deviceType": "HEALTH",
+  "brand": "小米",
+  "model": "手环6",
+  "status": "ONLINE",
+  "installationLocation": "101室",
+  "purchaseDate": "2023-06-15"
+}
+```
+
+## 开发规范
+
+### 1. 接口规范
+- 所有API请求都需要在Header中包含`Authorization: Bearer {token}`
+- 请求和响应统一使用JSON格式
+- 时间格式统一为`yyyy-MM-dd HH:mm:ss`
+- 分页参数统一使用`page`和`size`
+- 列表查询接口必须支持分页
+
+### 2. 状态码
+- 200: 请求成功
+- 201: 创建成功
+- 204: 删除成功
+- 400: 请求参数错误
+- 401: 未授权
+- 403: 禁止访问
+- 404: 资源不存在
+- 500: 服务器内部错误
+
+### 3. 分页响应格式
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "content": [],
+    "totalElements": 0,
+    "totalPages": 0,
+    "size": 10,
+    "number": 0
+  }
+}
+```
+
+### 4. 统一响应格式
+成功响应:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {}
+}
+```
+
+失败响应:
+```json
+{
+  "code": 400,
+  "message": "参数错误",
+  "data": null
+}
+```
+  - status: 状态(可选)
+
+#### 创建设备
+- **URL**: `/api/devices`
+- **方法**: POST
+- **请求体**:
+  ```json
+  {
+    "deviceCode": "string",
+    "deviceName": "string",
+    "deviceType": "string",
+    "status": "ONLINE|OFFLINE|FAULT"
+  }
+  ```
+
+### 4. 服务记录
+
+#### 获取服务记录
+- **URL**: `/api/service-records`
+- **方法**: GET
+- **参数**:
+  - elderId: 老人ID(可选)
+  - startTime: 开始时间(可选)
+  - endTime: 结束时间(可选)
+
+### 5. 系统管理
+
+#### 用户管理
+- 获取用户列表: `GET /api/users`
+- 创建用户: `POST /api/users`
+- 更新用户: `PUT /api/users/{id}`
+- 删除用户: `DELETE /api/users/{id}`
+
+#### 角色管理
+- 获取角色列表: `GET /api/roles`
+- 获取角色权限: `GET /api/roles/{id}/permissions`
+- 更新角色权限: `PUT /api/roles/{id}/permissions`
+
+## 部署说明
+
+### 后端部署
+1. 安装JDK 11+
+2. 安装Maven
+3. 配置数据库连接
+4. 构建项目:
+   ```bash
+   cd backend
+   mvn clean package
+   ```
+5. 运行:
+   ```bash
+   java -jar target/backend-1.0.0.jar
+   ```
+
+### 前端部署
+1. 安装Node.js 14+
+2. 安装依赖:
+   ```bash
+   cd frontend
+   npm install
+   ```
+3. 开发模式运行:
+   ```bash
+   npm run dev
+   ```
+4. 生产构建:
+   ```bash
+   npm run build
+   ```
+
+### Docker部署
+```bash
+docker-compose up -d
+```
+
+## 开发指南
+
+### 开发环境
+- 后端: JDK 11+, Maven 3.6+
+- 前端: Node.js 14+, npm 6+
+- 数据库: MySQL 8.0+
+
+### 代码规范
+- 后端: 遵循Java开发规范
+- 前端: 遵循Vue.js官方风格指南
+- 提交信息: 使用约定式提交规范
+
+## 常见问题
+
+### 1. 数据库连接失败
+- 检查`application.yml`中的数据库配置
+- 确保MySQL服务已启动
+- 检查数据库用户名和密码是否正确
+
+### 2. 前端接口请求失败
+- 检查`vite.config.js`中的代理配置
+- 确保后端服务已启动
+- 检查网络连接
 
 一、首页
 正中间：
@@ -404,12 +907,12 @@
 
 ### 系统集成与测试
 - [x] 后端服务部署
-  - [x] 项目在8081端口正常运行
+  - [x] 项目在8080端口正常运行
   - [x] 所有API接口测试通过
   - [x] 数据库连接正常
   - [x] 首页仪表板API集成
 - [x] 前端服务部署
-  - [x] 项目在3002端口正常运行
+  - [x] 项目在3000端口正常运行
   - [x] 构建无错误，所有页面正常访问
   - [x] API调用正常
   - [x] 首页仪表板功能完整
@@ -575,7 +1078,7 @@
 #### 首页数据修复和代码清理（2024年12月29日最新）
 **问题解决**：
 - ✅ **首页数据问题排查** - 发现后端服务停止导致前端使用模拟数据
-- ✅ **端口配置修复** - 解决8081端口冲突，改为8085端口统一配置
+- ✅ **端口配置修复** - 解决8080端口冲突，改为8085端口统一配置
 - ✅ **后端服务恢复** - 成功启动后端服务，API返回真实数据库数据
 - ✅ **Dashboard API调试** - 验证数据统计接口正常返回真实数据：
   - 老龄人口：23人，养老机构：3个，从业人员：3人
@@ -621,8 +1124,8 @@ VALUES
 ```properties
 # backend/src/main/resources/application.properties
 spring.datasource.url=jdbc:mysql://localhost:3306/pension_management_system
-spring.datasource.username=your_username
-spring.datasource.password=your_password
+spring.datasource.username=root
+spring.datasource.password=Htht1234
 ```
 
 4. 启动后端服务：

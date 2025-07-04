@@ -47,8 +47,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/device-alarms/**").hasAnyRole("ADMIN", "USER")
                 .requestMatchers("/api/debug/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            );
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
     }
@@ -66,7 +66,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://8.137.85.158:3002","http://localhost:3002", "http://localhost:3003"));
+        configuration.setAllowedOrigins(Arrays.asList("http://8.137.85.158:3000","http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList(
             "Authorization",

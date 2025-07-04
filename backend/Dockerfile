@@ -8,7 +8,7 @@ WORKDIR /app
 COPY target/*.jar app.jar
 
 # 暴露应用端口
-EXPOSE 8081
+EXPOSE 8080
 
 # 设置环境变量
 ENV SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/pension_management_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai

@@ -227,76 +227,122 @@
     <el-dialog 
       v-model="createDialogVisible" 
       title="添加用户" 
-      width="700px" 
+      width="900px" 
       class="user-dialog"
       :close-on-click-modal="false"
       destroy-on-close
     >
-      <el-form ref="createFormRef" :model="createForm" label-width="120px" :rules="createRules">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="用户名" prop="username">
-              <el-input v-model="createForm.username" placeholder="请输入用户名" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="密码" prop="password">
-              <el-input v-model="createForm.password" type="password" placeholder="请输入密码" show-password />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="姓名" prop="fullName">
-              <el-input v-model="createForm.fullName" placeholder="请输入姓名" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="邮箱" prop="email">
-              <el-input v-model="createForm.email" placeholder="请输入邮箱" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="手机号" prop="phone">
-              <el-input v-model="createForm.phone" placeholder="请输入手机号" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="所属机构">
-              <el-select v-model="createForm.organizationId" placeholder="请选择机构" style="width: 100%">
-                <el-option 
-                  v-for="org in organizations" 
-                  :key="org.id" 
-                  :label="org.name" 
-                  :value="org.id" 
+      <el-tabs v-model="createActiveTab" class="create-user-tabs">
+        <!-- 基本信息选项卡 -->
+        <el-tab-pane label="基本信息" name="basic">
+          <el-form ref="createFormRef" :model="createForm" label-width="120px" :rules="createRules">
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="用户名" prop="username">
+                  <el-input v-model="createForm.username" placeholder="请输入用户名" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="密码" prop="password">
+                  <el-input v-model="createForm.password" type="password" placeholder="请输入密码" show-password />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="姓名" prop="fullName">
+                  <el-input v-model="createForm.fullName" placeholder="请输入姓名" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="邮箱" prop="email">
+                  <el-input v-model="createForm.email" placeholder="请输入邮箱" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="手机号" prop="phone">
+                  <el-input v-model="createForm.phone" placeholder="请输入手机号" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="所属机构">
+                  <el-select v-model="createForm.organizationId" placeholder="请选择机构" style="width: 100%">
+                    <el-option 
+                      v-for="org in organizations" 
+                      :key="org.id" 
+                      :label="org.name" 
+                      :value="org.id" 
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="管理员权限">
+                  <el-switch 
+                    v-model="createForm.isAdmin" 
+                    active-text="是" 
+                    inactive-text="否"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="账号状态">
+                  <el-switch 
+                    v-model="createForm.isActive" 
+                    active-text="启用" 
+                    inactive-text="禁用"
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
+        </el-tab-pane>
+
+        <!-- 服务人员信息选项卡 -->
+        <el-tab-pane label="服务人员信息" name="serviceStaff">
+          <el-form ref="createServiceStaffFormRef" :model="createForm" label-width="120px">
+            <el-row :gutter="20">
+              <el-col :span="24">
+                <el-form-item label="关联服务人员">
+                  <el-select 
+                    v-model="createForm.serviceStaffId" 
+                    placeholder="请选择服务人员（可选）" 
+                    style="width: 100%"
+                    clearable
+                    filterable
+                  >
+                    <el-option
+                      v-for="staff in serviceStaffList"
+                      :key="staff.id"
+                      :label="`${staff.fullName} (${staff.employeeId})`"
+                      :value="staff.id"
+                    >
+                      <span style="float: left">{{ staff.fullName }}</span>
+                      <span style="float: right; color: #8492a6; font-size: 13px">{{ staff.employeeId }}</span>
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20" v-if="createForm.serviceStaffId">
+              <el-col :span="24">
+                <el-alert
+                  title="提示"
+                  type="info"
+                  description="该用户将关联到选中的服务人员，可以在服务人员管理中查看和编辑详细信息。"
+                  show-icon
+                  :closable="false"
                 />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="管理员权限">
-              <el-switch 
-                v-model="createForm.isAdmin" 
-                active-text="是" 
-                inactive-text="否"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="账号状态">
-              <el-switch 
-                v-model="createForm.isActive" 
-                active-text="启用" 
-                inactive-text="禁用"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
+              </el-col>
+            </el-row>
+          </el-form>
+        </el-tab-pane>
+      </el-tabs>
+      
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="createDialogVisible = false">取消</el-button>
@@ -422,6 +468,107 @@
           </div>
         </el-tab-pane>
 
+        <!-- 服务人员信息选项卡 -->
+        <el-tab-pane label="服务人员信息" name="serviceStaff" v-if="selectedUser.serviceStaffInfo">
+          <el-form label-width="120px" :disabled="true">
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="员工编号">
+                  <el-input :value="selectedUser.serviceStaffInfo.employeeId || '未设置'" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="性别">
+                  <el-tag :type="selectedUser.serviceStaffInfo.gender === 'MALE' ? 'primary' : 'danger'" size="small">
+                    {{ selectedUser.serviceStaffInfo.gender === 'MALE' ? '男' : selectedUser.serviceStaffInfo.gender === 'FEMALE' ? '女' : '未设置' }}
+                  </el-tag>
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="出生日期">
+                  <el-input :value="selectedUser.serviceStaffInfo.birthDate || '未设置'" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="身份证号">
+                  <el-input :value="selectedUser.serviceStaffInfo.idCard || '未设置'" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="24">
+                <el-form-item label="地址">
+                  <el-input :value="selectedUser.serviceStaffInfo.address || '未设置'" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="职位">
+                  <el-input :value="selectedUser.serviceStaffInfo.position || '未设置'" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="部门">
+                  <el-input :value="selectedUser.serviceStaffInfo.department || '未设置'" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="工作类型">
+                  <el-input :value="selectedUser.serviceStaffInfo.workType || '未设置'" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="入职日期">
+                  <el-input :value="selectedUser.serviceStaffInfo.hireDate || '未设置'" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="基本工资">
+                  <el-input :value="selectedUser.serviceStaffInfo.baseSalary ? `¥${selectedUser.serviceStaffInfo.baseSalary}` : '未设置'" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="工作班次">
+                  <el-input :value="selectedUser.serviceStaffInfo.workShift || '未设置'" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="教育程度">
+                  <el-input :value="selectedUser.serviceStaffInfo.education || '未设置'" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="专业技能">
+                  <el-input :value="selectedUser.serviceStaffInfo.skills || '未设置'" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20" v-if="selectedUser.serviceStaffInfo.emergencyContact">
+              <el-col :span="24">
+                <el-form-item label="紧急联系人">
+                  <el-input :value="selectedUser.serviceStaffInfo.emergencyContact || '未设置'" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
+        </el-tab-pane>
+
         <!-- 角色权限选项卡 -->
         <el-tab-pane label="角色权限" name="roles">
           <div class="user-roles">
@@ -455,76 +602,122 @@
     <el-dialog 
       v-model="editDialogVisible" 
       title="编辑用户" 
-      width="700px" 
+      width="900px" 
       class="user-dialog"
       :close-on-click-modal="false"
       destroy-on-close
     >
-      <el-form ref="editFormRef" :model="editForm" label-width="120px" :rules="editRules">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="用户名" prop="username">
-              <el-input v-model="editForm.username" placeholder="请输入用户名" disabled />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="新密码">
-              <el-input v-model="editForm.password" type="password" placeholder="留空则不修改密码" show-password />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="姓名" prop="fullName">
-              <el-input v-model="editForm.fullName" placeholder="请输入姓名" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="邮箱" prop="email">
-              <el-input v-model="editForm.email" placeholder="请输入邮箱" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="手机号" prop="phone">
-              <el-input v-model="editForm.phone" placeholder="请输入手机号" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="所属机构">
-              <el-select v-model="editForm.organizationId" placeholder="请选择机构" style="width: 100%">
-                <el-option 
-                  v-for="org in organizations" 
-                  :key="org.id" 
-                  :label="org.name" 
-                  :value="org.id" 
+      <el-tabs v-model="editActiveTab" class="edit-user-tabs">
+        <!-- 基本信息选项卡 -->
+        <el-tab-pane label="基本信息" name="basic">
+          <el-form ref="editFormRef" :model="editForm" label-width="120px" :rules="editRules">
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="用户名" prop="username">
+                  <el-input v-model="editForm.username" placeholder="请输入用户名" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="新密码">
+                  <el-input v-model="editForm.password" type="password" placeholder="留空则不修改密码" show-password />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="姓名" prop="fullName">
+                  <el-input v-model="editForm.fullName" placeholder="请输入姓名" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="邮箱" prop="email">
+                  <el-input v-model="editForm.email" placeholder="请输入邮箱" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="手机号" prop="phone">
+                  <el-input v-model="editForm.phone" placeholder="请输入手机号" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="所属机构">
+                  <el-select v-model="editForm.organizationId" placeholder="请选择机构" style="width: 100%">
+                    <el-option 
+                      v-for="org in organizations" 
+                      :key="org.id" 
+                      :label="org.name" 
+                      :value="org.id" 
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="管理员权限">
+                  <el-switch 
+                    v-model="editForm.isAdmin" 
+                    active-text="是" 
+                    inactive-text="否"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="账号状态">
+                  <el-switch 
+                    v-model="editForm.isActive" 
+                    active-text="启用" 
+                    inactive-text="禁用"
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
+        </el-tab-pane>
+
+        <!-- 服务人员信息选项卡 -->
+        <el-tab-pane label="服务人员信息" name="serviceStaff">
+          <el-form ref="serviceStaffFormRef" :model="editForm" label-width="120px">
+            <el-row :gutter="20">
+              <el-col :span="24">
+                <el-form-item label="关联服务人员">
+                  <el-select 
+                    v-model="editForm.serviceStaffId" 
+                    placeholder="请选择服务人员（可选）" 
+                    style="width: 100%"
+                    clearable
+                    filterable
+                  >
+                    <el-option
+                      v-for="staff in serviceStaffList"
+                      :key="staff.id"
+                      :label="`${staff.fullName} (${staff.employeeId})`"
+                      :value="staff.id"
+                    >
+                      <span style="float: left">{{ staff.fullName }}</span>
+                      <span style="float: right; color: #8492a6; font-size: 13px">{{ staff.employeeId }}</span>
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20" v-if="editForm.serviceStaffId">
+              <el-col :span="24">
+                <el-alert
+                  title="提示"
+                  type="info"
+                  description="该用户将关联到选中的服务人员，可以在服务人员管理中查看和编辑详细信息。"
+                  show-icon
+                  :closable="false"
                 />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="管理员权限">
-              <el-switch 
-                v-model="editForm.isAdmin" 
-                active-text="是" 
-                inactive-text="否"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="账号状态">
-              <el-switch 
-                v-model="editForm.isActive" 
-                active-text="启用" 
-                inactive-text="禁用"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
+              </el-col>
+            </el-row>
+          </el-form>
+        </el-tab-pane>
+      </el-tabs>
+      
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="editDialogVisible = false">取消</el-button>
@@ -634,6 +827,7 @@ export default {
     const userLogs = ref([])
     const userRoles = ref([])
     const activeTab = ref('basic')
+    const editActiveTab = ref('basic')
     const stats = ref({
       totalUsers: 0,
       activeUsers: 0,
@@ -661,6 +855,7 @@ export default {
     const detailDialogVisible = ref(false)
     const editDialogVisible = ref(false)
     const roleAssignDialogVisible = ref(false)
+    const createActiveTab = ref('basic')
 
     // 创建表单
     const createForm = reactive({
@@ -671,7 +866,8 @@ export default {
       phone: '',
       organizationId: '',
       isAdmin: false,
-      isActive: true
+      isActive: true,
+      serviceStaffId: null
     })
 
     // 编辑表单
@@ -684,8 +880,13 @@ export default {
       phone: '',
       organizationId: '',
       isAdmin: false,
-      isActive: true
+      isActive: true,
+      serviceStaffId: null
     })
+
+    // 服务人员列表
+    const serviceStaffList = ref([])
+    const serviceStaffLoading = ref(false)
 
     // 角色相关
     const availableRoles = ref([])
@@ -962,6 +1163,50 @@ export default {
       }
     }
 
+    // 加载服务人员列表
+    const loadServiceStaff = async () => {
+      serviceStaffLoading.value = true
+      try {
+        console.log('开始加载服务人员数据...')
+        
+        const data = await request({
+          url: 'service-staff',
+          method: 'get',
+          params: {
+            page: 1,
+            size: 1000
+          }
+        })
+        
+        console.log('服务人员API响应数据:', data)
+        
+        // 处理不同的API响应格式
+        let staffList = []
+        if (data.list) {
+          staffList = data.list
+        } else if (data.content) {
+          staffList = data.content
+        } else if (Array.isArray(data)) {
+          staffList = data
+        } else if (data.data) {
+          staffList = data.data.list || data.data.content || []
+        }
+        
+        serviceStaffList.value = staffList
+        console.log('加载的服务人员数据:', serviceStaffList.value)
+        
+        if (serviceStaffList.value.length === 0) {
+          console.warn('没有获取到服务人员数据')
+        }
+      } catch (error) {
+        console.error('加载服务人员列表异常:', error)
+        // 不显示错误消息，因为服务人员是可选的
+        serviceStaffList.value = []
+      } finally {
+        serviceStaffLoading.value = false
+      }
+    }
+
     // 搜索
     const handleSearch = () => {
       pagination.page = 1
@@ -985,10 +1230,13 @@ export default {
           createForm[key] = true
         } else if (key === 'isAdmin') {
           createForm[key] = false
+        } else if (key === 'serviceStaffId') {
+          createForm[key] = null
         } else {
           createForm[key] = ''
         }
       })
+      createActiveTab.value = 'basic'
       createDialogVisible.value = true
     }
 
@@ -996,12 +1244,14 @@ export default {
     const handleCreate = async () => {
       createLoading.value = true
       try {
-        console.log('正在创建用户:', createForm)
+        const requestData = { ...createForm }
+
+        console.log('正在创建用户:', requestData)
         
         const response = await request({
           url: 'system-users',
           method: 'post',
-          data: createForm
+          data: requestData
         })
         
         console.log('创建用户响应:', response)
@@ -1121,9 +1371,10 @@ export default {
     const showEditDialog = (user) => {
       selectedUser.value = user
       Object.keys(editForm).forEach(key => {
-        editForm[key] = user[key] || ''
+        editForm[key] = user[key] || (key === 'serviceStaffId' ? null : '')
       })
       editForm.password = '' // 清空密码字段
+      editActiveTab.value = 'basic' // 重置到基本信息选项卡
       editDialogVisible.value = true
     }
 
@@ -1444,6 +1695,7 @@ export default {
       loadUsers()
       loadOrganizations()
       loadRoles()
+      loadServiceStaff()
     })
 
     return {
@@ -1460,6 +1712,8 @@ export default {
       userLogs,
       userRoles,
       activeTab,
+      editActiveTab,
+      createActiveTab,
       stats,
       searchForm,
       pagination,
@@ -1471,12 +1725,15 @@ export default {
       editForm,
       availableRoles,
       selectedRoles,
+      serviceStaffList,
+      serviceStaffLoading,
       createRules,
       editRules,
       loadUsers,
       loadUserStats,
       loadOrganizations,
       loadRoles,
+      loadServiceStaff,
       handleSearch,
       handleReset,
       showCreateDialog,
@@ -1911,4 +2168,4 @@ export default {
 .unselected-icon {
   color: #dcdfe6;
 }
-</style> 
+</style>

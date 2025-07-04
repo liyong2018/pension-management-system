@@ -139,13 +139,23 @@
         <el-table-column prop="name" label="菜单名称" min-width="200">
           <template #default="scope">
             <div class="menu-info">
-              <el-icon v-if="scope.row.icon" :size="20" class="menu-icon">
+              <span class="menu-name" v-if="scope.row.type === 'CATALOG'">
+                <el-icon v-if="scope.row.icon" :size="20" class="menu-icon">
                 <component :is="getIconComponent(scope.row.icon)" />
               </el-icon>
               <el-icon v-else :size="20" class="menu-icon default-icon">
                 <Menu />
               </el-icon>
-              <span class="menu-name">{{ scope.row.name }}</span>
+                {{ scope.row.name }}</span>
+              <span class="menu-name" v-else>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp; <el-icon v-if="scope.row.icon" :size="20" class="menu-icon">
+                <component :is="getIconComponent(scope.row.icon)" />
+              </el-icon>
+              <el-icon v-else :size="20" class="menu-icon default-icon">
+                <Menu />
+              </el-icon>{{ scope.row.name }}
+              </span>
             </div>
           </template>
         </el-table-column>
@@ -332,12 +342,12 @@
               </el-form-item>
             </el-col>
           </el-row>
-          <el-row :gutter="20" v-if="currentMenu.type === 'BUTTON'">
+          <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="权限标识" prop="permission">
                 <el-input 
                   v-model="currentMenu.permission" 
-                  placeholder="请输入权限标识"
+                  placeholder="请输入权限标识（可选）"
                   maxlength="100"
                   show-word-limit
                 />
@@ -393,6 +403,13 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 图标选择器 -->
+    <IconSelector
+      v-model="showIconSelectorDialog"
+      :current-icon="currentMenu.icon"
+      @select="handleIconSelect"
+    />
   </div>
 </template>
 
@@ -405,6 +422,7 @@ import {
   Switch, Delete, House, OfficeBuilding, User, Monitor, Warning, Avatar, 
   Setting, Key, Collection
 } from '@element-plus/icons-vue'
+import IconSelector from '@/components/IconSelector.vue'
 import request from '@/utils/request'
 import { useRouter } from 'vue-router'
 
@@ -414,7 +432,7 @@ export default {
     Menu, FolderOpened, Operation, Link, Plus, CircleCheck, CircleClose,
     ArrowDown, Expand, Fold, Folder, Document, View, Hide, CopyDocument,
     Switch, Delete, House, OfficeBuilding, User, Monitor, Warning, Avatar,
-    Setting, Key, Collection
+    Setting, Key, Collection, IconSelector
   },
   setup() {
     // 响应式数据
@@ -769,6 +787,7 @@ export default {
           currentMenu[key] = ''
         }
       })
+      loadParentMenus() // 加载父级菜单列表
       dialogMode.value = 'create'
       dialogVisible.value = true
     }
@@ -784,7 +803,6 @@ export default {
           name: currentMenu.name,
           parentId: currentMenu.parentId,
           type: currentMenu.type,
-          permissionKey: currentMenu.permission,
           routePath: currentMenu.path,
           componentPath: currentMenu.component,
           icon: currentMenu.icon,
@@ -792,6 +810,11 @@ export default {
           isVisible: currentMenu.visible === '1',
           status: currentMenu.status === '1',
           remark: currentMenu.remark
+        }
+        
+        // 只有当权限标识不为空时才添加该字段
+        if (currentMenu.permission && currentMenu.permission.trim() !== '') {
+          createData.permissionKey = currentMenu.permission.trim()
         }
         
         console.log('创建菜单数据:', createData)
@@ -838,6 +861,7 @@ export default {
       Object.keys(currentMenu).forEach(key => {
         currentMenu[key] = menu[key] || (key === 'parentId' ? null : (key === 'sort' ? 0 : (key === 'visible' ? '1' : '')))
       })
+      loadParentMenus() // 加载父级菜单列表
       dialogMode.value = 'edit'
       dialogVisible.value = true
     }
@@ -854,7 +878,6 @@ export default {
           name: currentMenu.name,
           parentId: currentMenu.parentId,
           type: currentMenu.type,
-          permissionKey: currentMenu.permission,
           routePath: currentMenu.path,
           componentPath: currentMenu.component,
           icon: currentMenu.icon,
@@ -862,6 +885,11 @@ export default {
           isVisible: currentMenu.visible === '1',
           status: currentMenu.status === '1',
           remark: currentMenu.remark
+        }
+        
+        // 只有当权限标识不为空时才添加该字段
+        if (currentMenu.permission && currentMenu.permission.trim() !== '') {
+          updateData.permissionKey = currentMenu.permission.trim()
         }
         
         console.log('更新菜单数据:', updateData)
@@ -1083,9 +1111,16 @@ export default {
       }
     }
 
+    // 图标选择器相关
     // 显示图标选择器
     const showIconSelector = () => {
-      ElMessage.info('图标选择功能正在开发中...')
+      showIconSelectorDialog.value = true
+    }
+    
+    // 选择图标
+    const handleIconSelect = (iconName) => {
+      currentMenu.icon = iconName
+      showIconSelectorDialog.value = false
     }
 
     // 统一的提交处理
@@ -1151,6 +1186,7 @@ export default {
       parentMenuForCreate,
       showIconSelectorDialog,
       showIconSelector,
+      handleIconSelect,
       tableRef,
       stats,
       searchForm,
@@ -1319,6 +1355,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
+  float: left;
 }
 
 .menu-icon {
@@ -1547,4 +1584,4 @@ export default {
 :deep(.el-table__indent) {
   padding-left: 18px;
 }
-</style> 
+</style>

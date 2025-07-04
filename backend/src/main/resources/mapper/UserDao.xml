@@ -17,17 +17,24 @@
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
         <association property="organization" javaType="com.example.pension.model.Organization">
-            <id property="id" column="organization_id"/>
-            <!-- 如果需要加载 Organization 的其他属性，可以在这里继续定义 -->
-            <!-- 例如: <result property="name" column="org_name"/> -->
-            <!-- 这需要联表查询，或者后续的嵌套查询 -->
+            <id property="id" column="org_id"/>
+            <result property="name" column="org_name"/>
         </association>
     </resultMap>
 
+    <sql id="userColumns">
+        u.id, u.username, u.password_hash, u.full_name, u.email, u.phone, u.is_admin, u.is_active, u.last_login_time, u.create_time, u.update_time
+    </sql>
+
+    <sql id="orgColumns">
+        o.id as org_id, o.name as org_name
+    </sql>
+
     <select id="findByUsername" resultMap="UserResultMap">
-        SELECT id, username, password_hash, full_name, email, phone, organization_id, is_admin, is_active, last_login_time, create_time, update_time
-        FROM system_user
-        WHERE username = #{username}
+        SELECT <include refid="userColumns"/>, <include refid="orgColumns"/>
+        FROM system_user u
+        LEFT JOIN organization o ON u.organization_id = o.id
+        WHERE u.username = #{username}
     </select>
 
     <select id="existsByUsername" resultType="boolean">
@@ -35,14 +42,44 @@
     </select>
 
     <select id="findById" resultMap="UserResultMap">
-        SELECT id, username, password_hash, full_name, email, phone, organization_id, is_admin, is_active, last_login_time, create_time, update_time
-        FROM system_user
-        WHERE id = #{id}
+        SELECT <include refid="userColumns"/>, <include refid="orgColumns"/>
+        FROM system_user u
+        LEFT JOIN organization o ON u.organization_id = o.id
+        WHERE u.id = #{id}
     </select>
 
     <insert id="save" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO system_user (username, password_hash, full_name, email, phone, organization_id, is_admin, is_active, last_login_time, create_time, update_time)
-        VALUES (#{username}, #{passwordHash}, #{fullName}, #{email}, #{phone}, #{organization.id,jdbcType=BIGINT}, #{isAdmin}, #{isActive}, #{lastLoginTime}, NOW(), NOW())
+        INSERT INTO system_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            username,
+            password_hash,
+            full_name,
+            email,
+            phone,
+            <if test="organization != null and organization.id != null">
+                organization_id,
+            </if>
+            is_admin,
+            is_active,
+            last_login_time,
+            create_time,
+            update_time
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            #{username},
+            #{passwordHash},
+            #{fullName},
+            #{email},
+            #{phone},
+            <if test="organization != null and organization.id != null">
+                #{organization.id,jdbcType=BIGINT},
+            </if>
+            #{isAdmin},
+            #{isActive},
+            #{lastLoginTime},
+            NOW(),
+            NOW()
+        </trim>
     </insert>
 
     <update id="update">
@@ -54,10 +91,11 @@
             <if test="email != null">email = #{email},</if>
             <if test="phone != null">phone = #{phone},</if>
             <if test="organization != null and organization.id != null">organization_id = #{organization.id},</if>
-            <if test="isAdmin != null">is_admin = #{isAdmin},</if> <!-- boolean 类型通常不判断 null，但以防万一 -->
+            <if test="organization == null">organization_id = NULL,</if>
+            <if test="isAdmin != null">is_admin = #{isAdmin},</if>
             <if test="isActive != null">is_active = #{isActive},</if>
             <if test="lastLoginTime != null">last_login_time = #{lastLoginTime},</if>
-            update_time = NOW(),
+            update_time = NOW()
         </set>
         WHERE id = #{id}
     </update>
@@ -66,4 +104,4 @@
         DELETE FROM system_user WHERE id = #{id}
     </delete>
 
-</mapper> 
+</mapper>

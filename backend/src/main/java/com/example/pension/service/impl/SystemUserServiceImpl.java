@@ -68,6 +68,24 @@ public class SystemUserServiceImpl implements SystemUserService {
             }
         }
 
+        // 验证服务人员是否存在
+        if (systemUserDTO.getServiceStaffId() != null) {
+            // 这里可以添加对service_staff表的验证逻辑
+            // ServiceStaff serviceStaff = serviceStaffDao.findById(systemUserDTO.getServiceStaffId());
+            // if (serviceStaff == null) {
+            //     throw new RuntimeException("关联的服务人员不存在，ID：" + systemUserDTO.getServiceStaffId());
+            // }
+        }
+
+        // 验证服务人员是否存在
+        if (systemUserDTO.getServiceStaffId() != null) {
+            // 这里可以添加对service_staff表的验证逻辑
+            // ServiceStaff serviceStaff = serviceStaffDao.findById(systemUserDTO.getServiceStaffId());
+            // if (serviceStaff == null) {
+            //     throw new RuntimeException("关联的服务人员不存在，ID：" + systemUserDTO.getServiceStaffId());
+            // }
+        }
+
         systemUserDao.insert(systemUser);
 
         // 分配角色
@@ -385,4 +403,4 @@ public class SystemUserServiceImpl implements SystemUserService {
         
         return getById(userId); // 返回更新后的用户信息
     }
-} 
+}

@@ -18,7 +18,7 @@ public class User {
 
     private String phone;
 
-    private Long organizationId;
+
 
     private Organization organization;
 
@@ -31,4 +31,4 @@ public class User {
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;
-} 
+}
