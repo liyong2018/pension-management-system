@@ -1,0 +1,213 @@
+<!-- 健康管理页面 -->
+<view class="container">
+  <!-- 健康概览卡片 -->
+  <view class="health-overview">
+    <view class="overview-header">
+      <text class="overview-title">今日健康概览</text>
+      <text class="overview-date">{{currentDate}}</text>
+    </view>
+    <view class="overview-grid">
+      <view class="overview-item" bindtap="viewHealthDetail" data-type="bloodPressure">
+        <view class="overview-icon blood-pressure">
+          <t-icon name="heart" size="48rpx" color="#FF6B6B"></t-icon>
+        </view>
+        <view class="overview-content">
+          <text class="overview-label">血压</text>
+          <text class="overview-value">{{healthData.bloodPressure.systolic}}/{{healthData.bloodPressure.diastolic}}</text>
+          <text class="overview-unit">mmHg</text>
+          <view class="overview-status {{healthData.bloodPressure.status}}">{{healthData.bloodPressure.statusText}}</view>
+        </view>
+      </view>
+      
+      <view class="overview-item" bindtap="viewHealthDetail" data-type="heartRate">
+        <view class="overview-icon heart-rate">
+          <t-icon name="heart-filled" size="48rpx" color="#FF4757"></t-icon>
+        </view>
+        <view class="overview-content">
+          <text class="overview-label">心率</text>
+          <text class="overview-value">{{healthData.heartRate.value}}</text>
+          <text class="overview-unit">次/分</text>
+          <view class="overview-status {{healthData.heartRate.status}}">{{healthData.heartRate.statusText}}</view>
+        </view>
+      </view>
+      
+      <view class="overview-item" bindtap="viewHealthDetail" data-type="bloodSugar">
+        <view class="overview-icon blood-sugar">
+          <t-icon name="chart-bubble" size="48rpx" color="#5DADE2"></t-icon>
+        </view>
+        <view class="overview-content">
+          <text class="overview-label">血糖</text>
+          <text class="overview-value">{{healthData.bloodSugar.value}}</text>
+          <text class="overview-unit">mmol/L</text>
+          <view class="overview-status {{healthData.bloodSugar.status}}">{{healthData.bloodSugar.statusText}}</view>
+        </view>
+      </view>
+      
+      <view class="overview-item" bindtap="viewHealthDetail" data-type="temperature">
+        <view class="overview-icon temperature">
+          <t-icon name="heart" size="48rpx" color="#FFA726"></t-icon>
+        </view>
+        <view class="overview-content">
+          <text class="overview-label">体温</text>
+          <text class="overview-value">{{healthData.temperature.value}}</text>
+          <text class="overview-unit">°C</text>
+          <view class="overview-status {{healthData.temperature.status}}">{{healthData.temperature.statusText}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷操作 -->
+  <view class="quick-actions">
+    <view class="action-item" bindtap="recordHealth">
+      <view class="action-icon record">
+        <t-icon name="edit" size="48rpx" color="#4A90E2"></t-icon>
+      </view>
+      <text class="action-text">记录数据</text>
+    </view>
+    <view class="action-item" bindtap="deviceConnect">
+      <view class="action-icon device">
+        <t-icon name="bluetooth" size="48rpx" color="#2ED573"></t-icon>
+      </view>
+      <text class="action-text">设备连接</text>
+    </view>
+    <view class="action-item" bindtap="healthReport">
+      <view class="action-icon report">
+        <t-icon name="chart-line" size="48rpx" color="#FFA726"></t-icon>
+      </view>
+      <text class="action-text">健康报告</text>
+    </view>
+    <view class="action-item" bindtap="medicationReminder">
+      <view class="action-icon medication">
+        <t-icon name="time" size="48rpx" color="#9B59B6"></t-icon>
+      </view>
+      <text class="action-text">用药提醒</text>
+    </view>
+  </view>
+
+  <!-- 健康趋势图表 -->
+  <view class="card">
+    <view class="card-header">
+      <text class="card-title">健康趋势</text>
+      <view class="chart-tabs">
+        <text 
+          class="chart-tab {{currentChart === item.type ? 'active' : ''}}"
+          wx:for="{{chartTabs}}" 
+          wx:key="type"
+          bindtap="switchChart"
+          data-type="{{item.type}}"
+        >{{item.name}}</text>
+      </view>
+    </view>
+    <view class="card-body">
+      <view class="chart-container">
+        <!-- 这里可以集成图表组件 -->
+        <view class="chart-placeholder">
+          <image src="/images/chart-{{currentChart}}.png" mode="aspectFit"></image>
+        </view>
+      </view>
+      <view class="chart-summary">
+        <text class="summary-text">{{chartSummary}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 用药提醒 -->
+  <view class="card" wx:if="{{medications.length > 0}}">
+    <view class="card-header">
+      <text class="card-title">今日用药</text>
+      <text class="card-action" bindtap="manageMedications">管理</text>
+    </view>
+    <view class="card-body">
+      <view class="medication-list">
+        <view 
+          class="medication-item {{item.taken ? 'taken' : ''}}"
+          wx:for="{{medications}}" 
+          wx:key="id"
+          bindtap="toggleMedication"
+          data-id="{{item.id}}"
+        >
+          <view class="medication-info">
+            <text class="medication-name">{{item.name}}</text>
+            <text class="medication-dosage">{{item.dosage}}</text>
+            <text class="medication-time">{{item.time}}</text>
+          </view>
+          <view class="medication-status">
+            <t-icon 
+              name="{{item.taken ? 'check-circle-filled' : 'circle'}}" 
+              size="32rpx" 
+              color="{{item.taken ? '#2ED573' : '#CCC'}}"
+              class="status-icon"
+            ></t-icon>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 健康建议 -->
+  <view class="card">
+    <view class="card-header">
+      <text class="card-title">健康建议</text>
+    </view>
+    <view class="card-body">
+      <view class="suggestions-list">
+        <view 
+          class="suggestion-item"
+          wx:for="{{healthSuggestions}}" 
+          wx:key="id"
+        >
+          <view class="suggestion-icon {{item.type}}">
+            <t-icon name="lightbulb" size="32rpx" color="#FFA726"></t-icon>
+          </view>
+          <view class="suggestion-content">
+            <text class="suggestion-title">{{item.title}}</text>
+            <text class="suggestion-description">{{item.description}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 历史记录 -->
+  <view class="card">
+    <view class="card-header">
+      <text class="card-title">最近记录</text>
+      <text class="card-action" bindtap="viewAllRecords">查看全部</text>
+    </view>
+    <view class="card-body">
+      <view class="records-list">
+        <view 
+          class="record-item"
+          wx:for="{{recentRecords}}" 
+          wx:key="id"
+          bindtap="viewRecordDetail"
+          data-id="{{item.id}}"
+        >
+          <view class="record-date">
+            <text class="record-day">{{item.day}}</text>
+            <text class="record-month">{{item.month}}</text>
+          </view>
+          <view class="record-content">
+            <text class="record-type">{{item.type}}</text>
+            <text class="record-value">{{item.value}}</text>
+            <text class="record-time">{{item.time}}</text>
+          </view>
+          <view class="record-status {{item.status}}">
+            <text>{{item.statusText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 浮动添加按钮 -->
+<view class="fab" bindtap="recordHealth">
+  <t-icon name="add" size="48rpx" color="#fff"></t-icon>
+</view>
+
+<!-- 加载状态 -->
+<view class="loading" wx:if="{{loading}}">
+  <text>加载中...</text>
+</view>

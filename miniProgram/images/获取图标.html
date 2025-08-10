@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TabBar 图标获取工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1890FF;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .icon-item {
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            padding: 20px;
+            background: #fafafa;
+        }
+        .icon-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .icon-links {
+            margin: 10px 0;
+        }
+        .icon-links a {
+            display: inline-block;
+            margin: 5px 10px 5px 0;
+            padding: 5px 10px;
+            background: #1890FF;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .icon-links a:hover {
+            background: #40a9ff;
+        }
+        .color-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+        }
+        .instructions {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .step {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .download-btn {
+            background: #52c41a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        .download-btn:hover {
+            background: #73d13d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 微信小程序 TabBar 图标获取工具</h1>
+        
+        <div class="instructions">
+            <h3>📋 使用说明</h3>
+            <div class="step">1. 点击下方的 iconfont 链接，选择合适的图标</div>
+            <div class="step">2. 下载 PNG 格式，尺寸设置为 81x81px</div>
+            <div class="step">3. 分别设置普通状态和激活状态的颜色</div>
+            <div class="step">4. 将文件重命名并放入 images 目录</div>
+        </div>
+
+        <div class="icon-grid">
+            <div class="icon-item">
+                <div class="icon-title">🏠 首页图标 (home)</div>
+                <div class="icon-links">
+                    <a href="https://www.iconfont.cn/search/index?searchType=icon&q=home" target="_blank">搜索 home</a>
+                    <a href="https://www.iconfont.cn/search/index?searchType=icon&q=house" target="_blank">搜索 house</a>
+                    <a href="https://www.iconfont.cn/search/index?searchType=icon&q=主页" target="_blank">搜索 主页</a>
+                </div>
+                <div class="color-info">
+                    普通状态: #7A7E83 | 激活状态: #1890FF<br>
+                    文件名: home.png, home-active.png
+                </div>
+            </div>
+
+            <div class="icon-item">
+                <div class="icon-title">⭐ 服务图标 (service)</div>
+                <div class="icon-links">
+                    <a href="https://www.iconfont.cn/search/index?searchType=icon&q=service" target="_blank">搜索 service</a>
+                    <a href="https://www.iconfont.cn/search/index?searchType=icon&q=customer" target="_blank">搜索 customer</a>
+                    <a href="https://www.iconfont.cn/search/index?searchType=icon&q=服务" target="_blank">搜索 服务</a>
+                </div>
+                <div class="color-info">
+                    普通状态: #7A7E83 | 激活状态: #1890FF<br>
+                    文件名: service.png, service-active.png
+                </div>
+            </div>
+
+            <div class="icon-item">
+                <div class="icon-title">❤️ 健康图标 (health)</div>
+                <div class="icon-links">
+                    <a href="https://www.iconfont.cn/search/index?searchType=icon&q=heart" target="_blank">搜索 heart</a>
+                    <a href="https://www.iconfont.cn/search/index?searchType=icon&q=health" target="_blank">搜索 health</a>
+                    <a href="https://www.iconfont.cn/search/index?searchType=icon&q=医疗" target="_blank">搜索 医疗</a>
+                </div>
+                <div class="color-info">
+                    普通状态: #7A7E83 | 激活状态: #1890FF<br>
+                    文件名: health.png, health-active.png
+                </div>
+            </div>
+
+            <div class="icon-item">
+                <div class="icon-title">👥 社区图标 (community)</div>
+                <div class="icon-links">
+                    <a href="https://www.iconfont.cn/search/index?searchType=icon&q=team" target="_blank">搜索 team</a>
+                    <a href="https://www.iconfont.cn/search/index?searchType=icon&q=group" target="_blank">搜索 group</a>
+                    <a href="https://www.iconfont.cn/search/index?searchType=icon&q=社区" target="_blank">搜索 社区</a>
+                </div>
+                <div class="color-info">
+                    普通状态: #7A7E83 | 激活状态: #1890FF<br>
+                    文件名: community.png, community-active.png
+                </div>
+            </div>
+
+            <div class="icon-item">
+                <div class="icon-title">👤 个人图标 (profile)</div>
+                <div class="icon-links">
+                    <a href="https://www.iconfont.cn/search/index?searchType=icon&q=user" target="_blank">搜索 user</a>
+                    <a href="https://www.iconfont.cn/search/index?searchType=icon&q=profile" target="_blank">搜索 profile</a>
+                    <a href="https://www.iconfont.cn/search/index?searchType=icon&q=个人" target="_blank">搜索 个人</a>
+                </div>
+                <div class="color-info">
+                    普通状态: #7A7E83 | 激活状态: #1890FF<br>
+                    文件名: profile.png, profile-active.png
+                </div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>🎯 推荐图标样式</h3>
+            <p><strong>首页:</strong> 简洁的房子轮廓图标</p>
+            <p><strong>服务:</strong> 星形或客服耳机图标</p>
+            <p><strong>健康:</strong> 心形或十字医疗图标</p>
+            <p><strong>社区:</strong> 多人群组或对话气泡图标</p>
+            <p><strong>个人:</strong> 单人头像轮廓图标</p>
+        </div>
+
+        <div class="instructions">
+            <h3>⚡ 快速操作</h3>
+            <button class="download-btn" onclick="window.open('https://www.iconfont.cn/', '_blank')">
+                打开 iconfont 官网
+            </button>
+            <button class="download-btn" onclick="copyColors()">
+                复制颜色代码
+            </button>
+            <button class="download-btn" onclick="showFileNames()">
+                显示文件名列表
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function copyColors() {
+            const colors = "普通状态: #7A7E83\n激活状态: #1890FF";
+            navigator.clipboard.writeText(colors).then(() => {
+                alert('颜色代码已复制到剪贴板！');
+            });
+        }
+
+        function showFileNames() {
+            const fileNames = `需要的文件名：
+home.png, home-active.png
+service.png, service-active.png  
+health.png, health-active.png
+community.png, community-active.png
+profile.png, profile-active.png`;
+            alert(fileNames);
+        }
+    </script>
+</body>
+</html>

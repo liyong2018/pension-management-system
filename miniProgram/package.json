@@ -1,0 +1,21 @@
+{
+  "name": "pension-miniprogram",
+  "version": "1.0.0",
+  "description": "养老服务微信小程序",
+  "main": "app.js",
+  "scripts": {
+    "dev": "echo 'Development mode'",
+    "build": "echo 'Build completed'"
+  },
+  "dependencies": {
+    "tdesign-miniprogram": "^1.4.0"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "miniprogram",
+    "pension",
+    "tdesign"
+  ],
+  "author": "",
+  "license": "MIT"
+}

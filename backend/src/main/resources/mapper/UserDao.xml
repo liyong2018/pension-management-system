@@ -60,10 +60,7 @@
                 organization_id,
             </if>
             is_admin,
-            is_active,
-            last_login_time,
-            create_time,
-            update_time
+            is_active
         </trim>
         <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
             #{username},
@@ -75,10 +72,7 @@
                 #{organization.id,jdbcType=BIGINT},
             </if>
             #{isAdmin},
-            #{isActive},
-            #{lastLoginTime},
-            NOW(),
-            NOW()
+            #{isActive}
         </trim>
     </insert>
 
@@ -94,7 +88,6 @@
             <if test="organization == null">organization_id = NULL,</if>
             <if test="isAdmin != null">is_admin = #{isAdmin},</if>
             <if test="isActive != null">is_active = #{isActive},</if>
-            <if test="lastLoginTime != null">last_login_time = #{lastLoginTime},</if>
             update_time = NOW()
         </set>
         WHERE id = #{id}

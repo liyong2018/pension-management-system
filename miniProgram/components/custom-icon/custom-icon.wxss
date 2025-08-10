@@ -1,0 +1,18 @@
+.custom-icon-png {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.custom-icon-font {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.custom-icon-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  opacity: 0.6;
+  vertical-align: middle;
+}

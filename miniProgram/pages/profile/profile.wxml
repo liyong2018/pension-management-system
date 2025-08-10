@@ -1,0 +1,189 @@
+<!-- 个人中心页面 -->
+<view class="container">
+  <!-- 用户信息卡片 -->
+  <view class="user-card" bindtap="handleUserInfoTap">
+    <view class="user-background"></view>
+    <view class="user-content">
+      <view class="user-avatar" bindtap="changeAvatar">
+        <image wx:if="{{isLoggedIn && userInfo.avatar}}" src="{{userInfo.avatar}}" mode="aspectFill"></image>
+        <t-icon wx:else name="user-circle" size="120rpx" color="#4A90E2"></t-icon>
+        <view class="avatar-edit" wx:if="{{isLoggedIn}}">
+          <t-icon name="camera" size="24rpx" color="#fff"></t-icon>
+        </view>
+      </view>
+      <view class="user-info">
+        <text class="user-name">{{isLoggedIn ? (userInfo.fullName || userInfo.name || userInfo.username) : '未登录'}}</text>
+        <text class="user-phone" wx:if="{{isLoggedIn}}">{{userInfo.phone || userInfo.email || '未绑定联系方式'}}</text>
+        <text class="user-phone login-tip" wx:else>点击登录</text>
+        <view class="user-tags" wx:if="{{isLoggedIn}}">
+          <text class="user-tag" wx:if="{{userInfo.age}}">{{userInfo.age}}岁</text>
+          <text class="user-tag" wx:if="{{userInfo.organization}}">{{userInfo.organization}}</text>
+          <text class="user-tag admin" wx:if="{{userInfo.isAdmin}}">管理员</text>
+        </view>
+      </view>
+      <view class="user-edit" wx:if="{{isLoggedIn}}" bindtap="showUserInfo">
+        <t-icon name="edit" size="32rpx" color="#4A90E2"></t-icon>
+      </view>
+      <view class="user-edit" wx:else>
+        <t-icon name="chevron-right" size="32rpx" color="#4A90E2"></t-icon>
+      </view>
+    </view>
+  </view>
+
+  <!-- 健康概览 -->
+  <view class="health-summary">
+    <view class="summary-title">健康概览</view>
+    <view class="summary-grid" wx:if="{{isLoggedIn}}">
+      <view class="summary-item" bindtap="goToHealth">
+        <text class="summary-value">{{healthSummary.heartRate}}</text>
+        <text class="summary-label">心率</text>
+      </view>
+      <view class="summary-item" bindtap="goToHealth">
+        <text class="summary-value">{{healthSummary.bloodPressure}}</text>
+        <text class="summary-label">血压</text>
+      </view>
+      <view class="summary-item" bindtap="goToHealth">
+        <text class="summary-value">{{healthSummary.bloodSugar}}</text>
+        <text class="summary-label">血糖</text>
+      </view>
+      <view class="summary-item" bindtap="goToHealth">
+        <text class="summary-value">{{stats.totalOrders}}</text>
+        <text class="summary-label">订单</text>
+      </view>
+    </view>
+    <view class="summary-placeholder" wx:else>
+      <t-icon name="lock" size="48rpx" color="#ccc"></t-icon>
+      <text class="placeholder-text">登录后查看健康数据</text>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-section">
+    <view class="menu-group">
+      <view class="menu-item" bindtap="navigateTo" data-url="/pages/family/family">
+        <view class="menu-icon family">
+          <t-icon name="usergroup" size="32rpx" color="#4A90E2"></t-icon>
+        </view>
+        <text class="menu-text">家庭成员</text>
+        <view class="menu-badge" wx:if="{{familyCount > 0}}">{{familyCount}}</view>
+        <t-icon name="chevron-right" size="24rpx" color="#999" class="menu-arrow"></t-icon>
+      </view>
+      
+      <view class="menu-item" bindtap="navigateTo" data-url="/pages/emergency-contacts/emergency-contacts">
+        <view class="menu-icon emergency">
+          <t-icon name="call" size="32rpx" color="#FF6B6B"></t-icon>
+        </view>
+        <text class="menu-text">紧急联系人</text>
+        <t-icon name="chevron-right" size="24rpx" color="#999" class="menu-arrow"></t-icon>
+      </view>
+      
+      <view class="menu-item" bindtap="navigateTo" data-url="/pages/medical-records/medical-records">
+        <view class="menu-icon documents">
+          <t-icon name="file" size="32rpx" color="#4CAF50"></t-icon>
+        </view>
+        <text class="menu-text">病历档案</text>
+        <t-icon name="chevron-right" size="24rpx" color="#999" class="menu-arrow"></t-icon>
+      </view>
+    </view>
+
+    <view class="menu-group">
+      <view class="menu-item" bindtap="navigateTo" data-url="/pages/orders/orders">
+        <view class="menu-icon orders">
+          <t-icon name="list" size="32rpx" color="#FF9800"></t-icon>
+        </view>
+        <text class="menu-text">我的订单</text>
+        <view class="menu-badge" wx:if="{{orderCount > 0}}">{{orderCount}}</view>
+        <t-icon name="chevron-right" size="24rpx" color="#999" class="menu-arrow"></t-icon>
+      </view>
+      
+      <view class="menu-item" bindtap="navigateTo" data-url="/pages/favorites/favorites">
+        <view class="menu-icon favorites">
+          <t-icon name="heart" size="32rpx" color="#E91E63"></t-icon>
+        </view>
+        <text class="menu-text">我的收藏</text>
+        <t-icon name="chevron-right" size="24rpx" color="#999" class="menu-arrow"></t-icon>
+      </view>
+      
+      <view class="menu-item" bindtap="navigateTo" data-url="/pages/wallet/wallet">
+        <view class="menu-icon wallet">
+          <t-icon name="wallet" size="32rpx" color="#2196F3"></t-icon>
+        </view>
+        <text class="menu-text">我的钱包</text>
+        <text class="menu-extra">余额: ¥{{walletBalance}}</text>
+        <t-icon name="chevron-right" size="24rpx" color="#999" class="menu-arrow"></t-icon>
+      </view>
+    </view>
+
+    <view class="menu-group">
+      <view class="menu-item" bindtap="navigateTo" data-url="/pages/notifications/notifications">
+        <view class="menu-icon notifications">
+          <t-icon name="notification" size="32rpx" color="#9C27B0"></t-icon>
+        </view>
+        <text class="menu-text">消息通知</text>
+        <view class="menu-badge" wx:if="{{unreadCount > 0}}">{{unreadCount}}</view>
+        <t-icon name="chevron-right" size="24rpx" color="#999" class="menu-arrow"></t-icon>
+      </view>
+      
+      <view class="menu-item" bindtap="goToSettings">
+        <view class="menu-icon settings">
+          <t-icon name="setting" size="32rpx" color="#607D8B"></t-icon>
+        </view>
+        <text class="menu-text">设置</text>
+        <t-icon name="chevron-right" size="24rpx" color="#999" class="menu-arrow"></t-icon>
+      </view>
+      
+      <view class="menu-item logout" wx:if="{{isLoggedIn}}" bindtap="logout">
+        <view class="menu-icon logout">
+          <t-icon name="logout" size="32rpx" color="#FF6B6B"></t-icon>
+        </view>
+        <text class="menu-text">退出登录</text>
+        <t-icon name="chevron-right" size="24rpx" color="#999" class="menu-arrow"></t-icon>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷服务 -->
+  <view class="quick-service">
+    <view class="service-title">快捷服务</view>
+    <view class="service-grid">
+      <view class="service-item" bindtap="quickService" data-type="emergency">
+        <view class="service-icon emergency">
+          <t-icon name="call" size="48rpx" color="#FF6B6B"></t-icon>
+        </view>
+        <text class="service-text">紧急呼叫</text>
+      </view>
+      
+      <view class="service-item" bindtap="quickService" data-type="booking">
+        <view class="service-icon booking">
+          <t-icon name="calendar" size="48rpx" color="#4CAF50"></t-icon>
+        </view>
+        <text class="service-text">快速预约</text>
+      </view>
+      
+      <view class="service-item" bindtap="quickService" data-type="consultation">
+        <view class="service-icon consultation">
+          <t-icon name="chat" size="48rpx" color="#2196F3"></t-icon>
+        </view>
+        <text class="service-text">在线咨询</text>
+      </view>
+      
+      <view class="service-item" bindtap="quickService" data-type="feedback">
+        <view class="service-icon feedback">
+          <t-icon name="edit" size="48rpx" color="#FF9800"></t-icon>
+        </view>
+        <text class="service-text">意见反馈</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 版本信息 -->
+  <view class="version-info">
+    <text class="version-text">云数银龄 v{{version}}</text>
+    <text class="copyright">© 2024 养老管理系统</text>
+  </view>
+</view>
+
+<!-- 加载状态 -->
+<view class="loading" wx:if="{{loading}}">
+  <text>加载中...</text>
+</view>

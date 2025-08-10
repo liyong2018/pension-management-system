@@ -24,10 +24,34 @@ public class AuthController {
             LoginResponse response = userService.login(loginRequest);
             return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {
-            return ResponseEntity.status(401).body("Invalid username or password");
+            return ResponseEntity.status(401).body(new ErrorResponse("Invalid username or password"));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("Internal server error: " + e.getMessage());
+            return ResponseEntity.status(500).body(new ErrorResponse("Internal server error: " + e.getMessage()));
         }
     }
-} 
+
+    // 临时端点：生成密码哈希（仅用于调试）
+    @GetMapping("/generate-hash/{password}")
+    public ResponseEntity<String> generateHash(@PathVariable String password) {
+        String hash = userService.generatePasswordHash(password);
+        return ResponseEntity.ok(hash);
+    }
+    
+    // 错误响应类
+    public static class ErrorResponse {
+        private String message;
+        
+        public ErrorResponse(String message) {
+            this.message = message;
+        }
+        
+        public String getMessage() {
+            return message;
+        }
+        
+        public void setMessage(String message) {
+            this.message = message;
+        }
+    }
+}

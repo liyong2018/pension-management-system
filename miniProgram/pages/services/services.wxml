@@ -1,0 +1,182 @@
+<!-- 服务页面 -->
+<view class="container">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-input">
+      <t-icon name="search" size="32rpx" color="#999" class="search-icon"></t-icon>
+      <input placeholder="搜索服务项目" bindinput="onSearchInput" value="{{searchKeyword}}" />
+    </view>
+    <view class="filter-btn" bindtap="showFilterModal">
+      <t-icon name="filter" size="32rpx" color="#666" class="filter-icon"></t-icon>
+    </view>
+  </view>
+
+  <!-- 服务分类 -->
+  <view class="category-section">
+    <scroll-view class="category-scroll" scroll-x="true">
+      <view class="category-list">
+        <view 
+          class="category-item {{currentCategory === item.id ? 'active' : ''}}"
+          wx:for="{{categories}}" 
+          wx:key="id"
+          bindtap="selectCategory"
+          data-id="{{item.id}}"
+        >
+          <image class="category-icon" src="{{item.icon}}"></image>
+          <text class="category-name">{{item.name}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 推荐服务 -->
+  <view class="card" wx:if="{{recommendedServices.length > 0}}">
+    <view class="card-header">推荐服务</view>
+    <view class="card-body">
+      <scroll-view class="recommended-scroll" scroll-x="true">
+        <view class="recommended-list">
+          <view 
+            class="recommended-item"
+            wx:for="{{recommendedServices}}" 
+            wx:key="id"
+            bindtap="viewServiceDetail"
+            data-id="{{item.id}}"
+          >
+            <image class="recommended-image" src="{{item.image}}" mode="aspectFill"></image>
+            <view class="recommended-content">
+              <text class="recommended-title">{{item.title}}</text>
+              <text class="recommended-price">¥{{item.price}}</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 服务列表 -->
+  <view class="service-list">
+    <view 
+      class="service-item"
+      wx:for="{{serviceList}}" 
+      wx:key="id"
+      bindtap="viewServiceDetail"
+      data-id="{{item.id}}"
+    >
+      <image class="service-image" src="{{item.image}}" mode="aspectFill"></image>
+      <view class="service-content">
+        <view class="service-header">
+          <text class="service-title">{{item.title}}</text>
+          <view class="service-rating">
+            <t-icon name="star-filled" size="24rpx" color="#FFD700" class="star-icon"></t-icon>
+            <text class="rating-score">{{item.rating}}</text>
+          </view>
+        </view>
+        <text class="service-description">{{item.description}}</text>
+        <view class="service-tags">
+          <text class="service-tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+        </view>
+        <view class="service-footer">
+          <view class="service-provider">
+            <view class="provider-avatar">
+              <t-icon name="user" size="24rpx" color="#666"></t-icon>
+            </view>
+            <text class="provider-name">{{item.provider.name}}</text>
+          </view>
+          <view class="service-price">
+            <text class="price-label">起</text>
+            <text class="price-value">¥{{item.price}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载更多 -->
+  <view class="load-more" wx:if="{{hasMore}}">
+    <view class="loading" wx:if="{{loadingMore}}">
+      <text>加载中...</text>
+    </view>
+    <view class="load-more-btn" wx:else bindtap="loadMoreServices">
+      <text>加载更多</text>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{serviceList.length === 0 && !loading}}">
+    <image src="/images/empty-service.png"></image>
+    <text>暂无相关服务</text>
+  </view>
+</view>
+
+<!-- 筛选弹窗 -->
+<view class="modal-overlay" wx:if="{{showFilter}}" bindtap="hideFilterModal">
+  <view class="filter-modal" catchtap="">
+    <view class="modal-header">
+      <text class="modal-title">筛选条件</text>
+      <t-icon name="close" size="32rpx" color="#666" class="close-btn" bindtap="hideFilterModal"></t-icon>
+    </view>
+    <view class="modal-body">
+      <!-- 价格范围 -->
+      <view class="filter-section">
+        <text class="filter-label">价格范围</text>
+        <view class="price-range">
+          <view 
+            class="price-option {{priceRange === item.value ? 'active' : ''}}"
+            wx:for="{{priceOptions}}" 
+            wx:key="value"
+            bindtap="selectPriceRange"
+            data-value="{{item.value}}"
+          >
+            <text>{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 服务时间 -->
+      <view class="filter-section">
+        <text class="filter-label">服务时间</text>
+        <view class="time-options">
+          <view 
+            class="time-option {{serviceTime === item.value ? 'active' : ''}}"
+            wx:for="{{timeOptions}}" 
+            wx:key="value"
+            bindtap="selectServiceTime"
+            data-value="{{item.value}}"
+          >
+            <text>{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 服务评分 -->
+      <view class="filter-section">
+        <text class="filter-label">服务评分</text>
+        <view class="rating-options">
+          <view 
+            class="rating-option {{minRating === item.value ? 'active' : ''}}"
+            wx:for="{{ratingOptions}}" 
+            wx:key="value"
+            bindtap="selectMinRating"
+            data-value="{{item.value}}"
+          >
+            <text>{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <view class="btn btn-secondary" bindtap="resetFilter">重置</view>
+      <view class="btn btn-primary" bindtap="applyFilter">确定</view>
+    </view>
+  </view>
+</view>
+
+<!-- 浮动预约按钮 -->
+<view class="fab" bindtap="quickBooking">
+  <t-icon name="add" size="48rpx" color="#fff"></t-icon>
+</view>
+
+<!-- 加载状态 -->
+<view class="loading" wx:if="{{loading}}">
+  <text>加载中...</text>
+</view>

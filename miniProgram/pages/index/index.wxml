@@ -1,0 +1,137 @@
+<!-- 首页 -->
+<view class="container">
+  <!-- 用户欢迎区域 -->
+  <view class="welcome-section">
+    <view class="user-info">
+      <view class="avatar">
+        <t-icon name="user-circle" size="80rpx" color="#4A90E2"></t-icon>
+      </view>
+      <view class="user-details">
+        <text class="username">{{userInfo.nickName || '用户'}}</text>
+        <text class="welcome-text">欢迎使用云数银龄</text>
+      </view>
+    </view>
+    <view class="weather-info" wx:if="{{weather}}">
+      <text class="temperature">{{weather.temperature}}°</text>
+      <text class="weather-desc">{{weather.description}}</text>
+    </view>
+  </view>
+
+  <!-- 快捷服务 -->
+  <view class="card">
+    <view class="card-header">快捷服务</view>
+    <view class="card-body">
+      <view class="service-grid">
+        <view class="service-item" bindtap="navigateToEmergency">
+          <t-icon name="call" size="48rpx" color="#FF4757" class="service-icon"></t-icon>
+          <text class="service-name">紧急求助</text>
+        </view>
+        <view class="service-item" bindtap="navigateToHealth">
+          <t-icon name="heart" size="48rpx" color="#2ED573" class="service-icon"></t-icon>
+          <text class="service-name">健康监测</text>
+        </view>
+        <view class="service-item" bindtap="navigateToServices">
+          <t-icon name="calendar" size="48rpx" color="#1E90FF" class="service-icon"></t-icon>
+          <text class="service-name">预约服务</text>
+        </view>
+        <view class="service-item" bindtap="navigateToVolunteer">
+          <t-icon name="usergroup" size="48rpx" color="#FFA726" class="service-icon"></t-icon>
+          <text class="service-name">志愿服务</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 今日提醒 -->
+  <view class="card" wx:if="{{reminders.length > 0}}">
+    <view class="card-header">今日提醒</view>
+    <view class="card-body">
+      <view class="reminder-list">
+        <view class="reminder-item" wx:for="{{reminders}}" wx:key="id">
+          <view class="reminder-time">{{item.time}}</view>
+          <view class="reminder-content">
+            <text class="reminder-title">{{item.title}}</text>
+            <text class="reminder-desc">{{item.description}}</text>
+          </view>
+          <view class="reminder-status">
+            <text class="status-tag status-{{item.status}}">{{item.statusText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 健康数据概览 -->
+  <view class="card" wx:if="{{healthData}}">
+    <view class="card-header">健康概览</view>
+    <view class="card-body">
+      <view class="health-overview">
+        <view class="health-item">
+          <text class="health-label">血压</text>
+          <text class="health-value">{{healthData.bloodPressure || '--'}}</text>
+        </view>
+        <view class="health-item">
+          <text class="health-label">心率</text>
+          <text class="health-value">{{healthData.heartRate || '--'}}</text>
+        </view>
+        <view class="health-item">
+          <text class="health-label">血糖</text>
+          <text class="health-value">{{healthData.bloodSugar || '--'}}</text>
+        </view>
+        <view class="health-item">
+          <text class="health-label">体温</text>
+          <text class="health-value">{{healthData.temperature || '--'}}</text>
+        </view>
+      </view>
+      <view class="health-trend" bindtap="navigateToHealth">
+        <text class="trend-text">查看详细健康报告</text>
+        <text class="trend-arrow">></text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 社区动态 -->
+  <view class="card">
+    <view class="card-header">社区动态</view>
+    <view class="card-body">
+      <view class="news-list">
+        <view class="news-item" wx:for="{{communityNews}}" wx:key="id" bindtap="viewNewsDetail" data-id="{{item.id}}">
+          <image class="news-image" src="{{item.image}}" mode="aspectFill"></image>
+          <view class="news-content">
+            <text class="news-title">{{item.title}}</text>
+            <text class="news-summary">{{item.summary}}</text>
+            <text class="news-time">{{item.publishTime}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="more-news" bindtap="navigateToCommunity">
+        <text>查看更多社区动态</text>
+        <text class="arrow">></text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 紧急联系人 -->
+  <view class="card">
+    <view class="card-header">紧急联系</view>
+    <view class="card-body">
+      <view class="contact-list">
+        <view class="contact-item" wx:for="{{emergencyContacts}}" wx:key="id" bindtap="makeCall" data-phone="{{item.phone}}">
+          <view class="contact-avatar">
+            <t-icon name="user" size="32rpx" color="#666"></t-icon>
+          </view>
+          <view class="contact-info">
+            <text class="contact-name">{{item.name}}</text>
+            <text class="contact-relation">{{item.relation}}</text>
+          </view>
+          <view class="contact-phone">{{item.phone}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 加载状态 -->
+<view class="loading" wx:if="{{loading}}">
+  <text>加载中...</text>
+</view>

@@ -1,0 +1,76 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/service/service",
+    "pages/health/health",
+    "pages/community/community",
+    "pages/profile/profile",
+    "pages/login/login",
+    "pages/staff-archive/staff-archive",
+    "pages/service-staff/service-staff",
+    "pages/test-icons/test-icons"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#4A90E2",
+    "navigationBarTitleText": "云数银龄",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f8f9fa"
+  },
+  "tabBar": {
+      "color": "#7A7E83",
+      "selectedColor": "#1890FF",
+      "backgroundColor": "#ffffff",
+      "list": [
+        {
+          "pagePath": "pages/index/index",
+          "iconPath": "images/home.png",
+          "selectedIconPath": "images/home-active.png",
+          "text": "首页"
+        },
+        {
+          "pagePath": "pages/service/service",
+          "iconPath": "images/service.png",
+          "selectedIconPath": "images/service-active.png",
+          "text": "服务"
+        },
+        {
+          "pagePath": "pages/health/health",
+          "iconPath": "images/health.png",
+          "selectedIconPath": "images/health-active.png",
+          "text": "健康"
+        },
+        {
+          "pagePath": "pages/community/community",
+          "iconPath": "images/community.png",
+          "selectedIconPath": "images/community-active.png",
+          "text": "社区"
+        },
+        {
+          "pagePath": "pages/profile/profile",
+          "iconPath": "images/profile.png",
+          "selectedIconPath": "images/profile-active.png",
+          "text": "我的"
+        }
+      ]
+    },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于小程序位置接口的效果展示"
+    }
+  },
+  "networkTimeout": {
+    "request": 10000,
+    "downloadFile": 10000
+  },
+  "usingComponents": {
+    "t-icon": "tdesign-miniprogram/icon/icon",
+    "t-button": "tdesign-miniprogram/button/button",
+    "t-cell": "tdesign-miniprogram/cell/cell",
+    "t-cell-group": "tdesign-miniprogram/cell-group/cell-group",
+    "t-grid": "tdesign-miniprogram/grid/grid",
+    "t-grid-item": "tdesign-miniprogram/grid-item/grid-item"
+  }
+}

@@ -25,8 +25,6 @@ public class SystemUser {
 
     private String organizationName;
 
-    private Long serviceStaffId;
-
     private Boolean isAdmin = false;
 
     private Boolean isActive = true;

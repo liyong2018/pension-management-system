@@ -1,0 +1,119 @@
+<!-- 服务订单页面 -->
+<view class="container">
+  <!-- 搜索栏 -->
+  <view class="search-section">
+    <view class="search-row">
+      <input 
+        class="search-input" 
+        placeholder="老人姓名" 
+        bindinput="onSearchInput" 
+        data-field="elderlyName"
+        value="{{elderlyName}}" 
+      />
+      <input 
+        class="search-input" 
+        placeholder="服务内容" 
+        bindinput="onSearchInput" 
+        data-field="serviceContent"
+        value="{{serviceContent}}" 
+      />
+    </view>
+    <view class="search-row">
+      <input 
+        class="search-input" 
+        placeholder="服务提供者" 
+        bindinput="onSearchInput" 
+        data-field="serviceProviderName"
+        value="{{serviceProviderName}}" 
+      />
+      <view class="search-buttons">
+        <button class="search-btn" bindtap="onSearch">搜索</button>
+        <button class="reset-btn" bindtap="onReset">重置</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分类标签 -->
+  <view class="category-tabs">
+    <scroll-view class="tabs-scroll" scroll-x="true">
+      <view class="tabs-list">
+        <view 
+          class="tab-item {{currentCategory === item.id ? 'active' : ''}}"
+          wx:for="{{categories}}" 
+          wx:key="id"
+          bindtap="onCategoryChange"
+          data-category="{{item.id}}"
+        >
+          <text>{{item.name}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 服务订单列表 -->
+  <view class="service-records-list">
+    <view 
+      class="service-record-item"
+      wx:for="{{serviceRecords}}" 
+      wx:key="id"
+      bindtap="onViewDetail"
+      data-id="{{item.id}}"
+    >
+      <view class="record-header">
+        <view class="record-info">
+          <text class="elderly-name">{{item.elderlyName || '未知老人'}}</text>
+          <text class="record-id">订单号: {{item.id}}</text>
+        </view>
+        <view class="status-badge status-{{item.statusClass || item.status}}">
+          <text>{{item.statusText || item.status}}</text>
+        </view>
+      </view>
+      
+      <view class="record-content">
+        <view class="content-row">
+          <text class="label">服务内容:</text>
+          <text class="value">{{item.serviceContent || '未知服务'}}</text>
+        </view>
+        <view class="content-row">
+          <text class="label">服务提供者:</text>
+          <text class="value">{{item.serviceProviderName || '未知提供者'}}</text>
+        </view>
+        <view class="content-row" wx:if="{{item.serviceTime}}">
+          <text class="label">服务时间:</text>
+          <text class="value">{{item.serviceTime}}</text>
+        </view>
+        <view class="content-row" wx:if="{{item.price}}">
+          <text class="label">服务费用:</text>
+          <text class="value price">¥{{item.price}}</text>
+        </view>
+      </view>
+      
+      <view class="record-footer">
+        <text class="create-time">创建时间: {{item.createTime || item.createdAt}}</text>
+        <view class="action-btn">
+          <text>查看详情</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载更多 -->
+  <view class="load-more" wx:if="{{hasMore && !loading}}">
+    <view class="load-more-btn" bindtap="loadMoreServiceRecords">
+      <text>加载更多</text>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{serviceRecords.length === 0 && !loading}}">
+    <view class="empty-icon">📋</view>
+    <text class="empty-text">暂无服务订单</text>
+    <text class="empty-desc">当前筛选条件下没有找到相关订单</text>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+</view>

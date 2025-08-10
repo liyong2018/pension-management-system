@@ -1,0 +1,394 @@
+/* 个人中心页面样式 */
+.container {
+  background: #f8f9fa;
+  min-height: 100vh;
+  padding-bottom: 40rpx;
+}
+
+/* 用户信息卡片 */
+.user-card {
+  position: relative;
+  margin: 20rpx;
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 30rpx rgba(0,0,0,0.1);
+  cursor: pointer;
+}
+
+.user-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.user-content {
+  position: relative;
+  background: #fff;
+  margin-top: 120rpx;
+  padding: 80rpx 30rpx 30rpx;
+  display: flex;
+  align-items: flex-start;
+}
+
+.user-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-right: 30rpx;
+  overflow: hidden;
+}
+
+.user-avatar image {
+  width: 100%;
+  height: 100%;
+  border-radius: 60rpx;
+}
+
+.avatar-edit {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 36rpx;
+  height: 36rpx;
+  background: #4CAF50;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3rpx solid #fff;
+}
+
+.avatar-edit image {
+  width: 20rpx;
+  height: 20rpx;
+}
+
+.user-info {
+  flex: 1;
+  margin-left: 150rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.user-phone {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 15rpx;
+}
+
+.user-tags {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.user-tag {
+  font-size: 20rpx;
+  color: #666;
+  background: #f0f0f0;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  margin-right: 10rpx;
+  margin-bottom: 5rpx;
+}
+
+.user-tag.admin {
+  background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
+  color: #fff;
+}
+
+.login-tip {
+  color: rgba(255,255,255,0.8) !important;
+  font-size: 28rpx;
+}
+
+.user-edit {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-edit image {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+/* 健康概览 */
+.health-summary {
+  margin: 20rpx;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.05);
+}
+
+.summary-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx 0;
+}
+
+.placeholder-text {
+  color: #999;
+  font-size: 28rpx;
+  margin-top: 20rpx;
+}
+
+.summary-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 20rpx;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx 10rpx;
+  background: #f8f9fa;
+  border-radius: 15rpx;
+  transition: transform 0.3s ease;
+}
+
+.summary-item:active {
+  transform: scale(0.95);
+}
+
+.summary-value {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #4CAF50;
+  margin-bottom: 8rpx;
+}
+
+.summary-label {
+  font-size: 22rpx;
+  color: #666;
+}
+
+/* 功能菜单 */
+.menu-section {
+  margin: 20rpx;
+}
+
+.menu-group {
+  background: #fff;
+  border-radius: 20rpx;
+  margin-bottom: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.1);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  transition: background-color 0.3s ease;
+}
+
+.menu-item.logout {
+  border-bottom: none;
+}
+
+.menu-item.logout .menu-text {
+  color: #FF6B6B;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item:active {
+  background-color: #f8f9fa;
+}
+
+.menu-icon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+}
+
+.menu-icon.family {
+  background: linear-gradient(135deg, #ff9a9e, #fecfef);
+}
+
+.menu-icon.emergency {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+}
+
+.menu-icon.medical {
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+}
+
+.menu-icon.orders {
+  background: linear-gradient(135deg, #45b7d1, #96c93d);
+}
+
+.menu-icon.favorites {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+}
+
+.menu-icon.wallet {
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+}
+
+.menu-icon.notifications {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.menu-icon.settings {
+  background: linear-gradient(135deg, #a8edea, #fed6e3);
+}
+
+.menu-icon image {
+  width: 28rpx;
+  height: 28rpx;
+}
+
+.menu-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.menu-extra {
+  font-size: 24rpx;
+  color: #666;
+  margin-right: 10rpx;
+}
+
+.menu-badge {
+  background: #ff4757;
+  color: #fff;
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 20rpx;
+  margin-right: 10rpx;
+  min-width: 32rpx;
+  text-align: center;
+}
+
+.menu-arrow {
+  width: 24rpx;
+  height: 24rpx;
+  opacity: 0.5;
+}
+
+/* 快捷服务 */
+.quick-service {
+  background: #fff;
+  margin: 20rpx;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.1);
+}
+
+.service-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.service-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 20rpx;
+}
+
+.service-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx 10rpx;
+  transition: transform 0.3s ease;
+}
+
+.service-item:active {
+  transform: scale(0.9);
+}
+
+.service-icon {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15rpx;
+}
+
+.service-icon.emergency {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+}
+
+.service-icon.booking {
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+}
+
+.service-icon.consultation {
+  background: linear-gradient(135deg, #45b7d1, #96c93d);
+}
+
+.service-icon.feedback {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+}
+
+.service-icon image {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.service-text {
+  font-size: 24rpx;
+  color: #333;
+  text-align: center;
+}
+
+/* 版本信息 */
+.version-info {
+  text-align: center;
+  padding: 40rpx 20rpx;
+}
+
+.version-text {
+  font-size: 24rpx;
+  color: #999;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.copyright {
+  font-size: 22rpx;
+  color: #ccc;
+}

@@ -1,0 +1,290 @@
+<!-- 志愿者页面 -->
+<view class="container">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-input">
+      <t-icon name="search" size="32rpx" color="#999" class="search-icon"></t-icon>
+      <input placeholder="搜索志愿活动" value="{{searchKeyword}}" bindinput="onSearchInput" bindconfirm="onSearchConfirm" />
+    </view>
+  </view>
+
+  <!-- 志愿者统计 -->
+  <view class="stats-section">
+    <view class="stats-card">
+      <view class="stats-header">
+        <text class="stats-title">我的志愿服务</text>
+        <text class="stats-more" bindtap="onMyVolunteer">查看全部</text>
+      </view>
+      <view class="stats-grid">
+        <view class="stat-item">
+          <text class="stat-number">{{volunteerStats.totalHours}}</text>
+          <text class="stat-label">服务时长(小时)</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-number">{{volunteerStats.totalActivities}}</text>
+          <text class="stat-label">参与活动</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-number">{{volunteerStats.helpedPeople}}</text>
+          <text class="stat-label">帮助人数</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-number">{{volunteerStats.ranking}}</text>
+          <text class="stat-label">本月排名</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快速操作 -->
+  <view class="quick-actions">
+    <view class="action-item" bindtap="onRegisterVolunteer">
+      <view class="action-icon register">
+        <t-icon name="user-add" size="48rpx" color="#4CAF50"></t-icon>
+      </view>
+      <text class="action-text">志愿者注册</text>
+    </view>
+    <view class="action-item" bindtap="onMyActivities">
+      <view class="action-icon activities">
+        <t-icon name="calendar" size="48rpx" color="#2196F3"></t-icon>
+      </view>
+      <text class="action-text">我的活动</text>
+    </view>
+    <view class="action-item" bindtap="onVolunteerCertificate">
+      <view class="action-icon certificate">
+        <t-icon name="certificate" size="48rpx" color="#FF9800"></t-icon>
+      </view>
+      <text class="action-text">志愿证书</text>
+    </view>
+    <view class="action-item" bindtap="onVolunteerRanking">
+      <view class="action-icon ranking">
+        <t-icon name="chart" size="48rpx" color="#9C27B0"></t-icon>
+      </view>
+      <text class="action-text">爱心排行</text>
+    </view>
+  </view>
+
+  <!-- 分类标签 -->
+  <view class="category-tabs">
+    <scroll-view class="tabs-scroll" scroll-x="true">
+      <view class="tabs-list">
+        <view 
+          class="tab-item {{activeTab === item.id ? 'active' : ''}}" 
+          wx:for="{{categories}}" 
+          wx:key="id"
+          data-category="{{item.id}}"
+          bindtap="onTabChange"
+        >
+          {{item.name}}
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 推荐活动 -->
+  <view class="recommended-section" wx:if="{{recommendedActivities.length > 0}}">
+    <view class="section-header">
+      <text class="section-title">推荐活动</text>
+      <text class="section-more" bindtap="onMoreRecommended">更多</text>
+    </view>
+    <scroll-view class="recommended-scroll" scroll-x="true">
+      <view class="recommended-list">
+        <view 
+          class="recommended-item" 
+          wx:for="{{recommendedActivities}}" 
+          wx:key="id"
+          data-id="{{item.id}}"
+          bindtap="onActivityDetail"
+        >
+          <image class="recommended-image" src="{{item.image}}" mode="aspectFill"></image>
+          <view class="recommended-content">
+            <text class="recommended-title">{{item.title}}</text>
+            <view class="recommended-info">
+              <text class="recommended-time">{{item.time}}</text>
+              <text class="recommended-location">{{item.location}}</text>
+            </view>
+            <view class="recommended-tags">
+              <text class="tag">{{item.category}}</text>
+              <text class="tag urgent" wx:if="{{item.isUrgent}}">急需</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 活动列表 -->
+  <view class="activities-section">
+    <view class="section-header">
+      <text class="section-title">志愿活动</text>
+      <view class="filter-actions">
+        <text class="filter-btn" bindtap="onShowFilter">筛选</text>
+      </view>
+    </view>
+
+    <view class="activities-list" wx:if="{{activities.length > 0}}">
+      <view 
+        class="activity-item" 
+        wx:for="{{activities}}" 
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="onActivityDetail"
+      >
+        <image class="activity-image" src="{{item.image}}" mode="aspectFill"></image>
+        <view class="activity-content">
+          <view class="activity-header">
+            <text class="activity-title">{{item.title}}</text>
+            <view class="activity-status {{item.status}}">{{item.statusText}}</view>
+          </view>
+          <text class="activity-description">{{item.description}}</text>
+          <view class="activity-info">
+            <view class="info-item">
+              <t-icon name="time" size="24rpx" color="#666" class="info-icon"></t-icon>
+              <text class="info-text">{{item.time}}</text>
+            </view>
+            <view class="info-item">
+              <t-icon name="location" size="24rpx" color="#666" class="info-icon"></t-icon>
+              <text class="info-text">{{item.location}}</text>
+            </view>
+            <view class="info-item">
+              <t-icon name="usergroup" size="24rpx" color="#666" class="info-icon"></t-icon>
+              <text class="info-text">{{item.participants}}/{{item.maxParticipants}}人</text>
+            </view>
+          </view>
+          <view class="activity-footer">
+            <view class="organizer">
+              <view class="organizer-avatar">
+                <t-icon name="user" size="32rpx" color="#666"></t-icon>
+              </view>
+              <text class="organizer-name">{{item.organizer.name}}</text>
+            </view>
+            <view class="activity-actions">
+              <button 
+                class="action-btn join {{item.isJoined ? 'joined' : ''}}" 
+                data-id="{{item.id}}"
+                bindtap="onJoinActivity"
+                wx:if="{{item.status === 'recruiting'}}"
+              >
+                {{item.isJoined ? '已报名' : '立即报名'}}
+              </button>
+              <button class="action-btn share" data-id="{{item.id}}" bindtap="onShareActivity">分享</button>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 加载更多 -->
+    <view class="load-more" wx:if="{{hasMore}}">
+      <text class="load-more-btn" bindtap="loadMoreActivities">加载更多</text>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{!loading && activities.length === 0}}">
+      <t-icon name="heart" size="120rpx" color="#ccc"></t-icon>
+      <text>暂无志愿活动</text>
+      <view class="empty-action">
+        <button class="btn-primary" bindtap="onRefresh">刷新</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 筛选弹窗 -->
+  <view class="modal-overlay" wx:if="{{showFilter}}" bindtap="onHideFilter">
+    <view class="filter-modal" catchtap="">
+      <view class="modal-header">
+        <text class="modal-title">筛选条件</text>
+        <t-icon name="close" size="32rpx" color="#666" class="close-btn" bindtap="onHideFilter"></t-icon>
+      </view>
+      <view class="modal-body">
+        <view class="filter-group">
+          <text class="filter-label">活动类型</text>
+          <view class="filter-options">
+            <view 
+              class="filter-option {{filterOptions.category === item.id ? 'active' : ''}}"
+              wx:for="{{categories}}"
+              wx:key="id"
+              data-type="category"
+              data-value="{{item.id}}"
+              bindtap="onFilterSelect"
+            >
+              {{item.name}}
+            </view>
+          </view>
+        </view>
+        <view class="filter-group">
+          <text class="filter-label">活动状态</text>
+          <view class="filter-options">
+            <view 
+              class="filter-option {{filterOptions.status === 'all' ? 'active' : ''}}"
+              data-type="status"
+              data-value="all"
+              bindtap="onFilterSelect"
+            >
+              全部
+            </view>
+            <view 
+              class="filter-option {{filterOptions.status === 'recruiting' ? 'active' : ''}}"
+              data-type="status"
+              data-value="recruiting"
+              bindtap="onFilterSelect"
+            >
+              招募中
+            </view>
+            <view 
+              class="filter-option {{filterOptions.status === 'ongoing' ? 'active' : ''}}"
+              data-type="status"
+              data-value="ongoing"
+              bindtap="onFilterSelect"
+            >
+              进行中
+            </view>
+          </view>
+        </view>
+        <view class="filter-group">
+          <text class="filter-label">时间范围</text>
+          <view class="filter-options">
+            <view 
+              class="filter-option {{filterOptions.timeRange === 'today' ? 'active' : ''}}"
+              data-type="timeRange"
+              data-value="today"
+              bindtap="onFilterSelect"
+            >
+              今天
+            </view>
+            <view 
+              class="filter-option {{filterOptions.timeRange === 'week' ? 'active' : ''}}"
+              data-type="timeRange"
+              data-value="week"
+              bindtap="onFilterSelect"
+            >
+              本周
+            </view>
+            <view 
+              class="filter-option {{filterOptions.timeRange === 'month' ? 'active' : ''}}"
+              data-type="timeRange"
+              data-value="month"
+              bindtap="onFilterSelect"
+            >
+              本月
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <button class="btn-secondary" bindtap="onFilterReset">重置</button>
+        <button class="btn-primary" bindtap="onFilterApply">应用</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+</view>
+
+<!-- 浮动按钮 -->
+<view class="fab" bindtap="onCreateActivity">
+  <t-icon name="add" size="48rpx" color="#fff"></t-icon>
+</view>

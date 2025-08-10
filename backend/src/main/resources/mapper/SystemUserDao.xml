@@ -12,7 +12,6 @@
         <result property="phone" column="phone"/>
         <result property="organizationId" column="organization_id"/>
         <result property="organizationName" column="organization_name"/>
-        <result property="serviceStaffId" column="service_staff_id"/>
         <result property="isAdmin" column="is_admin"/>
         <result property="isActive" column="is_active"/>
         <result property="lastLoginTime" column="last_login_time"/>
@@ -23,7 +22,7 @@
     <!-- 基础查询字段 -->
     <sql id="baseColumns">
         su.id, su.username, su.password_hash, su.full_name, su.email, su.phone,
-        su.organization_id, su.service_staff_id, su.is_admin, su.is_active, su.last_login_time,
+        su.organization_id, su.is_admin, su.is_active, su.last_login_time,
         su.create_time, su.update_time, o.name as organization_name
     </sql>
 
@@ -61,10 +60,10 @@
     <!-- 插入用户 -->
     <insert id="insert" parameterType="com.example.pension.model.SystemUser" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO system_user (
-            username, password_hash, full_name, email, phone, organization_id, service_staff_id,
+            username, password_hash, full_name, email, phone, organization_id,
             is_admin, is_active, create_time, update_time
         ) VALUES (
-            #{username}, #{passwordHash}, #{fullName}, #{email}, #{phone}, #{organizationId}, #{serviceStaffId},
+            #{username}, #{passwordHash}, #{fullName}, #{email}, #{phone}, #{organizationId},
             #{isAdmin}, #{isActive}, NOW(), NOW()
         )
     </insert>
@@ -78,7 +77,6 @@
             <if test="email != null">email = #{email},</if>
             <if test="phone != null">phone = #{phone},</if>
             <if test="organizationId != null">organization_id = #{organizationId},</if>
-            <if test="serviceStaffId != null">service_staff_id = #{serviceStaffId},</if>
             <if test="isAdmin != null">is_admin = #{isAdmin},</if>
             <if test="isActive != null">is_active = #{isActive},</if>
 

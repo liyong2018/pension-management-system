@@ -1,0 +1,91 @@
+<!--pages/service-staff/service-staff.wxml-->
+<view class="service-staff-container">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="page-title">{{organizationName}}</text>
+    <text class="page-subtitle">专业的服务团队为您提供优质服务</text>
+  </view>
+
+  <!-- 搜索栏 -->
+  <view class="search-section">
+    <view class="search-box">
+      <icon class="search-icon" type="search" size="16" color="#999"></icon>
+      <input class="search-input" placeholder="搜索服务人员姓名或职位" bindinput="onSearchInput" value="{{searchKeyword}}" />
+      <view class="search-btn" bindtap="onSearch">搜索</view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-section" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">正在加载服务人员信息...</text>
+  </view>
+
+  <!-- 服务人员列表 -->
+  <view class="staff-list" wx:if="{{!loading}}">
+    <view class="staff-card" wx:for="{{serviceStaff}}" wx:key="id" bindtap="onStaffTap" data-id="{{item.id}}">
+      <!-- 服务人员头像和基本信息 -->
+      <view class="staff-header">
+        <image class="staff-avatar" src="{{item.avatar}}" mode="aspectFill"></image>
+        <view class="staff-info">
+          <view class="staff-name">{{item.name}}</view>
+          <view class="staff-position">{{item.position}} · {{item.level}}</view>
+          <view class="staff-specialty">专长：{{item.specialty}}</view>
+        </view>
+        <view class="staff-status {{item.status === '在职' ? 'active' : 'inactive'}}">
+          {{item.status}}
+        </view>
+      </view>
+
+      <!-- 服务人员详细信息 -->
+      <view class="staff-details">
+        <view class="detail-row">
+          <view class="detail-item">
+            <text class="detail-label">工作经验</text>
+            <text class="detail-value">{{item.experience}}年</text>
+          </view>
+          <view class="detail-item">
+            <text class="detail-label">服务评分</text>
+            <text class="detail-value rating">{{item.rating}}分</text>
+          </view>
+          <view class="detail-item">
+            <text class="detail-label">服务次数</text>
+            <text class="detail-value">{{item.serviceCount}}次</text>
+          </view>
+        </view>
+        
+        <view class="staff-description" wx:if="{{item.description}}">
+          {{item.description}}
+        </view>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="staff-actions">
+        <button class="action-btn call-btn" catchtap="onCallTap" data-phone="{{item.phone}}">
+          <icon type="success" size="16" color="#fff"></icon>
+          联系
+        </button>
+        <button class="action-btn detail-btn">
+          查看详情
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!loading && serviceStaff.length === 0}}">
+    <image class="empty-icon" src="/images/service.png" mode="aspectFit"></image>
+    <text class="empty-text">暂无服务人员信息</text>
+    <button class="refresh-btn" bindtap="loadServiceStaff">刷新重试</button>
+  </view>
+
+  <!-- 加载更多 -->
+  <view class="load-more" wx:if="{{!loading && serviceStaff.length > 0 && hasMore}}">
+    <text class="load-more-text">上拉加载更多</text>
+  </view>
+
+  <!-- 底部提示 -->
+  <view class="footer-tip" wx:if="{{!loading && serviceStaff.length > 0 && !hasMore}}">
+    <text class="tip-text">已显示全部 {{serviceStaff.length}} 位服务人员</text>
+  </view>
+</view>

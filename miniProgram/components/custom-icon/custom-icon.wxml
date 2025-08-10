@@ -1,0 +1,29 @@
+<!-- PNG图标 -->
+<image 
+  wx:if="{{showPngIcon && pngIconMap[name]}}"
+  src="{{pngIconMap[name]}}"
+  style="width: {{size}}; height: {{size}}; filter: {{color !== '#000000' ? 'brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%)' : 'none'}};"
+  class="custom-icon-png"
+  bindtap="onIconTap"
+  binderror="onPngError"
+/>
+
+<!-- TDesign字体图标 -->
+<t-icon 
+  wx:elif="{{fontLoaded}}"
+  name="{{name}}"
+  size="{{size}}"
+  color="{{color}}"
+  class="custom-icon-font"
+  bindtap="onIconTap"
+/>
+
+<!-- 默认占位符 -->
+<view 
+  wx:else
+  class="custom-icon-placeholder"
+  style="width: {{size}}; height: {{size}}; background-color: {{color}};"
+  bindtap="onIconTap"
+>
+  <text style="font-size: 12px; color: white;">?</text>
+</view>
