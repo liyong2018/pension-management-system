@@ -5,10 +5,7 @@ const { serviceRecordsAPI } = require('../../utils/api')
 Page({
   data: {
     loading: false,
-    searchKeyword: '',
-    elderlyName: '',
-    serviceContent: '',
-    serviceProviderName: '',
+    keyword: '',
     status: '',
     currentCategory: 'all',
     categories: [
@@ -65,9 +62,7 @@ Page({
       const params = {
         pageNum: this.data.pageNum,
         pageSize: this.data.pageSize,
-        elderlyName: this.data.elderlyName,
-        serviceContent: this.data.serviceContent,
-        serviceProviderName: this.data.serviceProviderName,
+        keyword: this.data.keyword,
         status: this.data.currentCategory === 'all' ? '' : this.data.currentCategory
       }
 
@@ -166,17 +161,7 @@ Page({
     this.loadServiceRecords()
   },
 
-  // 重置搜索
-  onReset() {
-    this.setData({
-      elderlyName: '',
-      serviceContent: '',
-      serviceProviderName: '',
-      pageNum: 1,
-      serviceRecords: []
-    })
-    this.loadServiceRecords()
-  },
+
 
   // 查看订单详情
   onViewDetail(e) {

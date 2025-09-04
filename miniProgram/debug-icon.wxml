@@ -1,4 +1,4 @@
-<wxs src="../common/utils.wxs" module="_"/>
+<wxs src="./miniprogram_npm/tdesign-miniprogram/common/utils.wxs" module="_"/>
 <view 
   class="{{ prefix ? prefix : classPrefix}} class {{componentPrefix}}-class" 
   style="{{_._style([iconStyle, style, customStyle])}}" 

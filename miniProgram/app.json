@@ -8,6 +8,11 @@
     "pages/login/login",
     "pages/staff-archive/staff-archive",
     "pages/service-staff/service-staff",
+    "pages/detail/detail",
+    "pages/device-detail/device-detail",
+    "pages/organization-detail/organization-detail",
+    "pages/info-detail/info-detail",
+    "pages/news-detail/news-detail",
     "pages/test-icons/test-icons"
   ],
   "window": {
@@ -32,7 +37,7 @@
           "pagePath": "pages/service/service",
           "iconPath": "images/service.png",
           "selectedIconPath": "images/service-active.png",
-          "text": "服务"
+          "text": "机构"
         },
         {
           "pagePath": "pages/health/health",
@@ -44,7 +49,7 @@
           "pagePath": "pages/community/community",
           "iconPath": "images/community.png",
           "selectedIconPath": "images/community-active.png",
-          "text": "社区"
+          "text": "服务"
         },
         {
           "pagePath": "pages/profile/profile",

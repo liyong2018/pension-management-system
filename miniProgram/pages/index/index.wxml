@@ -1,19 +1,9 @@
 <!-- 首页 -->
 <view class="container">
-  <!-- 用户欢迎区域 -->
-  <view class="welcome-section">
-    <view class="user-info">
-      <view class="avatar">
-        <t-icon name="user-circle" size="80rpx" color="#4A90E2"></t-icon>
-      </view>
-      <view class="user-details">
-        <text class="username">{{userInfo.nickName || '用户'}}</text>
-        <text class="welcome-text">欢迎使用云数银龄</text>
-      </view>
-    </view>
-    <view class="weather-info" wx:if="{{weather}}">
-      <text class="temperature">{{weather.temperature}}°</text>
-      <text class="weather-desc">{{weather.description}}</text>
+  <!-- 简约顶部区域 -->
+  <view class="header-section">
+    <view class="greeting">
+      <text class="greeting-text">你好，{{userInfo.nickName || '用户'}}</text>
     </view>
   </view>
 
@@ -86,6 +76,45 @@
       <view class="health-trend" bindtap="navigateToHealth">
         <text class="trend-text">查看详细健康报告</text>
         <text class="trend-arrow">></text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 老年人关注信息 -->
+  <view class="card">
+    <view class="card-header">热门资讯</view>
+    <view class="card-body">
+      <view class="info-categories">
+        <view class="category-item {{currentCategory === 'news' ? 'active' : ''}}" bindtap="switchCategory" data-category="news">
+          <text>热点新闻</text>
+        </view>
+        <view class="category-item {{currentCategory === 'policy' ? 'active' : ''}}" bindtap="switchCategory" data-category="policy">
+          <text>政策法规</text>
+        </view>
+        <view class="category-item {{currentCategory === 'finance' ? 'active' : ''}}" bindtap="switchCategory" data-category="finance">
+          <text>金融财政</text>
+        </view>
+        <view class="category-item {{currentCategory === 'military' ? 'active' : ''}}" bindtap="switchCategory" data-category="military">
+          <text>军事战争</text>
+        </view>
+      </view>
+      <view class="info-content">
+        <view class="info-list">
+          <view class="info-item" wx:for="{{currentInfoList}}" wx:key="id" bindtap="viewInfoDetail" data-item="{{item}}">
+            <view class="info-badge">
+              <text class="badge-text">{{item.tag}}</text>
+            </view>
+            <view class="info-main">
+              <text class="info-title">{{item.title}}</text>
+              <text class="info-summary">{{item.summary}}</text>
+              <view class="info-meta">
+                <text class="info-source">{{item.source}}</text>
+                <text class="info-time">{{item.time}}</text>
+              </view>
+            </view>
+            <view class="info-arrow">></view>
+          </view>
+        </view>
       </view>
     </view>
   </view>

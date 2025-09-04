@@ -1,10 +1,5 @@
 <!--pages/service-staff/service-staff.wxml-->
 <view class="service-staff-container">
-  <!-- 页面标题 -->
-  <view class="page-header">
-    <text class="page-title">{{organizationName}}</text>
-    <text class="page-subtitle">专业的服务团队为您提供优质服务</text>
-  </view>
 
   <!-- 搜索栏 -->
   <view class="search-section">

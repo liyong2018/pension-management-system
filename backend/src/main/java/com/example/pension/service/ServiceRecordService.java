@@ -27,6 +27,16 @@ public interface ServiceRecordService {
             int pageNum,
             int pageSize);
     
+    PageInfo<ServiceRecordDTO> searchByKeyword(
+            String keyword,
+            String serviceProviderType,
+            Long serviceProviderId,
+            String status,
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            int pageNum,
+            int pageSize);
+    
     ServiceRecordDTO update(Long id, ServiceRecordDTO serviceRecordDTO);
     
     void delete(Long id);
@@ -42,4 +52,4 @@ public interface ServiceRecordService {
     List<ServiceRecordDTO> getRecordsForEvaluation();
     
     ServiceRecordDTO evaluate(Long id, Integer score, String comment);
-} 
+}

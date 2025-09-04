@@ -2,9 +2,6 @@
 <view class="login-container">
   <!-- 顶部Logo区域 -->
   <view class="header">
-    <view class="logo">
-      <image src="/images/logo-yunshuyinling.png" class="logo-image" mode="aspectFit"></image>
-    </view>
     <text class="app-name">云数银龄</text>
     <text class="app-subtitle">智慧养老服务平台</text>
   </view>

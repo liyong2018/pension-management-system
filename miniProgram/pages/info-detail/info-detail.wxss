@@ -1,0 +1,271 @@
+/* 资讯详情页样式 */
+.container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  color: #666;
+}
+
+.loading-spinner {
+  width: 40rpx;
+  height: 40rpx;
+  border: 4rpx solid #e0e0e0;
+  border-top: 4rpx solid #1890ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20rpx;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 错误状态 */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  padding: 40rpx;
+}
+
+.error-icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.error-text {
+  font-size: 28rpx;
+  color: #666;
+  text-align: center;
+  margin-bottom: 40rpx;
+  line-height: 1.5;
+}
+
+.retry-btn {
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 8rpx;
+  padding: 20rpx 40rpx;
+  font-size: 28rpx;
+}
+
+/* 文章容器 */
+.article-container {
+  background-color: white;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 文章头部 */
+.article-header {
+  padding: 40rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+}
+
+.article-tag {
+  display: inline-block;
+  background-color: #1890ff;
+  color: white;
+  font-size: 24rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.article-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  line-height: 1.4;
+  margin-bottom: 30rpx;
+}
+
+.article-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+}
+
+.meta-label {
+  color: #666;
+  margin-right: 8rpx;
+  min-width: 120rpx;
+}
+
+.meta-value {
+  color: #333;
+  flex: 1;
+}
+
+/* 文章正文 */
+.article-body {
+  padding: 40rpx;
+  line-height: 1.8;
+  font-size: 30rpx;
+  color: #333;
+}
+
+/* rich-text 内容样式 */
+.article-body rich-text {
+  word-break: break-all;
+}
+
+/* rich-text 内容样式 */
+.article-content {
+  line-height: 1.8;
+}
+
+.article-content p {
+  margin: 20rpx 0;
+  text-indent: 2em;
+}
+
+.article-content h3 {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #1890ff;
+  margin: 40rpx 0 20rpx 0;
+  padding-left: 20rpx;
+  border-left: 6rpx solid #1890ff;
+}
+
+.article-content ul {
+  margin: 20rpx 0;
+  padding-left: 40rpx;
+}
+
+.article-content li {
+  margin: 12rpx 0;
+  list-style-type: disc;
+}
+
+/* 操作按钮 */
+.article-actions {
+  padding: 30rpx 40rpx;
+  border-top: 2rpx solid #f0f0f0;
+  display: flex;
+  justify-content: center;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 50rpx;
+  padding: 20rpx 40rpx;
+  font-size: 28rpx;
+  min-width: 200rpx;
+}
+
+.btn-icon {
+  margin-right: 12rpx;
+  font-size: 32rpx;
+}
+
+.btn-text {
+  font-size: 28rpx;
+}
+
+/* 相关新闻 */
+.related-news {
+  margin: 20rpx;
+  background-color: white;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  padding: 30rpx 40rpx 20rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+}
+
+.related-list {
+  padding: 0 40rpx 20rpx;
+}
+
+.related-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx 0;
+  border-bottom: 2rpx solid #f8f8f8;
+  position: relative;
+}
+
+.related-item:last-child {
+  border-bottom: none;
+}
+
+.related-title {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.4;
+  margin-right: 20rpx;
+}
+
+.related-time {
+  font-size: 24rpx;
+  color: #999;
+  margin-right: 20rpx;
+}
+
+.related-arrow {
+  font-size: 28rpx;
+  color: #ccc;
+}
+
+.related-item:active {
+  background-color: #f8f8f8;
+}
+
+/* 响应式适配 */
+@media (max-width: 750rpx) {
+  .article-container {
+    margin: 10rpx;
+  }
+  
+  .article-header {
+    padding: 30rpx;
+  }
+  
+  .article-body {
+    padding: 30rpx;
+  }
+  
+  .article-title {
+    font-size: 32rpx;
+  }
+}

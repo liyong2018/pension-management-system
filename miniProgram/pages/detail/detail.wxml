@@ -1,0 +1,391 @@
+<!--pages/detail/detail.wxml-->
+<view class="detail-container">
+  <!-- 加载状态 -->
+  <view class="loading-section" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 详情内容 -->
+  <view class="detail-content" wx:if="{{!loading && detailInfo}}">
+    <!-- 头部信息 -->
+    <view class="detail-header">
+      <view class="header-info">
+        <text class="name">{{detailInfo.name}}</text>
+        <text class="type" wx:if="{{type === 'elderly'}}">老人档案</text>
+        <text class="type" wx:if="{{type === 'staff'}}">员工档案</text>
+        <text class="type" wx:if="{{type === 'organization'}}">机构信息</text>
+      </view>
+      <view class="header-actions">
+        <button class="action-btn edit-btn" bindtap="onEdit">
+          <icon type="success" size="16" color="#fff"></icon>
+          编辑
+        </button>
+        <button class="action-btn share-btn" bindtap="onShare">
+          <icon type="info" size="16" color="#fff"></icon>
+          分享
+        </button>
+      </view>
+    </view>
+
+    <!-- 老人详情 -->
+    <view wx:if="{{type === 'elderly'}}">
+      <!-- 基本信息 -->
+      <view class="info-section">
+        <view class="section-title">
+          <icon type="success" size="18" color="#667eea"></icon>
+          <text>基本信息</text>
+        </view>
+        <view class="info-grid">
+          <view class="info-item">
+            <text class="label">姓名</text>
+            <text class="value">{{detailInfo.name}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">性别</text>
+            <text class="value">{{detailInfo.gender}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">年龄</text>
+            <text class="value">{{detailInfo.age}}岁</text>
+          </view>
+          <view class="info-item">
+            <text class="label">身份证号</text>
+            <text class="value">{{detailInfo.idCard}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">联系电话</text>
+            <text class="value phone" bindtap="onCallPhone" data-phone="{{detailInfo.phone}}">{{detailInfo.phone}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">房间号</text>
+            <text class="value">{{detailInfo.roomNumber}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 联系信息 -->
+      <view class="info-section">
+        <view class="section-title">
+          <icon type="info" size="18" color="#52c41a"></icon>
+          <text>紧急联系人</text>
+        </view>
+        <view class="info-grid">
+          <view class="info-item">
+            <text class="label">联系人</text>
+            <text class="value">{{detailInfo.emergencyContact}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">关系</text>
+            <text class="value">{{detailInfo.relationship}}</text>
+          </view>
+          <view class="info-item full-width">
+            <text class="label">联系电话</text>
+            <text class="value phone" bindtap="onCallPhone" data-phone="{{detailInfo.emergencyPhone}}">{{detailInfo.emergencyPhone}}</text>
+          </view>
+          <view class="info-item full-width">
+            <text class="label">家庭地址</text>
+            <text class="value">{{detailInfo.address}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 健康概况 -->
+      <view class="info-section">
+        <view class="section-title">
+          <icon type="warn" size="18" color="#ff6b35"></icon>
+          <text>健康概况</text>
+        </view>
+        <view class="health-grid">
+          <view class="health-item">
+            <text class="health-label">血压</text>
+            <text class="health-value">{{detailInfo.bloodPressure}}</text>
+            <text class="health-unit">mmHg</text>
+          </view>
+          <view class="health-item">
+            <text class="health-label">心率</text>
+            <text class="health-value">{{detailInfo.heartRate}}</text>
+            <text class="health-unit">次/分</text>
+          </view>
+          <view class="health-item">
+            <text class="health-label">体温</text>
+            <text class="health-value">{{detailInfo.temperature}}</text>
+            <text class="health-unit">°C</text>
+          </view>
+          <view class="health-item">
+            <text class="health-label">血糖</text>
+            <text class="health-value">{{detailInfo.bloodSugar}}</text>
+            <text class="health-unit">mmol/L</text>
+          </view>
+        </view>
+        <view class="info-grid">
+          <view class="info-item">
+            <text class="label">健康状况</text>
+            <text class="value status-good">{{detailInfo.healthStatus}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">护理等级</text>
+            <text class="value">{{detailInfo.careLevel}}</text>
+          </view>
+          <view class="info-item full-width">
+            <text class="label">既往病史</text>
+            <text class="value">{{detailInfo.medicalHistory}}</text>
+          </view>
+          <view class="info-item full-width">
+            <text class="label">过敏史</text>
+            <text class="value">{{detailInfo.allergies}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 护理信息 -->
+      <view class="info-section">
+        <view class="section-title">
+          <icon type="success" size="18" color="#1890ff"></icon>
+          <text>护理信息</text>
+        </view>
+        <view class="info-grid">
+          <view class="info-item">
+            <text class="label">护理类型</text>
+            <text class="value">{{detailInfo.careType}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">入住时间</text>
+            <text class="value">{{detailInfo.entryDate}}</text>
+          </view>
+          <view class="info-item full-width">
+            <text class="label">护理计划</text>
+            <text class="value">{{detailInfo.nursingPlan}}</text>
+          </view>
+          <view class="info-item full-width">
+            <text class="label">备注</text>
+            <text class="value">{{detailInfo.notes}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 员工详情 -->
+    <view wx:if="{{type === 'staff'}}">
+      <!-- 基本信息 -->
+      <view class="info-section">
+        <view class="section-title">
+          <icon type="success" size="18" color="#667eea"></icon>
+          <text>基本信息</text>
+        </view>
+        <view class="info-grid">
+          <view class="info-item">
+            <text class="label">姓名</text>
+            <text class="value">{{detailInfo.name}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">性别</text>
+            <text class="value">{{detailInfo.gender}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">年龄</text>
+            <text class="value">{{detailInfo.age}}岁</text>
+          </view>
+          <view class="info-item">
+            <text class="label">工号</text>
+            <text class="value">{{detailInfo.employeeId}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">联系电话</text>
+            <text class="value phone" bindtap="onCallPhone" data-phone="{{detailInfo.phone}}">{{detailInfo.phone}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">邮箱</text>
+            <text class="value">{{detailInfo.email}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 职业信息 -->
+      <view class="info-section">
+        <view class="section-title">
+          <icon type="info" size="18" color="#52c41a"></icon>
+          <text>职业信息</text>
+        </view>
+        <view class="info-grid">
+          <view class="info-item">
+            <text class="label">职位</text>
+            <text class="value">{{detailInfo.position}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">部门</text>
+            <text class="value">{{detailInfo.department}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">职级</text>
+            <text class="value">{{detailInfo.level}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">工作年限</text>
+            <text class="value">{{detailInfo.workYears}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">入职时间</text>
+            <text class="value">{{detailInfo.entryDate}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">工作班次</text>
+            <text class="value">{{detailInfo.workSchedule}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 资质信息 -->
+      <view class="info-section">
+        <view class="section-title">
+          <icon type="warn" size="18" color="#ff6b35"></icon>
+          <text>资质信息</text>
+        </view>
+        <view class="info-grid">
+          <view class="info-item">
+            <text class="label">学历</text>
+            <text class="value">{{detailInfo.education}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">绩效评价</text>
+            <text class="value status-good">{{detailInfo.performance}}</text>
+          </view>
+          <view class="info-item full-width">
+            <text class="label">负责区域</text>
+            <text class="value">{{detailInfo.responsibleArea}}</text>
+          </view>
+          <view class="info-item full-width">
+            <text class="label">证书资质</text>
+            <view class="tag-list">
+              <text class="tag" wx:for="{{detailInfo.certificates}}" wx:key="*this">{{item}}</text>
+            </view>
+          </view>
+          <view class="info-item full-width">
+            <text class="label">专业技能</text>
+            <view class="tag-list">
+              <text class="tag skill-tag" wx:for="{{detailInfo.skills}}" wx:key="*this">{{item}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 机构详情 -->
+    <view wx:if="{{type === 'organization'}}">
+      <!-- 基本信息 -->
+      <view class="info-section">
+        <view class="section-title">
+          <icon type="success" size="18" color="#667eea"></icon>
+          <text>基本信息</text>
+        </view>
+        <view class="info-grid">
+          <view class="info-item">
+            <text class="label">机构名称</text>
+            <text class="value">{{detailInfo.name}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">机构类型</text>
+            <text class="value">{{detailInfo.type}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">机构等级</text>
+            <text class="value">{{detailInfo.level}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">成立时间</text>
+            <text class="value">{{detailInfo.establishDate}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">联系电话</text>
+            <text class="value phone" bindtap="onCallPhone" data-phone="{{detailInfo.phone}}">{{detailInfo.phone}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">邮箱</text>
+            <text class="value">{{detailInfo.email}}</text>
+          </view>
+          <view class="info-item full-width">
+            <text class="label">地址</text>
+            <text class="value">{{detailInfo.address}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 规模信息 -->
+      <view class="info-section">
+        <view class="section-title">
+          <icon type="info" size="18" color="#52c41a"></icon>
+          <text>规模信息</text>
+        </view>
+        <view class="stats-grid">
+          <view class="stat-item">
+            <text class="stat-number">{{detailInfo.totalBeds}}</text>
+            <text class="stat-label">总床位数</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-number">{{detailInfo.occupiedBeds}}</text>
+            <text class="stat-label">已入住</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-number">{{detailInfo.occupancyRate}}</text>
+            <text class="stat-label">入住率</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-number">{{detailInfo.totalStaff}}</text>
+            <text class="stat-label">员工总数</text>
+          </view>
+        </view>
+        <view class="info-grid">
+          <view class="info-item">
+            <text class="label">建筑面积</text>
+            <text class="value">{{detailInfo.area}}</text>
+          </view>
+          <view class="info-item">
+            <text class="label">收费范围</text>
+            <text class="value price">{{detailInfo.priceRange}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 服务信息 -->
+      <view class="info-section">
+        <view class="section-title">
+          <icon type="warn" size="18" color="#ff6b35"></icon>
+          <text>服务信息</text>
+        </view>
+        <view class="info-grid">
+          <view class="info-item full-width">
+            <text class="label">服务项目</text>
+            <view class="tag-list">
+              <text class="tag service-tag" wx:for="{{detailInfo.services}}" wx:key="*this">{{item}}</text>
+            </view>
+          </view>
+          <view class="info-item full-width">
+            <text class="label">配套设施</text>
+            <view class="tag-list">
+              <text class="tag facility-tag" wx:for="{{detailInfo.facilities}}" wx:key="*this">{{item}}</text>
+            </view>
+          </view>
+          <view class="info-item full-width">
+            <text class="label">护理类型</text>
+            <view class="tag-list">
+              <text class="tag care-tag" wx:for="{{detailInfo.careTypes}}" wx:key="*this">{{item}}</text>
+            </view>
+          </view>
+          <view class="info-item full-width">
+            <text class="label">机构特色</text>
+            <view class="tag-list">
+              <text class="tag feature-tag" wx:for="{{detailInfo.features}}" wx:key="*this">{{item}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!loading && !detailInfo}}">
+    <icon type="warn" size="60" color="#ccc"></icon>
+    <text class="empty-text">暂无详情信息</text>
+    <button class="refresh-btn" bindtap="loadDetailInfo">重新加载</button>
+  </view>
+</view>

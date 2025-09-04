@@ -1,0 +1,161 @@
+<!--机构详情页面-->
+<view class="container">
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 错误状态 -->
+  <view wx:elif="{{error}}" class="error-container">
+    <text class="error-icon">⚠️</text>
+    <text class="error-text">{{error}}</text>
+    <button class="retry-btn" bindtap="onRetry">重试</button>
+  </view>
+
+  <!-- 机构详情内容 -->
+  <view wx:else class="organization-detail">
+    <!-- 机构头部信息 -->
+    <view class="header-card">
+      <view class="org-header">
+        <view class="org-avatar">
+          <text class="org-initial">{{organizationInfo.name ? organizationInfo.name.charAt(0) : '机'}}</text>
+        </view>
+        <view class="org-info">
+          <text class="org-name">{{organizationInfo.name || '未知机构'}}</text>
+          <text class="org-type">{{organizationInfo.type || '未知类型'}}</text>
+          <view class="org-rating" wx:if="{{organizationInfo.rating}}">
+            <text class="rating-stars">★★★★☆</text>
+            <text class="rating-score">{{organizationInfo.rating}}</text>
+          </view>
+        </view>
+        <view class="org-status {{organizationInfo.status === 'active' ? 'active' : 'inactive'}}">
+          <view class="status-dot"></view>
+          <text class="status-text">{{organizationInfo.status === 'active' ? '营业中' : '暂停服务'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 联系信息 -->
+    <view class="info-card">
+      <view class="card-header">
+        <text class="card-title">联系信息</text>
+      </view>
+      <view class="contact-info">
+        <view class="contact-item" wx:if="{{organizationInfo.phone}}">
+          <view class="contact-icon phone-icon">📞</view>
+          <view class="contact-content">
+            <text class="contact-label">联系电话</text>
+            <text class="contact-value" bindtap="onCallPhone" data-phone="{{organizationInfo.phone}}">{{organizationInfo.phone}}</text>
+          </view>
+        </view>
+        
+        <view class="contact-item" wx:if="{{organizationInfo.email}}">
+          <view class="contact-icon email-icon">📧</view>
+          <view class="contact-content">
+            <text class="contact-label">邮箱地址</text>
+            <text class="contact-value">{{organizationInfo.email}}</text>
+          </view>
+        </view>
+        
+        <view class="contact-item" wx:if="{{organizationInfo.address}}">
+          <view class="contact-icon location-icon">📍</view>
+          <view class="contact-content">
+            <text class="contact-label">机构地址</text>
+            <text class="contact-value" bindtap="onViewLocation">{{organizationInfo.address}}</text>
+          </view>
+        </view>
+        
+        <view class="contact-item" wx:if="{{organizationInfo.website}}">
+          <view class="contact-icon web-icon">🌐</view>
+          <view class="contact-content">
+            <text class="contact-label">官方网站</text>
+            <text class="contact-value">{{organizationInfo.website}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 机构详情 -->
+    <view class="info-card">
+      <view class="card-header">
+        <text class="card-title">机构详情</text>
+      </view>
+      <view class="detail-info">
+        <view class="detail-item" wx:if="{{organizationInfo.establishedDate}}">
+          <text class="detail-label">成立时间</text>
+          <text class="detail-value">{{organizationInfo.establishedDate}}</text>
+        </view>
+        
+        <view class="detail-item" wx:if="{{organizationInfo.capacity}}">
+          <text class="detail-label">服务容量</text>
+          <text class="detail-value">{{organizationInfo.capacity}}人</text>
+        </view>
+        
+        <view class="detail-item" wx:if="{{organizationInfo.currentOccupancy}}">
+          <text class="detail-label">当前入住</text>
+          <text class="detail-value">{{organizationInfo.currentOccupancy}}人</text>
+        </view>
+        
+        <view class="detail-item" wx:if="{{organizationInfo.staffCount}}">
+          <text class="detail-label">员工人数</text>
+          <text class="detail-value">{{organizationInfo.staffCount}}人</text>
+        </view>
+        
+        <view class="detail-item" wx:if="{{organizationInfo.licenseNumber}}">
+          <text class="detail-label">许可证号</text>
+          <text class="detail-value">{{organizationInfo.licenseNumber}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 服务项目 -->
+    <view class="info-card" wx:if="{{serviceList.length > 0}}">
+      <view class="card-header">
+        <text class="card-title">服务项目</text>
+      </view>
+      <view class="service-grid">
+        <view class="service-item" wx:for="{{serviceList}}" wx:key="id">
+          <view class="service-icon">{{item.icon || '🏥'}}</view>
+          <text class="service-name">{{item.name}}</text>
+          <text class="service-price" wx:if="{{item.price}}">¥{{item.price}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 机构介绍 -->
+    <view class="info-card" wx:if="{{organizationInfo.description}}">
+      <view class="card-header">
+        <text class="card-title">机构介绍</text>
+      </view>
+      <view class="description-content">
+        <text class="description-text">{{organizationInfo.description}}</text>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-card">
+      <view class="action-buttons">
+        <button class="action-btn primary-btn" bindtap="onViewStaff">
+          <text class="btn-icon">👥</text>
+          <text class="btn-text">查看员工</text>
+        </button>
+        
+        <button class="action-btn secondary-btn" bindtap="onViewArchive">
+          <text class="btn-icon">📋</text>
+          <text class="btn-text">人员档案</text>
+        </button>
+        
+        <button class="action-btn contact-btn" bindtap="onContact" wx:if="{{organizationInfo.phone}}">
+          <text class="btn-icon">📞</text>
+          <text class="btn-text">联系机构</text>
+        </button>
+      </view>
+    </view>
+
+    <!-- 更新时间 -->
+    <view class="update-time" wx:if="{{lastUpdateTime}}">
+      <text>最后更新：{{lastUpdateTime}}</text>
+    </view>
+  </view>
+</view>

@@ -94,6 +94,31 @@ public class ServiceRecordServiceImpl implements ServiceRecordService {
         PageInfo<ServiceRecord> entityPageInfo = new PageInfo<>(serviceRecords);
         return convertToDtoPageInfo(entityPageInfo);
     }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public PageInfo<ServiceRecordDTO> searchByKeyword(
+            String keyword,
+            String serviceProviderType,
+            Long serviceProviderId,
+            String status,
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            int pageNum,
+            int pageSize) {
+        PageHelper.startPage(pageNum, pageSize);
+        List<ServiceRecord> serviceRecords = serviceRecordDao.findWithKeywordSearch(
+                StringUtils.hasText(keyword) ? keyword : null,
+                StringUtils.hasText(serviceProviderType) ? serviceProviderType : null,
+                serviceProviderId,
+                StringUtils.hasText(status) ? status : null,
+                startTime,
+                endTime,
+                0,
+                0);
+        PageInfo<ServiceRecord> entityPageInfo = new PageInfo<>(serviceRecords);
+        return convertToDtoPageInfo(entityPageInfo);
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -235,4 +260,4 @@ public class ServiceRecordServiceImpl implements ServiceRecordService {
         
         return serviceRecordMapper.toDTO(serviceRecord);
     }
-} 
+}

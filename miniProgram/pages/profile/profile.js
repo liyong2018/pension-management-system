@@ -1,5 +1,5 @@
 // 个人中心页面
-const { userAPI, healthAPI } = require('../../utils/api');
+const { authAPI, userAPI, healthAPI } = require('../../utils/api');
 
 Page({
   data: {
@@ -103,7 +103,7 @@ Page({
   // 加载用户详细信息
   async loadUserDetails() {
     try {
-      const userDetails = await userAPI.getCurrentUser();
+      const userDetails = await authAPI.getCurrentUser();
       this.setData({
         userInfo: {
           ...this.data.userInfo,
@@ -135,7 +135,7 @@ Page({
   // 加载统计数据
   async loadStatsData() {
     try {
-      const statsData = await userAPI.getUserStats();
+      const statsData = await userAPI.getUserStatistics();
       this.setData({
         stats: statsData
       });

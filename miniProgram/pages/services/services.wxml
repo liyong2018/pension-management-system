@@ -1,17 +1,17 @@
-<!-- 服务页面 -->
+<!-- 机构页面 -->
 <view class="container">
   <!-- 搜索栏 -->
   <view class="search-bar">
     <view class="search-input">
       <t-icon name="search" size="32rpx" color="#999" class="search-icon"></t-icon>
-      <input placeholder="搜索服务项目" bindinput="onSearchInput" value="{{searchKeyword}}" />
+      <input placeholder="搜索机构项目" bindinput="onSearchInput" value="{{searchKeyword}}" />
     </view>
     <view class="filter-btn" bindtap="showFilterModal">
       <t-icon name="filter" size="32rpx" color="#666" class="filter-icon"></t-icon>
     </view>
   </view>
 
-  <!-- 服务分类 -->
+  <!-- 机构分类 -->
   <view class="category-section">
     <scroll-view class="category-scroll" scroll-x="true">
       <view class="category-list">
@@ -29,9 +29,9 @@
     </scroll-view>
   </view>
 
-  <!-- 推荐服务 -->
+  <!-- 推荐机构 -->
   <view class="card" wx:if="{{recommendedServices.length > 0}}">
-    <view class="card-header">推荐服务</view>
+    <view class="card-header">推荐机构</view>
     <view class="card-body">
       <scroll-view class="recommended-scroll" scroll-x="true">
         <view class="recommended-list">

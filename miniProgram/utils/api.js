@@ -1,5 +1,5 @@
 // API配置
-const BASE_URL = 'http://localhost:8085/api';
+const BASE_URL = 'http://8.137.85.158:8080/api';
 
 // 请求拦截器
 const request = (options) => {
@@ -227,6 +227,149 @@ const serviceRecordsAPI = {
   }
 };
 
+// 智能设备相关API
+const smartDeviceAPI = {
+  // 获取设备列表（分页）
+  getDeviceList: (params = {}) => {
+    // 手动构建查询字符串
+    let queryString = '';
+    if (params && Object.keys(params).length > 0) {
+      const queryPairs = [];
+      for (const key in params) {
+        if (params.hasOwnProperty(key) && params[key] !== undefined && params[key] !== null && params[key] !== '') {
+          queryPairs.push(`${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`);
+        }
+      }
+      queryString = queryPairs.join('&');
+    }
+    
+    const apiUrl = queryString ? `/smart-devices?${queryString}` : '/smart-devices';
+    
+    return request({
+      url: apiUrl,
+      method: 'GET'
+    });
+  },
+
+  // 搜索设备（使用真实API接口）
+  searchDevices: (params = {}) => {
+    // 手动构建查询字符串
+    let queryString = '';
+    if (params && Object.keys(params).length > 0) {
+      const queryPairs = [];
+      for (const key in params) {
+        if (params.hasOwnProperty(key) && params[key] !== undefined && params[key] !== null && params[key] !== '') {
+          queryPairs.push(`${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`);
+        }
+      }
+      queryString = queryPairs.join('&');
+    }
+    
+    const apiUrl = queryString ? `/smart-devices/search?${queryString}` : '/smart-devices/search';
+    
+    return request({
+      url: apiUrl,
+      method: 'GET'
+    });
+  },
+
+  // 搜索设备（使用真实API接口）
+  searchDevices: (params = {}) => {
+    // 手动构建查询字符串
+    let queryString = '';
+    if (params && Object.keys(params).length > 0) {
+      const queryPairs = [];
+      for (const key in params) {
+        if (params.hasOwnProperty(key) && params[key] !== undefined && params[key] !== null && params[key] !== '') {
+          queryPairs.push(`${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`);
+        }
+      }
+      queryString = queryPairs.join('&');
+    }
+    
+    const apiUrl = queryString ? `/smart-devices/search?${queryString}` : '/smart-devices/search';
+    
+    return request({
+      url: apiUrl,
+      method: 'GET'
+    });
+  },
+
+  // 根据老人ID获取设备列表
+  getDevicesByElderlyId: (elderlyId) => {
+    return request({
+      url: `/smart-devices/elderly/${elderlyId}`,
+      method: 'GET'
+    });
+  },
+
+  // 根据机构ID获取设备列表
+  getDevicesByOrganizationId: (organizationId) => {
+    return request({
+      url: `/smart-devices/organization/${organizationId}`,
+      method: 'GET'
+    });
+  },
+
+  // 获取设备详情
+  getDeviceById: (deviceId) => {
+    return request({
+      url: `/smart-devices/${deviceId}`,
+      method: 'GET'
+    });
+  },
+
+  // 更新设备状态
+  updateDeviceStatus: (deviceId, status) => {
+    return request({
+      url: `/smart-devices/${deviceId}/status`,
+      method: 'PUT',
+      data: { status }
+    });
+  },
+
+  // 获取设备实时数据
+  getDeviceData: (deviceId) => {
+    return request({
+      url: `/smart-devices/${deviceId}/data`,
+      method: 'GET'
+    });
+  }
+};
+
+// 设备告警相关API
+const deviceAlarmAPI = {
+  // 获取设备告警列表
+  getAlarmList: (params = {}) => {
+    let queryString = '';
+    if (params && Object.keys(params).length > 0) {
+      const queryPairs = [];
+      for (const key in params) {
+        if (params.hasOwnProperty(key) && params[key] !== undefined && params[key] !== null && params[key] !== '') {
+          queryPairs.push(`${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`);
+        }
+      }
+      queryString = queryPairs.join('&');
+    }
+    
+    const apiUrl = queryString ? `/device-alarms?${queryString}` : '/device-alarms';
+    
+    return request({
+      url: apiUrl,
+      method: 'GET'
+    });
+  },
+
+  // 处理告警
+  handleAlarm: (alarmId, handleData) => {
+    return request({
+      url: `/device-alarms/${alarmId}/handle`,
+      method: 'PUT',
+      data: handleData
+    });
+  }
+};
+
 // 导出API模块
 module.exports = {
   request,
@@ -236,5 +379,7 @@ module.exports = {
   serviceAPI,
   serviceStaffAPI,
   serviceRecordsAPI,
-  organizationAPI
+  organizationAPI,
+  smartDeviceAPI,
+  deviceAlarmAPI
 };

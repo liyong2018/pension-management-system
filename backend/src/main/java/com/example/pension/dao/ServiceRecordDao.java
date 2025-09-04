@@ -24,10 +24,28 @@ public interface ServiceRecordDao {
             @Param("offset") int offset,
             @Param("limit") int limit);
 
+    List<ServiceRecord> findWithKeywordSearch(
+            @Param("keyword") String keyword,
+            @Param("serviceProviderType") String serviceProviderType,
+            @Param("serviceProviderId") Long serviceProviderId,
+            @Param("status") String status,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime,
+            @Param("offset") int offset,
+            @Param("limit") int limit);
+
     long countWithConditions(
             @Param("elderlyName") String elderlyName,
             @Param("serviceContent") String serviceContent,
             @Param("serviceProviderName") String serviceProviderName,
+            @Param("serviceProviderType") String serviceProviderType,
+            @Param("serviceProviderId") Long serviceProviderId,
+            @Param("status") String status,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime);
+
+    long countWithKeywordSearch(
+            @Param("keyword") String keyword,
             @Param("serviceProviderType") String serviceProviderType,
             @Param("serviceProviderId") Long serviceProviderId,
             @Param("status") String status,
@@ -51,4 +69,4 @@ public interface ServiceRecordDao {
     
     // For evaluation
     List<ServiceRecord> findByStatusForEvaluation(@Param("status") String status);
-} 
+}

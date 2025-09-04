@@ -1,4 +1,5 @@
 /* pages/service/service.wxss */
+@import "../../styles/search-bar.wxss";
 
 .service-container {
   background-color: #f5f5f5;
@@ -8,7 +9,7 @@
 
 /* 页面标题 */
 .page-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
   padding: 40rpx 30rpx 30rpx;
   color: white;
   text-align: center;
@@ -27,42 +28,6 @@
   display: block;
 }
 
-/* 搜索栏 */
-.search-section {
-  background: white;
-  padding: 20rpx 30rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
-}
-
-.search-box {
-  display: flex;
-  align-items: center;
-  background: #f8f9fa;
-  border-radius: 50rpx;
-  padding: 0 20rpx;
-  height: 70rpx;
-}
-
-.search-icon {
-  margin-right: 15rpx;
-}
-
-.search-input {
-  flex: 1;
-  font-size: 28rpx;
-  height: 100%;
-}
-
-.search-btn {
-  background: #667eea;
-  color: white;
-  padding: 15rpx 25rpx;
-  border-radius: 40rpx;
-  font-size: 24rpx;
-  margin-left: 15rpx;
-}
-
 /* 筛选标签 */
 .filter-section {
   background: white;
@@ -74,17 +39,20 @@
 .filter-scroll {
   white-space: nowrap;
   padding: 0 30rpx;
+  overflow-x: auto;
 }
 
 .filter-item {
   display: inline-block;
-  padding: 15rpx 30rpx;
-  margin-right: 20rpx;
+  padding: 12rpx 24rpx;
+  margin-right: 15rpx;
   background: #f8f9fa;
-  border-radius: 40rpx;
-  font-size: 26rpx;
+  border-radius: 30rpx;
+  font-size: 24rpx;
   color: #666;
   transition: all 0.3s ease;
+  white-space: nowrap;
+  vertical-align: top;
 }
 
 .filter-item.active {
@@ -224,6 +192,10 @@
   font-size: 26rpx;
   border: none;
   transition: all 0.3s ease;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .archive-btn {

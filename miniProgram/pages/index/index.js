@@ -9,7 +9,16 @@ Page({
     reminders: [],
     healthData: null,
     communityNews: [],
-    emergencyContacts: []
+    emergencyContacts: [],
+    // 老年人关注信息
+    currentCategory: 'news',
+    seniorInfo: {
+      news: [],
+      policy: [],
+      finance: [],
+      military: []
+    },
+    currentInfoList: []
   },
 
   onLoad() {
@@ -33,7 +42,8 @@ Page({
         this.loadReminders(),
         this.loadHealthData(),
         this.loadCommunityNews(),
-        this.loadEmergencyContacts()
+        this.loadEmergencyContacts(),
+        this.loadSeniorInfo()
       ])
     } catch (error) {
       console.error('初始化页面失败:', error)
@@ -163,6 +173,109 @@ Page({
     } catch (error) {
       console.error('加载紧急联系人失败:', error)
     }
+  },
+
+  // 加载老年人关注信息
+  async loadSeniorInfo() {
+    try {
+      const seniorInfo = {
+        news: [
+          {
+            id: 1,
+            title: '全国老龄工作会议召开，部署新时代老龄工作',
+            summary: '会议强调要积极应对人口老龄化，推动老龄事业高质量发展',
+            source: '新华社',
+            time: '2小时前',
+            tag: '热点'
+          },
+          {
+            id: 2,
+            title: '智慧养老服务平台正式上线，惠及千万老年人',
+            summary: '平台整合医疗、生活、娱乐等多项服务，为老年人提供便民服务',
+            source: '人民日报',
+            time: '5小时前',
+            tag: '科技'
+          }
+        ],
+        policy: [
+          {
+            id: 3,
+            title: '《关于推进基本养老服务体系建设的意见》发布',
+            summary: '明确基本养老服务清单，推动养老服务均等化发展',
+            source: '国务院',
+            time: '1天前',
+            tag: '政策'
+          },
+          {
+            id: 4,
+            title: '新版《老年人权益保障法》实施细则出台',
+            summary: '进一步保障老年人合法权益，完善养老保障制度',
+            source: '民政部',
+            time: '3天前',
+            tag: '法规'
+          }
+        ],
+        finance: [
+          {
+            id: 5,
+            title: '养老金上调3.8%，惠及1.3亿退休人员',
+            summary: '连续19年上调基本养老金，保障退休人员基本生活',
+            source: '财政部',
+            time: '6小时前',
+            tag: '财政'
+          },
+          {
+            id: 6,
+            title: '个人养老金制度试点扩围，36个城市纳入',
+            summary: '鼓励个人参与养老金投资，提升养老保障水平',
+            source: '银保监会',
+            time: '1天前',
+            tag: '金融'
+          }
+        ],
+        military: [
+          {
+            id: 7,
+            title: '退役军人优抚政策再升级，保障水平持续提升',
+            summary: '完善退役军人服务保障体系，提高优抚对象待遇标准',
+            source: '退役军人部',
+            time: '4小时前',
+            tag: '军事'
+          },
+          {
+            id: 8,
+            title: '军队离退休干部医疗保障制度改革深入推进',
+            summary: '建立健全军队离退休干部医疗保障长效机制',
+            source: '解放军报',
+            time: '2天前',
+            tag: '保障'
+          }
+        ]
+      }
+      this.setData({ 
+        seniorInfo,
+        currentInfoList: seniorInfo[this.data.currentCategory]
+      })
+    } catch (error) {
+      console.error('加载老年人关注信息失败:', error)
+    }
+  },
+
+  // 切换信息分类
+  switchCategory(e) {
+    const category = e.currentTarget.dataset.category
+    this.setData({
+      currentCategory: category,
+      currentInfoList: this.data.seniorInfo[category]
+    })
+  },
+
+  // 查看信息详情
+  viewInfoDetail(e) {
+    const item = e.currentTarget.dataset.item
+    wx.navigateTo({
+      url: `/pages/info-detail/info-detail?id=${item.id}&category=${this.data.currentCategory}`
+    })
   },
 
   // 导航到紧急求助

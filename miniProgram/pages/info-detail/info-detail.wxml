@@ -1,0 +1,67 @@
+<!-- 资讯详情页 -->
+<view class="container">
+  <!-- 加载状态 -->
+  <view class="loading-container" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 错误状态 -->
+  <view class="error-container" wx:elif="{{error}}">
+    <view class="error-icon">⚠️</view>
+    <text class="error-text">{{error}}</text>
+    <button class="retry-btn" bindtap="onRetry">重试</button>
+  </view>
+
+  <!-- 文章内容 -->
+  <view class="article-container" wx:else>
+    <!-- 文章头部 -->
+    <view class="article-header">
+      <view class="article-tag">{{infoDetail.tag}}</view>
+      <text class="article-title">{{infoDetail.title}}</text>
+      <view class="article-meta">
+        <view class="meta-item">
+          <text class="meta-label">来源：</text>
+          <text class="meta-value">{{infoDetail.source}}</text>
+        </view>
+        <view class="meta-item" wx:if="{{infoDetail.author}}">
+          <text class="meta-label">作者：</text>
+          <text class="meta-value">{{infoDetail.author}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">发布时间：</text>
+          <text class="meta-value">{{infoDetail.publishTime}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">阅读量：</text>
+          <text class="meta-value">{{infoDetail.readCount}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 文章正文 -->
+    <view class="article-body">
+      <rich-text class="article-content" nodes="{{infoDetail.content}}"></rich-text>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="article-actions">
+      <button class="action-btn share-btn" bindtap="onShare">
+        <text class="btn-icon">📤</text>
+        <text class="btn-text">分享</text>
+      </button>
+    </view>
+
+    <!-- 相关新闻 -->
+    <view class="related-news" wx:if="{{infoDetail.relatedNews.length > 0}}">
+      <view class="section-title">相关新闻</view>
+      <view class="related-list">
+        <view class="related-item" wx:for="{{infoDetail.relatedNews}}" wx:key="id" bindtap="onViewRelated" data-id="{{item.id}}">
+          <text class="related-title">{{item.title}}</text>
+          <text class="related-time">{{item.publishTime}}</text>
+          <view class="related-arrow">></view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -24,6 +24,7 @@ public class ServiceRecordController {
     
     @GetMapping
     public ResponseEntity<PageInfo<ServiceRecordDTO>> getAllOrSearch(
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String elderlyName,
             @RequestParam(required = false) String serviceContent,
             @RequestParam(required = false) String serviceProviderName,
@@ -37,22 +38,30 @@ public class ServiceRecordController {
         
         PageInfo<ServiceRecordDTO> page;
         
-        // Check if any search criteria is provided
-        boolean hasSearchCriteria = StringUtils.hasText(elderlyName) || 
-                                   StringUtils.hasText(serviceContent) || 
-                                   StringUtils.hasText(serviceProviderName) || 
-                                   StringUtils.hasText(serviceProviderType) ||
-                                   serviceProviderId != null ||
-                                   StringUtils.hasText(status) ||
-                                   startTime != null ||
-                                   endTime != null;
-
-        if (hasSearchCriteria) {
-            page = serviceRecordService.searchByMultipleConditions(
-                    elderlyName, serviceContent, serviceProviderName, serviceProviderType,
-                    serviceProviderId, status, startTime, endTime, pageNum, pageSize);
+        // Check if keyword search is provided
+        if (StringUtils.hasText(keyword)) {
+            // Use keyword search with OR logic
+            page = serviceRecordService.searchByKeyword(
+                    keyword, serviceProviderType, serviceProviderId, status, 
+                    startTime, endTime, pageNum, pageSize);
         } else {
-            page = serviceRecordService.getAll(pageNum, pageSize);
+            // Check if any other search criteria is provided
+            boolean hasSearchCriteria = StringUtils.hasText(elderlyName) || 
+                                       StringUtils.hasText(serviceContent) || 
+                                       StringUtils.hasText(serviceProviderName) || 
+                                       StringUtils.hasText(serviceProviderType) ||
+                                       serviceProviderId != null ||
+                                       StringUtils.hasText(status) ||
+                                       startTime != null ||
+                                       endTime != null;
+
+            if (hasSearchCriteria) {
+                page = serviceRecordService.searchByMultipleConditions(
+                        elderlyName, serviceContent, serviceProviderName, serviceProviderType,
+                        serviceProviderId, status, startTime, endTime, pageNum, pageSize);
+            } else {
+                page = serviceRecordService.getAll(pageNum, pageSize);
+            }
         }
         
         return ResponseEntity.ok(page);
@@ -115,4 +124,4 @@ public class ServiceRecordController {
         String comment = (String) evaluationData.get("comment");
         return ResponseEntity.ok(serviceRecordService.evaluate(id, score, comment));
     }
-} 
+}

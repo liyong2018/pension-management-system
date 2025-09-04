@@ -1,35 +1,11 @@
-<!-- 服务订单页面 -->
+<!-- 服务中心页面 -->
 <view class="container">
   <!-- 搜索栏 -->
-  <view class="search-section">
-    <view class="search-row">
-      <input 
-        class="search-input" 
-        placeholder="老人姓名" 
-        bindinput="onSearchInput" 
-        data-field="elderlyName"
-        value="{{elderlyName}}" 
-      />
-      <input 
-        class="search-input" 
-        placeholder="服务内容" 
-        bindinput="onSearchInput" 
-        data-field="serviceContent"
-        value="{{serviceContent}}" 
-      />
-    </view>
-    <view class="search-row">
-      <input 
-        class="search-input" 
-        placeholder="服务提供者" 
-        bindinput="onSearchInput" 
-        data-field="serviceProviderName"
-        value="{{serviceProviderName}}" 
-      />
-      <view class="search-buttons">
-        <button class="search-btn" bindtap="onSearch">搜索</button>
-        <button class="reset-btn" bindtap="onReset">重置</button>
-      </view>
+  <view class="search-bar">
+    <view class="filter-btn" bindtap="onSearch">
+      <t-icon name="search" size="32rpx" color="#999" class="search-icon"></t-icon>
+      <t-icon name="search" size="32rpx" color="#fff" class="filter-icon"></t-icon>
+      <input placeholder="搜索老人姓名、服务内容或服务提供者" bindinput="onSearchInput" data-field="keyword" value="{{keyword}}" />
     </view>
   </view>
 

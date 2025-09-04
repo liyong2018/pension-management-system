@@ -1,10 +1,5 @@
 <!--pages/staff-archive/staff-archive.wxml-->
 <view class="archive-container">
-  <!-- 页面标题 -->
-  <view class="page-header">
-    <text class="page-title">人员档案</text>
-    <text class="page-subtitle">{{organizationName}}</text>
-  </view>
 
   <!-- 搜索栏 -->
   <view class="search-section">

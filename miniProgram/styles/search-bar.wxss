@@ -1,0 +1,145 @@
+/* 统一搜索栏样式规范 */
+
+/* 搜索区域容器 */
+.search-section {
+  background: white;
+  padding: 20rpx 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 搜索框容器 */
+.search-box {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 50rpx;
+  padding: 0 20rpx;
+  height: 70rpx;
+  border: 1rpx solid #e9ecef;
+}
+
+/* 搜索图标 */
+.search-icon {
+  margin-right: 15rpx;
+  color: #6c757d;
+}
+
+/* 搜索输入框 */
+.search-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: #495057;
+  height: 100%;
+  line-height: 70rpx;
+}
+
+/* 搜索输入框占位符 */
+.search-input::placeholder {
+  color: #adb5bd;
+  font-size: 28rpx;
+}
+
+/* 搜索按钮 */
+.search-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  padding: 12rpx 24rpx;
+  border-radius: 35rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+  margin-left: 15rpx;
+  min-width: 80rpx;
+  text-align: center;
+  box-shadow: 0 2rpx 8rpx rgba(40, 167, 69, 0.3);
+  transition: all 0.3s ease;
+}
+
+.search-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 1rpx 4rpx rgba(40, 167, 69, 0.4);
+}
+
+/* 筛选按钮 */
+.filter-btn {
+  background: #f8f9fa;
+  color: #6c757d;
+  padding: 12rpx 20rpx;
+  border-radius: 35rpx;
+  font-size: 26rpx;
+  margin-left: 15rpx;
+  border: 1rpx solid #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 70rpx;
+  transition: all 0.3s ease;
+}
+
+.filter-btn:active {
+  background: #e9ecef;
+  transform: scale(0.95);
+}
+
+/* 筛选按钮图标 */
+.filter-btn .icon {
+  margin-left: 8rpx;
+}
+
+/* 搜索框聚焦状态 */
+.search-box.focused {
+  border-color: #28a745;
+  box-shadow: 0 0 0 2rpx rgba(40, 167, 69, 0.2);
+}
+
+/* 响应式适配 */
+@media (max-width: 750rpx) {
+  .search-section {
+    padding: 15rpx 20rpx;
+  }
+  
+  .search-box {
+    height: 65rpx;
+    padding: 0 15rpx;
+  }
+  
+  .search-input {
+    font-size: 26rpx;
+  }
+  
+  .search-btn {
+    font-size: 24rpx;
+    padding: 10rpx 20rpx;
+  }
+  
+  .filter-btn {
+    font-size: 24rpx;
+    padding: 10rpx 16rpx;
+  }
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .search-section {
+    background: #2d3748;
+  }
+  
+  .search-box {
+    background: #4a5568;
+    border-color: #718096;
+  }
+  
+  .search-input {
+    color: #e2e8f0;
+  }
+  
+  .search-input::placeholder {
+    color: #a0aec0;
+  }
+  
+  .filter-btn {
+    background: #4a5568;
+    color: #e2e8f0;
+    border-color: #718096;
+  }
+}

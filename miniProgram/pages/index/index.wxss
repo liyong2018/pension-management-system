@@ -1,59 +1,19 @@
 /* 首页样式 */
 
-/* 欢迎区域 */
-.welcome-section {
-  background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-  border-radius: 16rpx;
-  padding: 40rpx;
-  margin-bottom: 20rpx;
-  color: #ffffff;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* 简约顶部区域 */
+.header-section {
+  padding: 30rpx 0;
+  margin-bottom: 30rpx;
 }
 
-.user-info {
-  display: flex;
-  align-items: center;
+.greeting {
+  text-align: center;
 }
 
-.avatar {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  margin-right: 20rpx;
-  border: 2rpx solid rgba(255, 255, 255, 0.3);
-}
-
-.user-details {
-  display: flex;
-  flex-direction: column;
-}
-
-.username {
-  font-size: 36rpx;
-  font-weight: 600;
-  margin-bottom: 8rpx;
-}
-
-.welcome-text {
-  font-size: 26rpx;
-  opacity: 0.8;
-}
-
-.weather-info {
-  text-align: right;
-}
-
-.temperature {
-  font-size: 48rpx;
-  font-weight: 300;
-  display: block;
-}
-
-.weather-desc {
-  font-size: 24rpx;
-  opacity: 0.8;
+.greeting-text {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
 }
 
 /* 服务网格 */
@@ -295,4 +255,114 @@
   font-size: 28rpx;
   color: #4A90E2;
   font-weight: 500;
+}
+
+/* 老年人关注信息样式 */
+.info-categories {
+  display: flex;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 8rpx;
+  margin-bottom: 20rpx;
+}
+
+.category-item {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 8rpx;
+  border-radius: 8rpx;
+  transition: all 0.3s ease;
+}
+
+.category-item.active {
+  background: #4A90E2;
+  color: white;
+}
+
+.category-item text {
+  font-size: 26rpx;
+  font-weight: 500;
+}
+
+.info-content {
+  margin-top: 20rpx;
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 20rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  transition: all 0.3s ease;
+}
+
+.info-item:active {
+  background: #e9ecef;
+  transform: scale(0.98);
+}
+
+.info-badge {
+  margin-right: 16rpx;
+  margin-top: 4rpx;
+}
+
+.badge-text {
+  background: #4A90E2;
+  color: white;
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 20rpx;
+  font-weight: 500;
+}
+
+.info-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.info-title {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 8rpx;
+  line-height: 1.4;
+}
+
+.info-summary {
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 12rpx;
+}
+
+.info-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-source {
+  font-size: 22rpx;
+  color: #4A90E2;
+  font-weight: 500;
+}
+
+.info-time {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.info-arrow {
+  margin-left: 16rpx;
+  font-size: 32rpx;
+  color: #ccc;
+  font-weight: 300;
 }

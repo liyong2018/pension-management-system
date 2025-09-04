@@ -2,7 +2,7 @@ App({
   globalData: {
     userInfo: null,
     token: null,
-    baseUrl: 'http://localhost:8080/api',
+    baseUrl: 'http://8.137.85.158:8080/api',
     isLoggedIn: false
   },
 

@@ -178,4 +178,65 @@
         ORDER BY sr.service_time DESC
     </select>
 
-</mapper> 
+    <select id="findWithKeywordSearch" resultMap="ServiceRecordResultMap">
+        SELECT <include refid="selectServiceRecordColumns" />
+        FROM service_record sr
+        LEFT JOIN elderly_profile ep ON sr.elderly_id = ep.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    ep.name LIKE CONCAT('%', #{keyword}, '%')
+                    OR sr.service_content LIKE CONCAT('%', #{keyword}, '%')
+                    OR sr.service_provider_name LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="serviceProviderType != null and serviceProviderType != ''">
+                AND sr.service_provider_type = #{serviceProviderType}
+            </if>
+            <if test="serviceProviderId != null">
+                AND sr.service_provider_id = #{serviceProviderId}
+            </if>
+            <if test="status != null and status != ''">
+                AND sr.status = #{status}
+            </if>
+            <if test="startTime != null">
+                AND sr.service_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND sr.service_time &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY sr.service_time DESC, sr.id DESC
+    </select>
+
+    <select id="countWithKeywordSearch" resultType="long">
+        SELECT count(sr.id)
+        FROM service_record sr
+        LEFT JOIN elderly_profile ep ON sr.elderly_id = ep.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    ep.name LIKE CONCAT('%', #{keyword}, '%')
+                    OR sr.service_content LIKE CONCAT('%', #{keyword}, '%')
+                    OR sr.service_provider_name LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="serviceProviderType != null and serviceProviderType != ''">
+                AND sr.service_provider_type = #{serviceProviderType}
+            </if>
+            <if test="serviceProviderId != null">
+                AND sr.service_provider_id = #{serviceProviderId}
+            </if>
+            <if test="status != null and status != ''">
+                AND sr.status = #{status}
+            </if>
+            <if test="startTime != null">
+                AND sr.service_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND sr.service_time &lt;= #{endTime}
+            </if>
+        </where>
+    </select>
+
+</mapper>

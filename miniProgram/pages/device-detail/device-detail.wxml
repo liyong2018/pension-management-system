@@ -1,0 +1,130 @@
+<!--设备详情页面-->
+<view class="container">
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 设备详情内容 -->
+  <view wx:else class="device-detail">
+    <!-- 设备基本信息 -->
+    <view class="info-card">
+      <view class="card-header">
+        <text class="card-title">设备信息</text>
+        <view class="device-status {{deviceInfo.deviceStatus}}">
+          <view class="status-dot"></view>
+          <text class="status-text">{{deviceInfo.deviceStatus === 'online' ? '在线' : '离线'}}</text>
+        </view>
+      </view>
+      
+      <view class="info-grid">
+        <view class="info-item">
+          <text class="info-label">设备名称</text>
+          <text class="info-value">{{deviceInfo.deviceName || '未知设备'}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">设备编号</text>
+          <text class="info-value">{{deviceInfo.deviceId || deviceInfo.deviceCode || '--'}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">设备类型</text>
+          <text class="info-value">{{deviceInfo.deviceType || '未知类型'}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">安装位置</text>
+          <text class="info-value">{{deviceInfo.installationLocation || deviceInfo.location || '未设置'}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">最后通信</text>
+          <text class="info-value">{{deviceInfo.lastCommunicationTime || deviceInfo.lastUpdateTime || '--'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 设备状态信息 -->
+    <view class="info-card">
+      <view class="card-header">
+        <text class="card-title">状态信息</text>
+      </view>
+      
+      <view class="status-grid">
+        <view class="status-item" wx:if="{{deviceInfo.batteryLevel !== undefined}}">
+          <view class="status-icon battery">
+            <text class="iconfont icon-battery"></text>
+          </view>
+          <view class="status-content">
+            <text class="status-label">电池电量</text>
+            <text class="status-value">{{deviceInfo.batteryLevel}}%</text>
+          </view>
+        </view>
+        
+        <view class="status-item" wx:if="{{deviceInfo.signalStrength !== undefined}}">
+          <view class="status-icon signal">
+            <text class="iconfont icon-signal"></text>
+          </view>
+          <view class="status-content">
+            <text class="status-label">信号强度</text>
+            <text class="status-value">{{deviceInfo.signalStrength}}%</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 实时数据 -->
+    <view class="info-card" wx:if="{{deviceInfo.realTimeData}}">
+      <view class="card-header">
+        <text class="card-title">实时数据</text>
+        <text class="refresh-time">{{lastUpdateTime}}</text>
+      </view>
+      
+      <view class="realtime-data">
+        <text class="data-content">{{deviceInfo.realTimeData}}</text>
+      </view>
+    </view>
+
+    <!-- 健康数据展示 (针对健康监测设备) -->
+    <view class="info-card" wx:if="{{healthData && healthData.length > 0}}">
+      <view class="card-header">
+        <text class="card-title">健康数据</text>
+      </view>
+      
+      <view class="health-data-list">
+        <view class="health-item" wx:for="{{healthData}}" wx:key="type">
+          <view class="health-icon {{item.type}}">
+            <text class="iconfont {{item.icon}}"></text>
+          </view>
+          <view class="health-content">
+            <text class="health-label">{{item.label}}</text>
+            <text class="health-value">{{item.value}} {{item.unit}}</text>
+          </view>
+          <view class="health-status {{item.status}}">
+            <text class="status-badge">{{item.statusText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-buttons">
+      <button class="action-btn primary" wx:if="{{deviceInfo.deviceStatus === 'offline'}}" bindtap="onConnectDevice">
+        连接设备
+      </button>
+      <button class="action-btn secondary" wx:if="{{deviceInfo.deviceStatus === 'online'}}" bindtap="onDisconnectDevice">
+        断开连接
+      </button>
+      <button class="action-btn secondary" bindtap="onRefreshData">
+        刷新数据
+      </button>
+    </view>
+  </view>
+
+  <!-- 错误状态 -->
+  <view wx:if="{{error}}" class="error-container">
+    <view class="error-icon">
+      <text class="iconfont icon-error"></text>
+    </view>
+    <text class="error-message">{{error}}</text>
+    <button class="retry-btn" bindtap="onRetry">重试</button>
+  </view>
+</view>

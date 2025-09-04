@@ -1,365 +1,468 @@
-// 健康管理页面
+// 健康管理页面 - 设备列表
+const { smartDeviceAPI } = require('../../utils/api');
+
 Page({
   data: {
     loading: true,
-    currentDate: '',
-    currentChart: 'bloodPressure',
+    devices: [],
+    filteredDevices: [],
+    devicesByType: {}, // 按类型分组的设备
+    searchKeyword: '',
+    currentFilter: 'all',
+    refreshing: false,
     
-    // 健康数据
-    healthData: {
-      bloodPressure: {
-        systolic: 120,
-        diastolic: 80,
-        status: 'normal',
-        statusText: '正常'
-      },
-      heartRate: {
-        value: 72,
-        status: 'normal',
-        statusText: '正常'
-      },
-      bloodSugar: {
-        value: 5.6,
-        status: 'normal',
-        statusText: '正常'
-      },
-      temperature: {
-        value: 36.5,
-        status: 'normal',
-        statusText: '正常'
-      }
-    },
-    
-    // 图表选项卡
-    chartTabs: [
-      { type: 'bloodPressure', name: '血压' },
-      { type: 'heartRate', name: '心率' },
-      { type: 'bloodSugar', name: '血糖' },
-      { type: 'temperature', name: '体温' }
-    ],
-    
-    chartSummary: '您的血压在过去一周内保持稳定，建议继续保持良好的生活习惯。',
-    
-    // 用药提醒
-    medications: [
-      {
-        id: 1,
-        name: '降压药',
-        dosage: '1片',
-        time: '08:00',
-        taken: true
-      },
-      {
-        id: 2,
-        name: '维生素D',
-        dosage: '2粒',
-        time: '12:00',
-        taken: false
-      },
-      {
-        id: 3,
-        name: '钙片',
-        dosage: '1片',
-        time: '18:00',
-        taken: false
-      }
-    ],
-    
-    // 健康建议
-    healthSuggestions: [
-      {
-        id: 1,
-        type: 'diet',
-        icon: '/images/suggestion-diet.png',
-        title: '饮食建议',
-        description: '建议多食用富含纤维的蔬菜水果，减少盐分摄入'
-      },
-      {
-        id: 2,
-        type: 'exercise',
-        icon: '/images/suggestion-exercise.png',
-        title: '运动建议',
-        description: '每天进行30分钟的轻度运动，如散步或太极'
-      },
-      {
-        id: 3,
-        type: 'sleep',
-        icon: '/images/suggestion-sleep.png',
-        title: '睡眠建议',
-        description: '保持规律作息，每晚睡眠时间不少于7小时'
-      }
-    ],
-    
-    // 最近记录
-    recentRecords: [
-      {
-        id: 1,
-        day: '15',
-        month: '12月',
-        type: '血压',
-        value: '120/80 mmHg',
-        time: '08:30',
-        status: 'normal',
-        statusText: '正常'
-      },
-      {
-        id: 2,
-        day: '14',
-        month: '12月',
-        type: '血糖',
-        value: '5.8 mmol/L',
-        time: '07:45',
-        status: 'normal',
-        statusText: '正常'
-      },
-      {
-        id: 3,
-        day: '13',
-        month: '12月',
-        type: '心率',
-        value: '75 次/分',
-        time: '09:15',
-        status: 'normal',
-        statusText: '正常'
-      }
+    // 设备类型过滤选项 - 动态生成
+    filterOptions: [
+      { type: 'all', name: '全部' }
     ]
   },
 
   onLoad(options) {
-    this.initPage();
-    this.loadHealthData();
+    this.loadDevices();
   },
 
   onShow() {
-    this.refreshHealthData();
+    this.loadDevices();
   },
 
   onPullDownRefresh() {
-    this.loadHealthData().then(() => {
-      wx.stopPullDownRefresh();
-    });
+    this.refreshDevices();
   },
 
-  // 初始化页面
-  initPage() {
-    const now = new Date();
-    const currentDate = `${now.getMonth() + 1}月${now.getDate()}日`;
-    this.setData({ currentDate });
-  },
-
-  // 加载健康数据
-  async loadHealthData() {
+  // 加载设备列表
+  async loadDevices() {
     try {
       this.setData({ loading: true });
       
-      // 模拟API调用
-      await this.simulateApiCall();
+      // 使用真实的搜索API接口
+      const response = await smartDeviceAPI.searchDevices({
+        page: 1,
+        size: 100,
+        deviceName: '',
+        deviceType: '',
+        deviceStatus: ''
+      });
       
-      // 更新健康数据
-      await this.updateHealthData();
+      console.log('API响应:', response);
       
-      this.setData({ loading: false });
+      if (response && (response.success !== false)) {
+        // 处理不同的响应数据结构
+        let devices = [];
+        if (response.data) {
+          devices = response.data.list || response.data.records || response.data.content || [];
+        } else if (Array.isArray(response)) {
+          devices = response;
+        } else if (response.list) {
+          devices = response.list;
+        } else if (response.records) {
+          devices = response.records;
+        }
+        
+        // 数据字段映射和标准化
+        const normalizedDevices = devices.map(device => ({
+          id: device.id || device.deviceId,
+          deviceId: device.deviceCode || device.deviceId || device.id,
+          deviceName: device.deviceName || device.name || '未知设备',
+          deviceType: device.deviceType || device.type || '未知类型',
+          deviceStatus: device.deviceStatus || device.status || 'offline',
+          status: device.deviceStatus || device.status || 'offline',
+          installationLocation: device.installationLocation || device.location || '未设置',
+          location: device.installationLocation || device.location || '未设置',
+          lastCommunicationTime: device.lastCommunicationTime || device.lastUpdateTime || device.updateTime,
+          lastUpdateTime: device.lastCommunicationTime || device.lastUpdateTime || device.updateTime,
+          batteryLevel: device.batteryLevel,
+          signalStrength: device.signalStrength
+        }));
+        
+        // 按设备类型分组
+        const devicesByType = this.groupDevicesByType(normalizedDevices);
+        
+        // 动态生成过滤选项
+        const filterOptions = this.generateFilterOptions(normalizedDevices);
+        
+        this.setData({ 
+          devices: normalizedDevices,
+          filteredDevices: normalizedDevices,
+          devicesByType,
+          filterOptions
+        });
+        
+        this.filterDevices();
+        
+        console.log('设备数据处理完成:', {
+          total: normalizedDevices.length,
+          byType: devicesByType,
+          filterOptions
+        });
+        
+      } else {
+        // API调用失败，使用模拟数据
+        console.warn('API调用失败，使用模拟数据');
+        this.loadMockDevices();
+      }
     } catch (error) {
-      console.error('加载健康数据失败:', error);
+      console.error('加载设备列表失败:', error);
+      // 网络错误，使用模拟数据
+      this.loadMockDevices();
+    } finally {
       this.setData({ loading: false });
+    }
+  },
+
+  // 按设备类型分组
+  groupDevicesByType(devices) {
+    const grouped = {};
+    devices.forEach(device => {
+      const type = device.deviceType;
+      if (!grouped[type]) {
+        grouped[type] = [];
+      }
+      grouped[type].push(device);
+    });
+    return grouped;
+  },
+
+  // 动态生成过滤选项
+  generateFilterOptions(devices) {
+    // 定义设备大类别，确保标签始终显示
+    const deviceCategories = [
+      '定位',
+      '安全', 
+      '智能家居',
+      '健康检测'
+    ];
+    
+    // 从当前设备中获取实际存在的类型
+    const existingTypes = new Set();
+    devices.forEach(device => {
+      if (device.deviceType && device.deviceType !== '未知类型') {
+        existingTypes.add(device.deviceType);
+      }
+    });
+    
+    // 合并所有类型和实际存在的类型
+    const allTypes = new Set([...deviceCategories, ...Array.from(existingTypes)]);
+    
+    const filterOptions = [{ type: 'all', name: '全部' }];
+    Array.from(allTypes).sort().forEach(type => {
+      filterOptions.push({ type, name: type });
+    });
+    
+    return filterOptions;
+  },
+
+  // 加载模拟设备数据
+  loadMockDevices() {
+    const mockDevices = [
+      {
+        id: 'DEV001',
+        deviceId: 'DEV001',
+        deviceName: '智能血压计',
+        deviceType: '健康检测',
+        deviceStatus: 'online',
+        status: 'online',
+        installationLocation: '客厅',
+        location: '客厅',
+        lastCommunicationTime: '2024-01-15 10:30:00',
+        lastUpdateTime: '2024-01-15 10:30:00',
+        batteryLevel: 85
+      },
+      {
+        id: 'DEV002',
+        deviceId: 'DEV002',
+        deviceName: 'GPS定位器',
+        deviceType: '定位',
+        deviceStatus: 'online',
+        status: 'online',
+        installationLocation: '随身携带',
+        location: '随身携带',
+        lastCommunicationTime: '2024-01-15 10:25:00',
+        lastUpdateTime: '2024-01-15 10:25:00',
+        batteryLevel: 92
+      },
+      {
+        id: 'DEV003',
+        deviceId: 'DEV003',
+        deviceName: '智能门锁',
+        deviceType: '安全',
+        deviceStatus: 'online',
+        status: 'online',
+        installationLocation: '大门',
+        location: '大门',
+        lastCommunicationTime: '2024-01-15 09:15:00',
+        lastUpdateTime: '2024-01-15 09:15:00',
+        batteryLevel: 78
+      },
+      {
+        id: 'DEV004',
+        deviceId: 'DEV004',
+        deviceName: '智能灯泡',
+        deviceType: '智能家居',
+        deviceStatus: 'offline',
+        status: 'offline',
+        installationLocation: '客厅',
+        location: '客厅',
+        lastCommunicationTime: '2024-01-14 08:15:00',
+        lastUpdateTime: '2024-01-14 08:15:00',
+        batteryLevel: 0
+      }
+    ];
+    
+    const devicesByType = this.groupDevicesByType(mockDevices);
+    
+    // 动态生成过滤选项
+    const filterOptions = this.generateFilterOptions(mockDevices);
+    
+    this.setData({ 
+      devices: mockDevices,
+      filteredDevices: mockDevices,
+      devicesByType,
+      filterOptions
+    });
+    
+    this.filterDevices();
+    
+    wx.showToast({
+      title: '使用模拟数据',
+      icon: 'none',
+      duration: 2000
+    });
+  },
+
+  // 刷新设备列表
+  async refreshDevices() {
+    try {
+      this.setData({ refreshing: true });
+      await this.loadDevices();
+    } catch (error) {
+      console.error('刷新设备列表失败:', error);
+    } finally {
+      this.setData({ refreshing: false });
+      wx.stopPullDownRefresh();
+    }
+  },
+
+  // 搜索输入
+  onSearchInput(e) {
+    const searchKeyword = e.detail.value;
+    this.setData({ searchKeyword });
+    this.filterDevices();
+  },
+
+  // 搜索设备
+  async onSearch() {
+    const { searchKeyword, currentFilter } = this.data;
+    
+    // 如果有搜索关键词，调用API进行搜索
+    if (searchKeyword.trim()) {
+      try {
+        this.setData({ loading: true });
+        
+        const response = await smartDeviceAPI.searchDevices({
+          page: 1,
+          size: 100,
+          deviceName: searchKeyword,
+          deviceType: currentFilter !== 'all' ? currentFilter : '',
+          deviceStatus: ''
+        });
+        
+        if (response && (response.success !== false)) {
+          // 处理搜索结果
+          let devices = [];
+          if (response.data) {
+            devices = response.data.list || response.data.records || response.data.content || [];
+          } else if (Array.isArray(response)) {
+            devices = response;
+          } else if (response.list) {
+            devices = response.list;
+          } else if (response.records) {
+            devices = response.records;
+          }
+          
+          // 数据标准化
+          const normalizedDevices = devices.map(device => ({
+            id: device.id || device.deviceId,
+            deviceId: device.deviceCode || device.deviceId || device.id,
+            deviceName: device.deviceName || device.name || '未知设备',
+            deviceType: device.deviceType || device.type || '未知类型',
+            deviceStatus: device.deviceStatus || device.status || 'offline',
+            status: device.deviceStatus || device.status || 'offline',
+            installationLocation: device.installationLocation || device.location || '未设置',
+            location: device.installationLocation || device.location || '未设置',
+            lastCommunicationTime: device.lastCommunicationTime || device.lastUpdateTime || device.updateTime,
+            lastUpdateTime: device.lastCommunicationTime || device.lastUpdateTime || device.updateTime,
+            batteryLevel: device.batteryLevel,
+            signalStrength: device.signalStrength
+          }));
+          
+          const devicesByType = this.groupDevicesByType(normalizedDevices);
+          
+          // 动态生成过滤选项
+          const filterOptions = this.generateFilterOptions(normalizedDevices);
+          
+          this.setData({
+            devices: normalizedDevices,
+            filteredDevices: normalizedDevices,
+            devicesByType,
+            filterOptions
+          });
+          
+        } else {
+          // API搜索失败，使用本地过滤
+          this.filterDevices();
+        }
+        
+      } catch (error) {
+        console.error('搜索设备失败:', error);
+        // 搜索失败，使用本地过滤
+        this.filterDevices();
+      } finally {
+        this.setData({ loading: false });
+      }
+    } else {
+      // 没有搜索关键词，重新加载所有设备
+      await this.loadDevices();
+    }
+  },
+
+  // 过滤器点击
+  async onFilterTap(e) {
+    const filterType = e.currentTarget.dataset.type;
+    
+    this.setData({ currentFilter: filterType });
+    
+    // 优先使用本地筛选
+    this.filterDevices();
+  },
+
+  // 过滤设备
+  filterDevices() {
+    const { devices, currentFilter, searchKeyword } = this.data;
+    let filtered = devices;
+    
+    // 按类型过滤
+    if (currentFilter !== 'all') {
+      filtered = filtered.filter(device => device.deviceType === currentFilter);
+    }
+    
+    // 按关键词搜索
+    if (searchKeyword) {
+      const keyword = searchKeyword.toLowerCase();
+      filtered = filtered.filter(device => 
+        (device.deviceName && device.deviceName.toLowerCase().includes(keyword)) ||
+        (device.deviceType && device.deviceType.toLowerCase().includes(keyword)) ||
+        (device.deviceId && device.deviceId.toLowerCase().includes(keyword)) ||
+        (device.location && device.location.toLowerCase().includes(keyword))
+      );
+    }
+    
+    // 重新按类型分组过滤后的设备
+    const filteredDevicesByType = this.groupDevicesByType(filtered);
+    
+    this.setData({ 
+      filteredDevices: filtered,
+      devicesByType: filteredDevicesByType
+    });
+    
+    console.log('过滤结果:', {
+      filter: currentFilter,
+      keyword: searchKeyword,
+      total: filtered.length,
+      byType: filteredDevicesByType
+    });
+  },
+
+  // 设备点击
+  onDeviceTap(e) {
+    const deviceId = e.currentTarget.dataset.id;
+    wx.navigateTo({
+      url: `/pages/device-detail/device-detail?id=${deviceId}`
+    });
+  },
+
+  // 连接设备
+  async onConnectTap(e) {
+    e.stopPropagation();
+    const deviceId = e.currentTarget.dataset.id;
+    
+    try {
+      wx.showLoading({ title: '连接中...' });
+      
+      const response = await smartDeviceAPI.updateDeviceStatus(deviceId, {
+        status: 'online'
+      });
+      
+      if (response.success) {
+        wx.showToast({
+          title: '连接成功',
+          icon: 'success'
+        });
+        this.loadDevices();
+      } else {
+        wx.showToast({
+          title: '连接失败',
+          icon: 'none'
+        });
+      }
+    } catch (error) {
+      console.error('连接设备失败:', error);
       wx.showToast({
-        title: '加载失败',
+        title: '连接失败',
         icon: 'none'
       });
+    } finally {
+      wx.hideLoading();
     }
   },
 
-  // 刷新健康数据
-  async refreshHealthData() {
-    // 静默刷新，不显示loading
+  // 断开设备
+  async onDisconnectTap(e) {
+    e.stopPropagation();
+    const deviceId = e.currentTarget.dataset.id;
+    
     try {
-      await this.updateHealthData();
+      wx.showLoading({ title: '断开中...' });
+      
+      const response = await smartDeviceAPI.updateDeviceStatus(deviceId, {
+        status: 'offline'
+      });
+      
+      if (response.success) {
+        wx.showToast({
+          title: '已断开',
+          icon: 'success'
+        });
+        this.loadDevices();
+      } else {
+        wx.showToast({
+          title: '断开失败',
+          icon: 'none'
+        });
+      }
     } catch (error) {
-      console.error('刷新健康数据失败:', error);
+      console.error('断开设备失败:', error);
+      wx.showToast({
+        title: '断开失败',
+        icon: 'none'
+      });
+    } finally {
+      wx.hideLoading();
     }
   },
 
-  // 更新健康数据
-  async updateHealthData() {
-    // 模拟从设备或API获取最新数据
-    const healthData = {
-      bloodPressure: {
-        systolic: 118 + Math.floor(Math.random() * 10),
-        diastolic: 78 + Math.floor(Math.random() * 8),
-        status: 'normal',
-        statusText: '正常'
-      },
-      heartRate: {
-        value: 70 + Math.floor(Math.random() * 10),
-        status: 'normal',
-        statusText: '正常'
-      },
-      bloodSugar: {
-        value: (5.2 + Math.random() * 1.0).toFixed(1),
-        status: 'normal',
-        statusText: '正常'
-      },
-      temperature: {
-        value: (36.3 + Math.random() * 0.6).toFixed(1),
-        status: 'normal',
-        statusText: '正常'
-      }
-    };
-    
-    // 判断健康状态
-    this.evaluateHealthStatus(healthData);
-    
-    this.setData({ healthData });
-  },
-
-  // 评估健康状态
-  evaluateHealthStatus(healthData) {
-    // 血压评估
-    const { systolic, diastolic } = healthData.bloodPressure;
-    if (systolic >= 140 || diastolic >= 90) {
-      healthData.bloodPressure.status = 'danger';
-      healthData.bloodPressure.statusText = '偏高';
-    } else if (systolic >= 130 || diastolic >= 85) {
-      healthData.bloodPressure.status = 'warning';
-      healthData.bloodPressure.statusText = '偏高';
-    }
-    
-    // 心率评估
-    const heartRate = healthData.heartRate.value;
-    if (heartRate > 100 || heartRate < 60) {
-      healthData.heartRate.status = 'warning';
-      healthData.heartRate.statusText = '异常';
-    }
-    
-    // 血糖评估
-    const bloodSugar = parseFloat(healthData.bloodSugar.value);
-    if (bloodSugar >= 7.0) {
-      healthData.bloodSugar.status = 'danger';
-      healthData.bloodSugar.statusText = '偏高';
-    } else if (bloodSugar >= 6.1) {
-      healthData.bloodSugar.status = 'warning';
-      healthData.bloodSugar.statusText = '偏高';
-    }
-    
-    // 体温评估
-    const temperature = parseFloat(healthData.temperature.value);
-    if (temperature >= 37.5) {
-      healthData.temperature.status = 'danger';
-      healthData.temperature.statusText = '发热';
-    } else if (temperature >= 37.0) {
-      healthData.temperature.status = 'warning';
-      healthData.temperature.statusText = '偏高';
-    }
-  },
-
-  // 模拟API调用
-  simulateApiCall() {
-    return new Promise(resolve => {
-      setTimeout(resolve, 1000);
-    });
-  },
-
-  // 查看健康详情
-  viewHealthDetail(e) {
-    const type = e.currentTarget.dataset.type;
+  // 查看详情
+  onDetailTap(e) {
+    e.stopPropagation();
+    const deviceId = e.currentTarget.dataset.id;
     wx.navigateTo({
-      url: `/pages/health-detail/health-detail?type=${type}`
-    });
-  },
-
-  // 切换图表
-  switchChart(e) {
-    const type = e.currentTarget.dataset.type;
-    const chartSummaries = {
-      bloodPressure: '您的血压在过去一周内保持稳定，建议继续保持良好的生活习惯。',
-      heartRate: '您的心率变化正常，适度运动有助于心血管健康。',
-      bloodSugar: '您的血糖控制良好，请继续保持健康饮食。',
-      temperature: '您的体温正常，身体状况良好。'
-    };
-    
-    this.setData({
-      currentChart: type,
-      chartSummary: chartSummaries[type]
-    });
-  },
-
-  // 记录健康数据
-  recordHealth() {
-    wx.navigateTo({
-      url: '/pages/health-record/health-record'
-    });
-  },
-
-  // 设备连接
-  deviceConnect() {
-    wx.navigateTo({
-      url: '/pages/device-connect/device-connect'
-    });
-  },
-
-  // 健康报告
-  healthReport() {
-    wx.navigateTo({
-      url: '/pages/health-report/health-report'
-    });
-  },
-
-  // 用药提醒管理
-  medicationReminder() {
-    wx.navigateTo({
-      url: '/pages/medication/medication'
-    });
-  },
-
-  // 管理用药
-  manageMedications() {
-    wx.navigateTo({
-      url: '/pages/medication/medication'
-    });
-  },
-
-  // 切换用药状态
-  toggleMedication(e) {
-    const medicationId = e.currentTarget.dataset.id;
-    const medications = this.data.medications.map(item => {
-      if (item.id === medicationId) {
-        return { ...item, taken: !item.taken };
-      }
-      return item;
-    });
-    
-    this.setData({ medications });
-    
-    // 震动反馈
-    wx.vibrateShort();
-    
-    // 显示提示
-    const medication = medications.find(item => item.id === medicationId);
-    wx.showToast({
-      title: medication.taken ? '已标记为已服用' : '已取消标记',
-      icon: 'success'
-    });
-  },
-
-  // 查看所有记录
-  viewAllRecords() {
-    wx.navigateTo({
-      url: '/pages/health-records/health-records'
-    });
-  },
-
-  // 查看记录详情
-  viewRecordDetail(e) {
-    const recordId = e.currentTarget.dataset.id;
-    wx.navigateTo({
-      url: `/pages/health-record-detail/health-record-detail?id=${recordId}`
+      url: `/pages/device-detail/device-detail?id=${deviceId}`
     });
   },
 
   // 分享
   onShareAppMessage() {
     return {
-      title: '云数银龄 - 健康管理',
+      title: '云数银龄 - 设备管理',
       path: '/pages/health/health'
     };
   }

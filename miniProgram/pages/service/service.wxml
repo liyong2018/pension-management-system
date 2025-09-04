@@ -1,11 +1,5 @@
 <!--pages/service/service.wxml-->
 <view class="service-container">
-  <!-- 页面标题 -->
-  <view class="page-header">
-    <text class="page-title">养老服务</text>
-    <text class="page-subtitle">专业的养老机构为您提供优质服务</text>
-  </view>
-
   <!-- 搜索栏 -->
   <view class="search-section">
     <view class="search-box">

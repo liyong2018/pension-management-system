@@ -1,0 +1,87 @@
+<!-- 社区动态详情页 -->
+<view class="container">
+  <!-- 加载状态 -->
+  <view class="loading-container" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 错误状态 -->
+  <view class="error-container" wx:elif="{{error}}">
+    <view class="error-icon">⚠️</view>
+    <text class="error-text">{{error}}</text>
+    <button class="retry-btn" bindtap="onRetry">重试</button>
+  </view>
+
+  <!-- 新闻内容 -->
+  <view class="news-container" wx:else>
+    <!-- 新闻头部 -->
+    <view class="news-header">
+      <!-- 新闻图片 -->
+      <view class="news-image-container" wx:if="{{newsDetail.image}}">
+        <image class="news-image" src="{{newsDetail.image}}" mode="aspectFill" bindtap="onPreviewImage"></image>
+      </view>
+      
+      <!-- 新闻标题 -->
+      <text class="news-title">{{newsDetail.title}}</text>
+      
+      <!-- 新闻标签 -->
+      <view class="news-tags" wx:if="{{newsDetail.tags.length > 0}}">
+        <view class="tag-item" wx:for="{{newsDetail.tags}}" wx:key="*this">
+          <text class="tag-text">{{item}}</text>
+        </view>
+      </view>
+      
+      <!-- 新闻元信息 -->
+      <view class="news-meta">
+        <view class="meta-item">
+          <text class="meta-label">作者：</text>
+          <text class="meta-value">{{newsDetail.author}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">发布时间：</text>
+          <text class="meta-value">{{newsDetail.publishTime}}</text>
+        </view>
+        <view class="meta-stats">
+          <text class="stat-item">阅读 {{newsDetail.readCount}}</text>
+          <text class="stat-item">点赞 {{newsDetail.likeCount}}</text>
+          <text class="stat-item">评论 {{newsDetail.commentCount}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 新闻正文 -->
+    <view class="news-body">
+      <rich-text class="news-content" nodes="{{newsDetail.content}}"></rich-text>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="news-actions">
+      <button class="action-btn like-btn {{newsDetail.isLiked ? 'liked' : ''}}" bindtap="onToggleLike">
+        <text class="btn-icon">{{newsDetail.isLiked ? '❤️' : '🤍'}}</text>
+        <text class="btn-text">{{newsDetail.isLiked ? '已点赞' : '点赞'}}</text>
+        <text class="btn-count">({{newsDetail.likeCount}})</text>
+      </button>
+      
+      <button class="action-btn share-btn" bindtap="onShare">
+        <text class="btn-icon">📤</text>
+        <text class="btn-text">分享</text>
+      </button>
+    </view>
+
+    <!-- 相关新闻 -->
+    <view class="related-news" wx:if="{{newsDetail.relatedNews.length > 0}}">
+      <view class="section-title">相关动态</view>
+      <view class="related-list">
+        <view class="related-item" wx:for="{{newsDetail.relatedNews}}" wx:key="id" bindtap="onViewRelated" data-id="{{item.id}}">
+          <image class="related-image" src="{{item.image}}" mode="aspectFill" wx:if="{{item.image}}"></image>
+          <view class="related-content">
+            <text class="related-title">{{item.title}}</text>
+            <text class="related-time">{{item.publishTime}}</text>
+          </view>
+          <view class="related-arrow">></view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
