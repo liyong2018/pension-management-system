@@ -37,4 +37,21 @@ public class DictionaryDTO {
     
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
-} 
+
+    // Getter and Setter methods
+    public String getDictType() {
+        return dictType;
+    }
+
+    public void setDictType(String dictType) {
+        this.dictType = dictType;
+    }
+
+    public String getDictCode() {
+        return dictCode;
+    }
+
+    public void setDictCode(String dictCode) {
+        this.dictCode = dictCode;
+    }
+}

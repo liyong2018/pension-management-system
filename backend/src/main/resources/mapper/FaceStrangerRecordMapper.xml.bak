@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pension.dao.FaceStrangerRecordDao">
+    
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.example.pension.model.FaceStrangerRecord">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="snap_id" property="snapId" jdbcType="INTEGER"/>
+        <result column="snap_time" property="snapTime" jdbcType="TIMESTAMP"/>
+        <result column="image_path" property="imagePath" jdbcType="VARCHAR"/>
+        <result column="temperature" property="temperature" jdbcType="DOUBLE"/>
+        <result column="device_id" property="deviceId" jdbcType="VARCHAR"/>
+        <result column="organization_id" property="organizationId" jdbcType="BIGINT"/>
+        <result column="process_status" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="process_result" property="processResult" jdbcType="VARCHAR"/>
+        <result column="processed_by" property="processedBy" jdbcType="BIGINT"/>
+        <result column="processed_at" property="processedAt" jdbcType="TIMESTAMP"/>
+        <result column="remarks" property="remarks" jdbcType="VARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    
+    <!-- 基础列 -->
+    <sql id="Base_Column_List">
+        id, snap_id, snap_time, image_path, temperature, device_id, organization_id,
+        process_status, process_result, processed_by, processed_at, remarks, created_at, updated_at
+    </sql>
+    
+    <!-- 插入陌生人抓拍记录 -->
+    <insert id="insert" parameterType="com.example.pension.model.FaceStrangerRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO face_stranger_record (
+            snap_id, snap_time, image_path, temperature, device_id, organization_id,
+            process_status, process_result, processed_by, processed_at, remarks, created_at, updated_at
+        ) VALUES (
+            #{snapId}, #{snapTime}, #{imagePath}, #{temperature}, #{deviceId}, #{organizationId},
+            #{processStatus}, #{processResult}, #{processedBy}, #{processedAt}, #{remarks}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+    
+    <!-- 根据ID查询 -->
+    <select id="findById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM face_stranger_record
+        WHERE id = #{id}
+    </select>
+    
+    <!-- 查询所有记录 -->
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM face_stranger_record
+        ORDER BY snap_time DESC
+    </select>
+    
+    <!-- 搜索陌生人抓拍记录 -->
+    <select id="search" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM face_stranger_record
+        <where>
+            <if test="deviceId != null and deviceId != ''">
+                AND device_id = #{deviceId}
+            </if>
+            <if test="processStatus != null and processStatus != ''">
+                AND process_status = #{processStatus}
+            </if>
+            <if test="organizationId != null">
+                AND organization_id = #{organizationId}
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND snap_time >= #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                AND snap_time <= #{endTime}
+            </if>
+        </where>
+        ORDER BY snap_time DESC
+    </select>
+    
+    <!-- 根据设备ID查询最近记录 -->
+    <select id="findRecentByDevice" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM face_stranger_record
+        WHERE device_id = #{deviceId}
+        ORDER BY snap_time DESC
+        LIMIT #{limit}
+    </select>
+    
+    <!-- 查询待处理的抓拍记录 -->
+    <select id="findPendingRecords" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM face_stranger_record
+        WHERE process_status = 'PENDING'
+        <if test="organizationId != null">
+            AND organization_id = #{organizationId}
+        </if>
+        ORDER BY snap_time DESC
+    </select>
+    
+    <!-- 根据时间范围统计数量 -->
+    <select id="countByDateRange" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM face_stranger_record
+        WHERE snap_time >= #{startTime}
+        AND snap_time < #{endTime}
+    </select>
+    
+    <!-- 根据处理状态统计数量 -->
+    <select id="countByProcessStatus" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM face_stranger_record
+        WHERE process_status = #{processStatus}
+    </select>
+    
+    <!-- 根据机构ID统计数量 -->
+    <select id="countByOrganization" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM face_stranger_record
+        WHERE organization_id = #{organizationId}
+    </select>
+    
+    <!-- 根据设备ID统计数量 -->
+    <select id="countByDevice" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM face_stranger_record
+        WHERE device_id = #{deviceId}
+    </select>
+    
+    <!-- 更新陌生人抓拍记录 -->
+    <update id="update" parameterType="com.example.pension.model.FaceStrangerRecord">
+        UPDATE face_stranger_record
+        <set>
+            <if test="snapId != null">snap_id = #{snapId},</if>
+            <if test="snapTime != null">snap_time = #{snapTime},</if>
+            <if test="imagePath != null">image_path = #{imagePath},</if>
+            <if test="temperature != null">temperature = #{temperature},</if>
+            <if test="deviceId != null">device_id = #{deviceId},</if>
+            <if test="organizationId != null">organization_id = #{organizationId},</if>
+            <if test="processStatus != null">process_status = #{processStatus},</if>
+            <if test="processResult != null">process_result = #{processResult},</if>
+            <if test="processedBy != null">processed_by = #{processedBy},</if>
+            <if test="processedAt != null">processed_at = #{processedAt},</if>
+            <if test="remarks != null">remarks = #{remarks},</if>
+            updated_at = #{updatedAt}
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 根据ID删除 -->
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM face_stranger_record WHERE id = #{id}
+    </delete>
+    
+    <!-- 根据snapId查询（防重复） -->
+    <select id="findBySnapId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM face_stranger_record
+        WHERE snap_id = #{snapId}
+    </select>
+    
+    <!-- 根据机构ID查询 -->
+    <select id="findByOrganization" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM face_stranger_record
+        WHERE organization_id = #{organizationId}
+        ORDER BY snap_time DESC
+    </select>
+    
+    <!-- 根据设备ID查询 -->
+    <select id="findByDevice" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM face_stranger_record
+        WHERE device_id = #{deviceId}
+        ORDER BY snap_time DESC
+    </select>
+    
+    <!-- 根据处理状态查询 -->
+    <select id="findByProcessStatus" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM face_stranger_record
+        WHERE process_status = #{processStatus}
+        ORDER BY snap_time DESC
+    </select>
+    
+    <!-- 批量更新处理状态 -->
+    <update id="batchUpdateProcessStatus">
+        UPDATE face_stranger_record
+        SET process_status = #{processStatus},
+            processed_by = #{processedBy},
+            processed_at = NOW(),
+            updated_at = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+    
+</mapper>

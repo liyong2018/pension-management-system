@@ -89,4 +89,21 @@ public class Organization {
 
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
-} 
+    
+    // 手动添加getter方法
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+}

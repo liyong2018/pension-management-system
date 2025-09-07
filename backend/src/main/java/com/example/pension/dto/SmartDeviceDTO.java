@@ -82,4 +82,29 @@ public class SmartDeviceDTO {
     private String createdBy;
 
     private String updatedBy;
-} 
+
+    // Getter and Setter methods
+    public String getDeviceCode() {
+        return deviceCode;
+    }
+
+    public void setDeviceCode(String deviceCode) {
+        this.deviceCode = deviceCode;
+    }
+
+    public Long getElderlyId() {
+        return elderlyId;
+    }
+
+    public void setElderlyId(Long elderlyId) {
+        this.elderlyId = elderlyId;
+    }
+
+    public Long getOrganizationId() {
+        return organizationId;
+    }
+
+    public void setOrganizationId(Long organizationId) {
+        this.organizationId = organizationId;
+    }
+}

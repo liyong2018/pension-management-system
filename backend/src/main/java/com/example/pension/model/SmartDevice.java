@@ -80,4 +80,92 @@ public class SmartDevice {
     private String updatedBy;
 
     private Boolean isDeleted = false;
-} 
+    
+    public void setDeviceCode(String deviceCode) {
+        this.deviceCode = deviceCode;
+    }
+    
+    public String getDeviceCode() {
+        return deviceCode;
+    }
+    
+    public void setDeviceName(String deviceName) {
+        this.deviceName = deviceName;
+    }
+    
+    public String getDeviceName() {
+        return deviceName;
+    }
+    
+    public void setDeviceType(String deviceType) {
+        this.deviceType = deviceType;
+    }
+    
+    public String getDeviceType() {
+        return deviceType;
+    }
+    
+    public void setDeviceStatus(String deviceStatus) {
+        this.deviceStatus = deviceStatus;
+    }
+    
+    public String getDeviceStatus() {
+        return deviceStatus;
+    }
+    
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public String getDeviceBrand() {
+        return deviceBrand;
+    }
+    
+    public void setDeviceBrand(String deviceBrand) {
+        this.deviceBrand = deviceBrand;
+    }
+    
+    public String getDeviceModel() {
+        return deviceModel;
+    }
+    
+    public void setDeviceModel(String deviceModel) {
+        this.deviceModel = deviceModel;
+    }
+    
+    public LocalDate getPurchaseDate() {
+        return purchaseDate;
+    }
+    
+    public void setPurchaseDate(LocalDate purchaseDate) {
+        this.purchaseDate = purchaseDate;
+    }
+    
+    public String getInstallationLocation() {
+        return installationLocation;
+    }
+    
+    public void setInstallationLocation(String installationLocation) {
+        this.installationLocation = installationLocation;
+    }
+    
+    public ElderlyProfile getElderlyProfile() {
+        return elderlyProfile;
+    }
+    
+    public void setElderlyProfile(ElderlyProfile elderlyProfile) {
+        this.elderlyProfile = elderlyProfile;
+    }
+    
+    public Organization getOrganization() {
+        return organization;
+    }
+    
+    public void setOrganization(Organization organization) {
+        this.organization = organization;
+    }
+}

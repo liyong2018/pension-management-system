@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.pension.dao.ElderlyProfileDao">
+
+    <!-- Result Map -->
+    <resultMap id="ElderlyProfileResultMap" type="com.example.pension.model.ElderlyProfile">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="gender" column="gender"/>
+        <result property="birthDate" column="birth_date"/>
+        <result property="idCardNumber" column="id_card_number"/>
+        <result property="phone" column="phone"/>
+        <result property="elderlyType" column="elderly_type"/>
+        <result property="pensionType" column="pension_type"/>
+        <result property="abilityAssessment" column="ability_assessment"/>
+        <result property="medicalHistory" column="medical_history"/>
+        <result property="allergyHistory" column="allergy_history"/>
+        <result property="physicalExamReport" column="physical_exam_report"/>
+        <result property="currentHealthStatus" column="current_health_status"/>
+        <result property="careLevel" column="care_level"/>
+        <result property="livingHabits" column="living_habits"/>
+        <result property="hobbies" column="hobbies"/>
+        <result property="religiousBelief" column="religious_belief"/>
+        <result property="remarks" column="remarks"/>
+
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <association property="organization" javaType="com.example.pension.model.Organization">
+            <id property="id" column="org_id"/>
+            <result property="name" column="org_name"/>
+            <result property="type" column="org_type"/>
+            <result property="address" column="org_address"/>
+            <result property="phone" column="org_phone"/>
+            <result property="contactPerson" column="org_contact_person"/>
+            <result property="description" column="org_description"/>
+            <result property="createTime" column="org_create_time"/>
+            <result property="updateTime" column="org_update_time"/>
+        </association>
+    </resultMap>
+
+    <!-- Base Column List -->
+    <sql id="Base_Column_List">
+        ep.id, ep.name, ep.gender, ep.birth_date, ep.id_card_number, ep.phone,
+        ep.elderly_type, ep.pension_type, ep.ability_assessment, ep.medical_history, 
+        ep.allergy_history, ep.physical_exam_report, ep.current_health_status, ep.care_level, 
+        ep.living_habits, ep.hobbies, ep.religious_belief, ep.remarks, 
+        ep.organization_id, ep.create_time, ep.update_time
+    </sql>
+
+    <!-- Organization Column List -->
+    <sql id="Organization_Column_List">
+        o.id as org_id, o.name as org_name, o.type as org_type, o.address as org_address,
+        o.phone as org_phone, o.director_contact as org_contact_person, o.description as org_description,
+        o.create_time as org_create_time, o.update_time as org_update_time
+    </sql>
+
+    <!-- Find by ID -->
+    <select id="findById" resultMap="ElderlyProfileResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>,
+        <include refid="Organization_Column_List"/>
+        FROM elderly_profile ep
+        LEFT JOIN organization o ON ep.organization_id = o.id
+        WHERE ep.id = #{id}
+    </select>
+
+    <!-- Find by Custom ID -->
+    <select id="findByCustomId" resultMap="ElderlyProfileResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>,
+        <include refid="Organization_Column_List"/>
+        FROM elderly_profile ep
+        LEFT JOIN organization o ON ep.organization_id = o.id
+        WHERE ep.custom_id = #{customId}
+    </select>
+
+    <!-- Find by ID Card Number -->
+    <select id="findByIdCardNumber" resultMap="ElderlyProfileResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>,
+        <include refid="Organization_Column_List"/>
+        FROM elderly_profile ep
+        LEFT JOIN organization o ON ep.organization_id = o.id
+        WHERE ep.id_card_number = #{idCardNumber}
+    </select>
+
+    <!-- Find by ID Card Number and ID Not -->
+    <select id="findByIdCardNumberAndIdNot" resultMap="ElderlyProfileResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>,
+        <include refid="Organization_Column_List"/>
+        FROM elderly_profile ep
+        LEFT JOIN organization o ON ep.organization_id = o.id
+        WHERE ep.id_card_number = #{idCardNumber} AND ep.id != #{id}
+    </select>
+
+    <!-- Find with Conditions -->
+    <select id="findWithConditions" resultMap="ElderlyProfileResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>,
+        <include refid="Organization_Column_List"/>
+        FROM elderly_profile ep
+        LEFT JOIN organization o ON ep.organization_id = o.id
+        <where>
+            <if test="name != null and name != ''">
+                AND ep.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="idCardNumber != null and idCardNumber != ''">
+                AND ep.id_card_number LIKE CONCAT('%', #{idCardNumber}, '%')
+            </if>
+            <if test="phone != null and phone != ''">
+                AND ep.phone LIKE CONCAT('%', #{phone}, '%')
+            </if>
+            <if test="elderlyType != null and elderlyType != ''">
+                AND ep.elderly_type = #{elderlyType}
+            </if>
+            <if test="organizationId != null">
+                AND ep.organization_id = #{organizationId}
+            </if>
+        </where>
+        ORDER BY ep.create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- Count with Conditions -->
+    <select id="countWithConditions" resultType="long">
+        SELECT COUNT(*)
+        FROM elderly_profile ep
+        <where>
+            <if test="name != null and name != ''">
+                AND ep.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="idCardNumber != null and idCardNumber != ''">
+                AND ep.id_card_number LIKE CONCAT('%', #{idCardNumber}, '%')
+            </if>
+            <if test="phone != null and phone != ''">
+                AND ep.phone LIKE CONCAT('%', #{phone}, '%')
+            </if>
+            <if test="elderlyType != null and elderlyType != ''">
+                AND ep.elderly_type = #{elderlyType}
+            </if>
+            <if test="organizationId != null">
+                AND ep.organization_id = #{organizationId}
+            </if>
+        </where>
+    </select>
+
+    <!-- Find All by Organization ID -->
+    <select id="findAllByOrganizationId" resultMap="ElderlyProfileResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>,
+        <include refid="Organization_Column_List"/>
+        FROM elderly_profile ep
+        LEFT JOIN organization o ON ep.organization_id = o.id
+        WHERE ep.organization_id = #{organizationId}
+        ORDER BY ep.create_time DESC
+    </select>
+
+    <!-- Find All -->
+    <select id="findAll" resultMap="ElderlyProfileResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>,
+        <include refid="Organization_Column_List"/>
+        FROM elderly_profile ep
+        LEFT JOIN organization o ON ep.organization_id = o.id
+        ORDER BY ep.create_time DESC
+    </select>
+
+    <!-- Insert -->
+    <insert id="insert" parameterType="com.example.pension.model.ElderlyProfile" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO elderly_profile (
+            name, gender, birth_date, id_card_number, phone, elderly_type, pension_type,
+            ability_assessment, medical_history, allergy_history, physical_exam_report,
+            current_health_status, care_level, living_habits, hobbies,
+            religious_belief, remarks, organization_id, create_time, update_time
+        ) VALUES (
+            #{name}, #{gender}, #{birthDate}, #{idCardNumber}, #{phone}, #{elderlyType}, #{pensionType},
+            #{abilityAssessment}, #{medicalHistory}, #{allergyHistory}, #{physicalExamReport},
+            #{currentHealthStatus}, #{careLevel}, #{livingHabits}, #{hobbies},
+            #{religiousBelief}, #{remarks}, #{organization.id}, NOW(), NOW()
+        )
+    </insert>
+
+    <!-- Update -->
+    <update id="update" parameterType="com.example.pension.model.ElderlyProfile">
+        UPDATE elderly_profile
+        SET name = #{name},
+            gender = #{gender},
+            birth_date = #{birthDate},
+            id_card_number = #{idCardNumber},
+            phone = #{phone},
+            elderly_type = #{elderlyType},
+            pension_type = #{pensionType},
+            ability_assessment = #{abilityAssessment},
+            medical_history = #{medicalHistory},
+            allergy_history = #{allergyHistory},
+            physical_exam_report = #{physicalExamReport},
+            current_health_status = #{currentHealthStatus},
+            care_level = #{careLevel},
+            living_habits = #{livingHabits},
+            hobbies = #{hobbies},
+            religious_belief = #{religiousBelief},
+            remarks = #{remarks},
+            organization_id = #{organization.id},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- Delete by ID -->
+    <delete id="deleteById">
+        DELETE FROM elderly_profile WHERE id = #{id}
+    </delete>
+
+</mapper>

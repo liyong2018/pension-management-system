@@ -20,6 +20,8 @@ public class ElderlyProfile {
     
     private String idCardNumber;
     
+    private String customId;
+    
     private String phone;
     
     private String photoUrl;
@@ -67,7 +69,19 @@ public class ElderlyProfile {
     }
     
     public void removeFamilyMember(ElderlyFamilyMember familyMember) {
-        familyMembers.remove(familyMember);
+        this.familyMembers.remove(familyMember);
         familyMember.setElderlyProfile(null);
     }
-} 
+    
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public Long getOrganizationId() {
+        return organization != null ? organization.getId() : null;
+    }
+}

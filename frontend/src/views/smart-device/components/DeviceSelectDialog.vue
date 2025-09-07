@@ -168,7 +168,8 @@ const getDeviceTypeTag = (type) => {
     '健康监测设备': 'success',
     '智能家居设备': 'primary',
     '安全设备': 'warning',
-    '定位设备': 'info'
+    '定位设备': 'info',
+    '人脸识别设备': 'danger'
   }
   return map[type] || ''
 }
@@ -215,4 +216,4 @@ watch(() => props.modelValue, (newVal) => {
 .dialog-footer {
   text-align: right;
 }
-</style> 
+</style>

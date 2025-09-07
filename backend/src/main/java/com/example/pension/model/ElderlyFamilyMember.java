@@ -20,4 +20,13 @@ public class ElderlyFamilyMember {
     private LocalDateTime createTime;
     
     private LocalDateTime updateTime;
-} 
+
+    // Getter and Setter methods
+    public ElderlyProfile getElderlyProfile() {
+        return elderlyProfile;
+    }
+
+    public void setElderlyProfile(ElderlyProfile elderlyProfile) {
+        this.elderlyProfile = elderlyProfile;
+    }
+}

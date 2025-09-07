@@ -29,7 +29,9 @@ services:
   mysql:
     image: mysql:8.0
     container_name: pension-mysql
-    network_mode: host
+    # network_mode: host
+    ports:
+      - "13306:13306"
     environment:
       - MYSQL_ROOT_PASSWORD=Htht1234
       - MYSQL_DATABASE=pension_management_system

@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pension.dao.SmartDeviceDao">
+
+    <!-- 结果映射 -->
+    <resultMap id="smartDeviceMap" type="com.example.pension.model.SmartDevice">
+        <id property="id" column="id"/>
+        <result property="deviceCode" column="device_code"/>
+        <result property="deviceName" column="device_name"/>
+        <result property="deviceType" column="device_type"/>
+        <result property="deviceBrand" column="device_brand"/>
+        <result property="deviceModel" column="device_model"/>
+        <result property="deviceStatus" column="device_status"/>
+        <result property="purchaseDate" column="purchase_date"/>
+        <result property="installationLocation" column="installation_location"/>
+        <result property="ipAddress" column="ip_address"/>
+        <result property="macAddress" column="mac_address"/>
+        <result property="wifiConfig" column="wifi_config"/>
+        <result property="communicationProtocol" column="communication_protocol"/>
+        <result property="dataCollectionFrequency" column="data_collection_frequency"/>
+        <result property="alarmThreshold" column="alarm_threshold"/>
+        <result property="batteryThreshold" column="battery_threshold"/>
+        <result property="realTimeData" column="real_time_data"/>
+        <result property="batteryLevel" column="battery_level"/>
+        <result property="signalStrength" column="signal_strength"/>
+        <result property="lastCommunicationTime" column="last_communication_time"/>
+        <result property="dataUploadStatus" column="data_upload_status"/>
+        <result property="warrantyExpiryDate" column="warranty_expiry_date"/>
+        <result property="maintenanceCycle" column="maintenance_cycle"/>
+        <result property="nextMaintenanceDate" column="next_maintenance_date"/>
+        <result property="failureCount" column="failure_count"/>
+        <result property="createTime" column="created_time"/>
+        <result property="updateTime" column="updated_time"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="updatedBy" column="updated_by"/>
+        <result property="isDeleted" column="is_deleted"/>
+        
+        <!-- 关联映射 -->
+        <association property="elderlyProfile" javaType="com.example.pension.model.ElderlyProfile">
+            <id property="id" column="elderly_id"/>
+            <result property="name" column="elderly_name"/>
+        </association>
+        
+        <association property="organization" javaType="com.example.pension.model.Organization">
+            <id property="id" column="organization_id"/>
+            <result property="name" column="organization_name"/>
+        </association>
+    </resultMap>
+
+    <!-- 基础查询字段 -->
+    <sql id="baseColumns">
+        sd.id, sd.device_code, sd.device_name, sd.device_type, sd.device_brand, sd.device_model,
+        sd.device_status, sd.purchase_date, sd.installation_location, sd.ip_address, sd.mac_address,
+        sd.wifi_config, sd.communication_protocol, sd.data_collection_frequency, sd.alarm_threshold,
+        sd.battery_threshold, sd.real_time_data, sd.battery_level, sd.signal_strength,
+        sd.last_communication_time, sd.data_upload_status, sd.warranty_expiry_date,
+        sd.maintenance_cycle, sd.next_maintenance_date, sd.failure_count, sd.created_time,
+        sd.updated_time, sd.created_by, sd.updated_by, sd.is_deleted,
+        ep.id as elderly_id, ep.name as elderly_name,
+        org.id as organization_id, org.name as organization_name
+    </sql>
+
+    <!-- 基础查询表 -->
+    <sql id="baseTables">
+        smart_device sd
+        LEFT JOIN elderly_profile ep ON sd.elderly_id = ep.id
+        LEFT JOIN organization org ON sd.organization_id = org.id
+    </sql>
+
+    <!-- 查询条件 -->
+    <sql id="queryConditions">
+        <where>
+            sd.is_deleted = 0
+            <if test="deviceName != null and deviceName != ''">
+                AND sd.device_name LIKE CONCAT('%', #{deviceName}, '%')
+            </if>
+            <if test="deviceType != null and deviceType != ''">
+                AND sd.device_type = #{deviceType}
+            </if>
+            <if test="deviceStatus != null and deviceStatus != ''">
+                AND sd.device_status = #{deviceStatus}
+            </if>
+            <if test="elderlyId != null">
+                AND sd.elderly_id = #{elderlyId}
+            </if>
+            <if test="organizationId != null">
+                AND sd.organization_id = #{organizationId}
+            </if>
+        </where>
+    </sql>
+
+    <!-- 插入设备 -->
+    <insert id="insert" parameterType="com.example.pension.model.SmartDevice" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO smart_device (
+            device_code, device_name, device_type, device_brand, device_model, device_status,
+            purchase_date, installation_location, elderly_id, organization_id, ip_address,
+            mac_address, wifi_config, communication_protocol, data_collection_frequency,
+            alarm_threshold, battery_threshold, real_time_data, battery_level, signal_strength,
+            last_communication_time, data_upload_status, warranty_expiry_date, maintenance_cycle,
+            next_maintenance_date, failure_count, created_time, updated_time, created_by, updated_by, is_deleted
+        ) VALUES (
+            #{deviceCode}, #{deviceName}, #{deviceType}, #{deviceBrand}, #{deviceModel}, #{deviceStatus},
+            #{purchaseDate}, #{installationLocation}, 
+            #{elderlyProfile.id}, #{organization.id}, #{ipAddress},
+            #{macAddress}, #{wifiConfig}, #{communicationProtocol}, #{dataCollectionFrequency},
+            #{alarmThreshold}, #{batteryThreshold}, #{realTimeData}, #{batteryLevel}, #{signalStrength},
+            #{lastCommunicationTime}, #{dataUploadStatus}, #{warrantyExpiryDate}, #{maintenanceCycle},
+            #{nextMaintenanceDate}, #{failureCount}, #{createTime}, #{updateTime}, #{createdBy}, #{updatedBy}, #{isDeleted}
+        )
+    </insert>
+
+    <!-- 更新设备 -->
+    <update id="update" parameterType="com.example.pension.model.SmartDevice">
+        UPDATE smart_device
+        <set>
+            <if test="deviceCode != null">device_code = #{deviceCode},</if>
+            <if test="deviceName != null">device_name = #{deviceName},</if>
+            <if test="deviceType != null">device_type = #{deviceType},</if>
+            <if test="deviceBrand != null">device_brand = #{deviceBrand},</if>
+            <if test="deviceModel != null">device_model = #{deviceModel},</if>
+            <if test="deviceStatus != null">device_status = #{deviceStatus},</if>
+            <if test="purchaseDate != null">purchase_date = #{purchaseDate},</if>
+            <if test="installationLocation != null">installation_location = #{installationLocation},</if>
+            <if test="elderlyProfile != null">elderly_id = #{elderlyProfile.id},</if>
+            <if test="organization != null">organization_id = #{organization.id},</if>
+            <if test="ipAddress != null">ip_address = #{ipAddress},</if>
+            <if test="macAddress != null">mac_address = #{macAddress},</if>
+            <if test="wifiConfig != null">wifi_config = #{wifiConfig},</if>
+            <if test="communicationProtocol != null">communication_protocol = #{communicationProtocol},</if>
+            <if test="dataCollectionFrequency != null">data_collection_frequency = #{dataCollectionFrequency},</if>
+            <if test="alarmThreshold != null">alarm_threshold = #{alarmThreshold},</if>
+            <if test="batteryThreshold != null">battery_threshold = #{batteryThreshold},</if>
+            <if test="realTimeData != null">real_time_data = #{realTimeData},</if>
+            <if test="batteryLevel != null">battery_level = #{batteryLevel},</if>
+            <if test="signalStrength != null">signal_strength = #{signalStrength},</if>
+            <if test="lastCommunicationTime != null">last_communication_time = #{lastCommunicationTime},</if>
+            <if test="dataUploadStatus != null">data_upload_status = #{dataUploadStatus},</if>
+            <if test="warrantyExpiryDate != null">warranty_expiry_date = #{warrantyExpiryDate},</if>
+            <if test="maintenanceCycle != null">maintenance_cycle = #{maintenanceCycle},</if>
+            <if test="nextMaintenanceDate != null">next_maintenance_date = #{nextMaintenanceDate},</if>
+            <if test="failureCount != null">failure_count = #{failureCount},</if>
+            <if test="updateTime != null">updated_time = #{updateTime},</if>
+            <if test="updatedBy != null">updated_by = #{updatedBy}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除设备 -->
+    <delete id="deleteById">
+        DELETE FROM smart_device WHERE id = #{id}
+    </delete>
+
+    <!-- 批量删除设备 -->
+    <delete id="deleteBatchByIds">
+        DELETE FROM smart_device WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 根据ID查询设备 -->
+    <select id="findById" resultMap="smartDeviceMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="baseTables"/>
+        WHERE sd.id = #{id} AND sd.is_deleted = 0
+    </select>
+
+    <!-- 根据设备编号查询设备 -->
+    <select id="findByDeviceCode" resultMap="smartDeviceMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="baseTables"/>
+        WHERE sd.device_code = #{deviceCode} AND sd.is_deleted = 0
+    </select>
+
+    <!-- 根据设备编号查询设备（排除指定ID） -->
+    <select id="findByDeviceCodeAndIdNot" resultMap="smartDeviceMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="baseTables"/>
+        WHERE sd.device_code = #{deviceCode} AND sd.id != #{id} AND sd.is_deleted = 0
+    </select>
+
+    <!-- 多条件查询设备 -->
+    <select id="findWithConditions" resultMap="smartDeviceMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="baseTables"/>
+        <include refid="queryConditions"/>
+        ORDER BY sd.id DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <!-- 根据老人ID查询设备 -->
+    <select id="findAllByElderlyId" resultMap="smartDeviceMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="baseTables"/>
+        WHERE sd.elderly_id = #{elderlyId} AND sd.is_deleted = 0
+        ORDER BY sd.id DESC
+    </select>
+
+    <!-- 根据机构ID查询设备 -->
+    <select id="findAllByOrganizationId" resultMap="smartDeviceMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="baseTables"/>
+        WHERE sd.organization_id = #{organizationId} AND sd.is_deleted = 0
+        ORDER BY sd.id DESC
+    </select>
+
+    <!-- 根据设备类型统计数量 -->
+    <select id="countByDeviceType" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM smart_device 
+        WHERE device_type = #{deviceType} AND is_deleted = 0
+    </select>
+
+    <!-- 根据设备状态统计数量 -->
+    <select id="countByDeviceStatus" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM smart_device 
+        WHERE device_status = #{deviceStatus} AND is_deleted = 0
+    </select>
+
+    <!-- 根据老人ID统计设备数量 -->
+    <select id="countByElderlyId" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM smart_device 
+        WHERE elderly_id = #{elderlyId} AND is_deleted = 0
+    </select>
+
+    <!-- 查询需要维护的设备 -->
+    <select id="findDevicesNeedMaintenance" resultMap="smartDeviceMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="baseTables"/>
+        WHERE sd.is_deleted = 0 
+          AND sd.next_maintenance_date IS NOT NULL 
+          AND sd.next_maintenance_date &lt;= CURDATE()
+        ORDER BY sd.next_maintenance_date ASC
+    </select>
+
+    <!-- 新增：按设备类型分组统计设备数量和在线数量 -->
+    <select id="getDeviceStatisticsGroupedByType" resultType="com.example.pension.dto.DeviceTypeDetailedStatDTO">
+        SELECT
+            device_type AS deviceType,
+            COUNT(*) AS totalCount,
+            SUM(CASE WHEN device_status = '在线' THEN 1 ELSE 0 END) AS onlineCount
+        FROM
+            smart_device
+        WHERE is_deleted = 0
+        GROUP BY
+            device_type
+        ORDER BY
+            totalCount DESC
+    </select>
+
+</mapper> 

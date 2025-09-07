@@ -9,6 +9,7 @@ import com.example.pension.model.ElderlyFamilyMember;
 import com.example.pension.model.ElderlyProfile;
 import com.example.pension.service.ElderlyFamilyMemberService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,12 +17,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class ElderlyFamilyMemberServiceImpl implements ElderlyFamilyMemberService {
     
     private final ElderlyFamilyMemberDao familyMemberDao;
     private final ElderlyProfileDao elderlyProfileDao;
     private final ElderlyFamilyMemberDTOMapper familyMemberMapper;
+    
+    public ElderlyFamilyMemberServiceImpl(
+            ElderlyFamilyMemberDao familyMemberDao,
+            ElderlyProfileDao elderlyProfileDao,
+            @Qualifier("elderlyFamilyMemberDTOMapperImpl") ElderlyFamilyMemberDTOMapper familyMemberMapper) {
+        this.familyMemberDao = familyMemberDao;
+        this.elderlyProfileDao = elderlyProfileDao;
+        this.familyMemberMapper = familyMemberMapper;
+    }
     
     @Override
     @Transactional(readOnly = true)
@@ -85,4 +94,4 @@ public class ElderlyFamilyMemberServiceImpl implements ElderlyFamilyMemberServic
     public void deleteAllByElderlyId(Long elderlyId) {
         familyMemberDao.deleteByElderlyId(elderlyId);
     }
-} 
+}

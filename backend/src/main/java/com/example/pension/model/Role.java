@@ -27,4 +27,44 @@ public class Role {
 
     // 关联权限列表
     private List<MenuPermission> permissions;
-} 
+    
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public String getRoleName() {
+        return roleName;
+    }
+    
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
+    
+    public String getDescription() {
+        return description;
+    }
+    
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    
+    public String getRoleKey() {
+        return roleKey;
+    }
+    
+    public void setRoleKey(String roleKey) {
+        this.roleKey = roleKey;
+    }
+    
+    public String getStatus() {
+        return status;
+    }
+    
+    public void setStatus(String status) {
+        this.status = status;
+    }
+}

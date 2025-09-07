@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pension.dao.UserDao">
+
+    <resultMap id="UserResultMap" type="com.example.pension.model.User">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="passwordHash" column="password_hash"/>
+        <result property="fullName" column="full_name"/>
+        <result property="email" column="email"/>
+        <result property="phone" column="phone"/>
+        <result property="isAdmin" column="is_admin"/>
+        <result property="isActive" column="is_active"/>
+        <result property="lastLoginTime" column="last_login_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <association property="organization" javaType="com.example.pension.model.Organization">
+            <id property="id" column="org_id"/>
+            <result property="name" column="org_name"/>
+        </association>
+    </resultMap>
+
+    <sql id="userColumns">
+        u.id, u.username, u.password_hash, u.full_name, u.email, u.phone, u.is_admin, u.is_active, u.last_login_time, u.create_time, u.update_time
+    </sql>
+
+    <sql id="orgColumns">
+        o.id as org_id, o.name as org_name
+    </sql>
+
+    <select id="findByUsername" resultMap="UserResultMap">
+        SELECT <include refid="userColumns"/>, <include refid="orgColumns"/>
+        FROM system_user u
+        LEFT JOIN organization o ON u.organization_id = o.id
+        WHERE u.username = #{username}
+    </select>
+
+    <select id="existsByUsername" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM system_user WHERE username = #{username})
+    </select>
+
+    <select id="findById" resultMap="UserResultMap">
+        SELECT <include refid="userColumns"/>, <include refid="orgColumns"/>
+        FROM system_user u
+        LEFT JOIN organization o ON u.organization_id = o.id
+        WHERE u.id = #{id}
+    </select>
+
+    <insert id="save" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO system_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            username,
+            password_hash,
+            full_name,
+            email,
+            phone,
+            <if test="organization != null and organization.id != null">
+                organization_id,
+            </if>
+            is_admin,
+            is_active
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            #{username},
+            #{passwordHash},
+            #{fullName},
+            #{email},
+            #{phone},
+            <if test="organization != null and organization.id != null">
+                #{organization.id,jdbcType=BIGINT},
+            </if>
+            #{isAdmin},
+            #{isActive}
+        </trim>
+    </insert>
+
+    <update id="update">
+        UPDATE system_user
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="passwordHash != null">password_hash = #{passwordHash},</if>
+            <if test="fullName != null">full_name = #{fullName},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="organization != null and organization.id != null">organization_id = #{organization.id},</if>
+            <if test="organization == null">organization_id = NULL,</if>
+            <if test="isAdmin != null">is_admin = #{isAdmin},</if>
+            <if test="isActive != null">is_active = #{isActive},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM system_user WHERE id = #{id}
+    </delete>
+
+</mapper>

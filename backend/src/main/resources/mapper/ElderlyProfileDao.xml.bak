@@ -8,6 +8,7 @@
         <result property="gender" column="gender" />
         <result property="birthDate" column="birth_date" />
         <result property="idCardNumber" column="id_card_number" />
+        <result property="customId" column="custom_id" />
         <result property="phone" column="phone" />
         <result property="photoUrl" column="photo_url" />
         <result property="addressDetail" column="address_detail" />
@@ -35,7 +36,7 @@
     </resultMap>
 
     <sql id="selectElderlyProfileColumns">
-        ep.id, ep.name, ep.gender, ep.birth_date, ep.id_card_number, ep.phone, ep.photo_url, ep.address_detail,
+        ep.id, ep.name, ep.gender, ep.birth_date, ep.id_card_number, ep.custom_id, ep.phone, ep.photo_url, ep.address_detail,
         ep.community, ep.pension_type, ep.elderly_type, ep.medical_history, ep.allergy_history, ep.physical_exam_report,
         ep.current_health_status, ep.care_level, ep.ability_assessment, ep.living_habits, ep.hobbies,
         ep.religious_belief, ep.remarks, ep.create_time, ep.update_time,
@@ -179,5 +180,13 @@
             #{id}
         </foreach>
     </delete>
+    
+    <select id="findByCustomId" resultMap="ElderlyProfileResultMap">
+        SELECT <include refid="selectElderlyProfileColumns" />
+        FROM elderly_profile ep
+        LEFT JOIN organization o ON ep.organization_id = o.id
+        WHERE ep.custom_id = #{customId}
+        LIMIT 1
+    </select>
 
-</mapper> 
+</mapper>

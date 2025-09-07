@@ -45,4 +45,8 @@ public interface SmartDeviceDao {
     List<SmartDevice> findDevicesNeedMaintenance();
 
     List<DeviceTypeDetailedStatDTO> getDeviceStatisticsGroupedByType();
-} 
+
+    SmartDevice findByIpAddress(@Param("ipAddress") String ipAddress);
+    
+    SmartDevice findByFacesluiceId(@Param("facesluiceId") String facesluiceId);
+}

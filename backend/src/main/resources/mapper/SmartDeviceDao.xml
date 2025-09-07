@@ -249,4 +249,11 @@
             totalCount DESC
     </select>
 
-</mapper> 
+    <!-- 根据IP地址查询设备 -->
+    <select id="findByIpAddress" resultMap="smartDeviceMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="baseTables"/>
+        WHERE sd.ip_address = #{ipAddress} AND sd.is_deleted = 0
+    </select>
+
+</mapper>

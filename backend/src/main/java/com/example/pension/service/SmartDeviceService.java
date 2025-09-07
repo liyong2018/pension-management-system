@@ -2,6 +2,8 @@ package com.example.pension.service;
 
 import com.example.pension.dto.SmartDeviceDTO;
 import com.example.pension.dto.DeviceTypeDetailedStatDTO;
+import com.example.pension.model.face.PushData;
+import com.example.pension.model.face.HeartBeatInfo;
 import com.github.pagehelper.PageInfo;
 
 import java.util.List;
@@ -47,4 +49,14 @@ public interface SmartDeviceService {
     void updateDeviceRealTimeData(Long deviceId, String realTimeData);
 
     List<DeviceTypeDetailedStatDTO> getDeviceDetailedStatistics();
-} 
+
+    void updateLastCommunicationTime(String ipAddress);
+
+    void updateLastCommunicationTimeByDeviceCode(String deviceCode);
+
+    void updateLastCommunicationTimeWithHeartbeat(String ipAddress, PushData<HeartBeatInfo> heartbeatData);
+    
+    void updateLastCommunicationTimeWithHeartbeatByFacesluiceId(String facesluiceId, String ipAddress, PushData<HeartBeatInfo> heartbeatData);
+
+    void checkAndUpdateOfflineDevices();
+}

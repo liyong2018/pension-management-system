@@ -13,6 +13,7 @@
             <el-option label="智能家居设备" value="智能家居设备"></el-option>
             <el-option label="安全设备" value="安全设备"></el-option>
             <el-option label="定位设备" value="定位设备"></el-option>
+            <el-option label="人脸识别设备" value="人脸识别设备"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="设备状态">
@@ -274,7 +275,8 @@ const getDeviceTypeTag = (type) => {
     '健康监测设备': 'success',
     '智能家居设备': 'primary',
     '安全设备': 'warning',
-    '定位设备': 'info'
+    '定位设备': 'info',
+    '人脸识别设备': 'danger'
   }
   return map[type] || ''
 }
@@ -477,4 +479,4 @@ onMounted(() => {
   margin-top: 20px;
   text-align: right;
 }
-</style> 
+</style>

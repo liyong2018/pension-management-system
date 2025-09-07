@@ -41,4 +41,37 @@ public class MenuPermissionDTO {
 
     // 子菜单/权限列表
     private List<MenuPermissionDTO> children;
-} 
+
+    // Getter and Setter methods
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
+    }
+
+    public String getPermissionKey() {
+        return permissionKey;
+    }
+
+    public void setPermissionKey(String permissionKey) {
+        this.permissionKey = permissionKey;
+    }
+
+    public List<MenuPermissionDTO> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<MenuPermissionDTO> children) {
+        this.children = children;
+    }
+}

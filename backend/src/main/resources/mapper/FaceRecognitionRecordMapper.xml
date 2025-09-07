@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pension.dao.FaceRecognitionRecordDao">
+    
+    <resultMap id="BaseResultMap" type="com.example.pension.model.FaceRecognitionRecord">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="custom_id" property="customId" jdbcType="VARCHAR"/>
+        <result column="person_id" property="personId" jdbcType="VARCHAR"/>
+        <result column="record_id" property="recordId" jdbcType="INTEGER"/>
+        <result column="verify_status" property="verifyStatus" jdbcType="INTEGER"/>
+        <result column="person_type" property="personType" jdbcType="INTEGER"/>
+        <result column="similarity" property="similarity" jdbcType="DOUBLE"/>
+        <result column="similarity2" property="similarity2" jdbcType="DOUBLE"/>
+        <result column="sendintime" property="sendintime" jdbcType="INTEGER"/>
+        <result column="direction" property="direction" jdbcType="VARCHAR"/>
+        <result column="otype" property="otype" jdbcType="VARCHAR"/>
+        <result column="persion_name" property="persionName" jdbcType="VARCHAR"/>
+        <result column="person_name" property="personName" jdbcType="VARCHAR"/>
+        <result column="facesluice_name" property="facesluiceName" jdbcType="VARCHAR"/>
+        <result column="id_card" property="idCard" jdbcType="VARCHAR"/>
+        <result column="telnum" property="telnum" jdbcType="VARCHAR"/>
+        <result column="face_left" property="left" jdbcType="VARCHAR"/>
+        <result column="face_top" property="top" jdbcType="VARCHAR"/>
+        <result column="face_right" property="right" jdbcType="VARCHAR"/>
+        <result column="face_bottom" property="bottom" jdbcType="VARCHAR"/>
+        <result column="push_type" property="pushType" jdbcType="VARCHAR"/>
+        <result column="opendoor_way" property="opendoorWay" jdbcType="VARCHAR"/>
+        <result column="card_num2" property="cardNum2" jdbcType="VARCHAR"/>
+        <result column="rfid_card" property="rfidCard" jdbcType="VARCHAR"/>
+        <result column="sz_qr_code_data" property="szQrCodeData" jdbcType="VARCHAR"/>
+        <result column="is_no_mask" property="isNoMask" jdbcType="VARCHAR"/>
+        <result column="dw_file_index" property="dwFileIndex" jdbcType="VARCHAR"/>
+        <result column="dw_file_pos" property="dwFilePos" jdbcType="VARCHAR"/>
+        <result column="image_path" property="imagePath" jdbcType="VARCHAR"/>
+        <result column="recognition_time" property="recognitionTime" jdbcType="TIMESTAMP"/>
+        <result column="temperature" property="temperature" jdbcType="DOUBLE"/>
+        <result column="device_id" property="deviceId" jdbcType="VARCHAR"/>
+        <result column="elderly_id" property="elderlyId" jdbcType="BIGINT"/>
+        <result column="organization_id" property="organizationId" jdbcType="BIGINT"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        id, custom_id, person_id, record_id, verify_status, person_type, similarity, similarity2, 
+        sendintime, direction, otype, persion_name, person_name, facesluice_name, id_card, telnum,
+        face_left, face_top, face_right, face_bottom, push_type, opendoor_way, card_num2, rfid_card,
+        sz_qr_code_data, is_no_mask, dw_file_index, dw_file_pos, image_path, recognition_time,
+        temperature, device_id, elderly_id, organization_id, created_at, updated_at
+    </sql>
+    
+    <insert id="insert" parameterType="com.example.pension.model.FaceRecognitionRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO face_recognition_record (
+            custom_id, person_id, record_id, verify_status, person_type, similarity, similarity2,
+            sendintime, direction, otype, persion_name, person_name, facesluice_name, id_card, telnum,
+            face_left, face_top, face_right, face_bottom, push_type, opendoor_way, card_num2, rfid_card,
+            sz_qr_code_data, is_no_mask, dw_file_index, dw_file_pos, image_path, recognition_time,
+            temperature, device_id, elderly_id, organization_id, created_at, updated_at
+        ) VALUES (
+            #{customId}, #{personId}, #{recordId}, #{verifyStatus}, #{personType}, #{similarity}, #{similarity2},
+            #{sendintime}, #{direction}, #{otype}, #{persionName}, #{personName}, #{facesluiceName}, #{idCard}, #{telnum},
+            #{left}, #{top}, #{right}, #{bottom}, #{pushType}, #{opendoorWay}, #{cardNum2}, #{rfidCard},
+            #{szQrCodeData}, #{isNoMask}, #{dwFileIndex}, #{dwFilePos}, #{imagePath}, #{recognitionTime},
+            #{temperature}, #{deviceId}, #{elderlyId}, #{organizationId}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+    
+    <select id="findById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM face_recognition_record
+        WHERE id = #{id}
+    </select>
+    
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM face_recognition_record
+        ORDER BY recognition_time DESC
+    </select>
+    
+</mapper>

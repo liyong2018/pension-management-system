@@ -147,4 +147,53 @@ public class ServiceStaffDTO {
         }
         return LocalDate.now().getYear() - hireDate.getYear();
     }
+    
+    // 手动添加关键的getter和setter方法
+    public String getEmployeeId() {
+        return employeeId;
+    }
+    
+    public void setEmployeeId(String employeeId) {
+        this.employeeId = employeeId;
+    }
+    
+    public Long getOrganizationId() {
+        return organizationId;
+    }
+    
+    public void setOrganizationId(Long organizationId) {
+        this.organizationId = organizationId;
+    }
+    
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public String getStatus() {
+        return status;
+    }
+    
+    public void setStatus(String status) {
+        this.status = status;
+    }
+    
+    public String getOrganizationName() {
+        return organizationName;
+    }
+    
+    public void setOrganizationName(String organizationName) {
+        this.organizationName = organizationName;
+    }
 }

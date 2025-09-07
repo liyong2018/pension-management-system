@@ -19,7 +19,7 @@
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <springdoc-openapi.version>2.2.0</springdoc-openapi.version>
         <lombok.version>1.18.30</lombok.version>
-        <mybatis.version>3.0.3</mybatis.version>
+        <mybatis.version>3.0.4</mybatis.version>
         <pagehelper.version>1.4.7</pagehelper.version>
     </properties>
 
@@ -203,4 +203,4 @@
             </plugin>
         </plugins>
     </build>
-</project> 
+</project>

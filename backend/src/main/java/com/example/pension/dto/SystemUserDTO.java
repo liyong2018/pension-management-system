@@ -45,4 +45,76 @@ public class SystemUserDTO {
 
     // 角色信息列表（用于前端展示）
     private List<RoleDTO> roles;
+    
+    public Long getOrganizationId() {
+        return organizationId;
+    }
+    
+    public void setOrganizationId(Long organizationId) {
+        this.organizationId = organizationId;
+    }
+    
+    public Long getServiceStaffId() {
+        return serviceStaffId;
+    }
+    
+    public void setServiceStaffId(Long serviceStaffId) {
+        this.serviceStaffId = serviceStaffId;
+    }
+    
+    public List<Long> getRoleIds() {
+        return roleIds;
+    }
+    
+    public void setRoleIds(List<Long> roleIds) {
+        this.roleIds = roleIds;
+    }
+    
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public void setRoles(List<RoleDTO> roles) {
+        this.roles = roles;
+    }
+    
+    public List<RoleDTO> getRoles() {
+        return roles;
+    }
+    
+    public String getFullName() {
+        return fullName;
+    }
+    
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+    
+    public String getUsername() {
+        return username;
+    }
+    
+    public void setUsername(String username) {
+        this.username = username;
+    }
+    
+    public String getEmail() {
+        return email;
+    }
+    
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    
+    public String getPhone() {
+        return phone;
+    }
+    
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 }

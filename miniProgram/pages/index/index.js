@@ -34,7 +34,9 @@ Page({
     try {
       // 获取用户信息
       const userInfo = wx.getStorageSync('userInfo') || {}
-      this.setData({ userInfo })
+      this.setData({
+        userInfo
+      })
 
       // 并行加载数据
       await Promise.all([
@@ -49,7 +51,9 @@ Page({
       console.error('初始化页面失败:', error)
       app.showError('加载数据失败')
     } finally {
-      this.setData({ loading: false })
+      this.setData({
+        loading: false
+      })
     }
   },
 
@@ -73,7 +77,9 @@ Page({
         temperature: 22,
         description: '晴朗'
       }
-      this.setData({ weather })
+      this.setData({
+        weather
+      })
     } catch (error) {
       console.error('加载天气数据失败:', error)
     }
@@ -83,8 +89,7 @@ Page({
   async loadReminders() {
     try {
       // 模拟提醒数据
-      const reminders = [
-        {
+      const reminders = [{
           id: 1,
           time: '09:00',
           title: '服药提醒',
@@ -101,12 +106,30 @@ Page({
           statusText: '已预约'
         }
       ]
-      this.setData({ reminders })
+      this.setData({
+        reminders
+      })
     } catch (error) {
       console.error('加载提醒数据失败:', error)
     }
   },
-
+  async hello() {
+    // 打开内置地图，显示在北京天安门广场
+    wx.openLocation({
+      latitude: 39.908860, // 纬度，浮点数
+      longitude: 116.397390, // 经度，浮点数
+      scale: 18, // 缩放级别
+      name: '天安门广场',
+      address: '北京市东城区长安街',
+      success(res) {
+        console.log('地图打开成功', res);
+      },
+      fail(err) {
+        console.error('地图打开失败', err);
+        // 可以在这里提示用户检查手机是否安装了微信或网络是否正常
+      }
+    });
+  },
   // 加载健康数据
   async loadHealthData() {
     try {
@@ -117,7 +140,9 @@ Page({
         bloodSugar: '5.6',
         temperature: '36.5°C'
       }
-      this.setData({ healthData })
+      this.setData({
+        healthData
+      })
     } catch (error) {
       console.error('加载健康数据失败:', error)
     }
@@ -127,8 +152,7 @@ Page({
   async loadCommunityNews() {
     try {
       // 模拟社区动态数据
-      const communityNews = [
-        {
+      const communityNews = [{
           id: 1,
           title: '社区健康讲座通知',
           summary: '本周六上午9点，邀请专家讲解老年人健康保健知识',
@@ -143,7 +167,9 @@ Page({
           publishTime: '1天前'
         }
       ]
-      this.setData({ communityNews })
+      this.setData({
+        communityNews
+      })
     } catch (error) {
       console.error('加载社区动态失败:', error)
     }
@@ -153,8 +179,7 @@ Page({
   async loadEmergencyContacts() {
     try {
       // 模拟紧急联系人数据
-      const emergencyContacts = [
-        {
+      const emergencyContacts = [{
           id: 1,
           name: '张医生',
           relation: '家庭医生',
@@ -169,7 +194,9 @@ Page({
           avatar: '/images/nurse.png'
         }
       ]
-      this.setData({ emergencyContacts })
+      this.setData({
+        emergencyContacts
+      })
     } catch (error) {
       console.error('加载紧急联系人失败:', error)
     }
@@ -179,8 +206,7 @@ Page({
   async loadSeniorInfo() {
     try {
       const seniorInfo = {
-        news: [
-          {
+        news: [{
             id: 1,
             title: '全国老龄工作会议召开，部署新时代老龄工作',
             summary: '会议强调要积极应对人口老龄化，推动老龄事业高质量发展',
@@ -197,8 +223,7 @@ Page({
             tag: '科技'
           }
         ],
-        policy: [
-          {
+        policy: [{
             id: 3,
             title: '《关于推进基本养老服务体系建设的意见》发布',
             summary: '明确基本养老服务清单，推动养老服务均等化发展',
@@ -215,8 +240,7 @@ Page({
             tag: '法规'
           }
         ],
-        finance: [
-          {
+        finance: [{
             id: 5,
             title: '养老金上调3.8%，惠及1.3亿退休人员',
             summary: '连续19年上调基本养老金，保障退休人员基本生活',
@@ -233,8 +257,7 @@ Page({
             tag: '金融'
           }
         ],
-        military: [
-          {
+        military: [{
             id: 7,
             title: '退役军人优抚政策再升级，保障水平持续提升',
             summary: '完善退役军人服务保障体系，提高优抚对象待遇标准',
@@ -252,7 +275,7 @@ Page({
           }
         ]
       }
-      this.setData({ 
+      this.setData({
         seniorInfo,
         currentInfoList: seniorInfo[this.data.currentCategory]
       })

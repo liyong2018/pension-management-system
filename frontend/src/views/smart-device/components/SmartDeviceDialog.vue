@@ -46,6 +46,7 @@
                   <el-option label="智能家居设备" value="智能家居设备"></el-option>
                   <el-option label="安全设备" value="安全设备"></el-option>
                   <el-option label="定位设备" value="定位设备"></el-option>
+                  <el-option label="人脸识别设备" value="人脸识别设备"></el-option>
                 </el-select>
               </el-form-item>
             </el-col>
@@ -646,4 +647,4 @@ const resetForm = () => {
 .dialog-footer {
   text-align: right;
 }
-</style> 
+</style>

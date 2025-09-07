@@ -30,4 +30,13 @@ public class RoleDTO {
 
     // 权限信息列表（用于前端展示）
     private List<MenuPermissionDTO> permissions;
-} 
+
+    // Getter and Setter methods
+    public String getRoleKey() {
+        return roleKey;
+    }
+
+    public void setRoleKey(String roleKey) {
+        this.roleKey = roleKey;
+    }
+}

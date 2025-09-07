@@ -10,6 +10,7 @@ import com.example.pension.exception.ResourceNotFoundException;
 import com.example.pension.exception.ValidationException;
 import com.example.pension.mapper.ElderlyFamilyMemberDTOMapper;
 import com.example.pension.mapper.ElderlyProfileMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 import com.example.pension.model.ElderlyFamilyMember;
 import com.example.pension.model.ElderlyProfile;
 import com.example.pension.model.Organization;
@@ -29,7 +30,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class ElderlyProfileServiceImpl implements ElderlyProfileService {
 
     private final ElderlyProfileDao elderlyProfileDao;
@@ -38,6 +38,21 @@ public class ElderlyProfileServiceImpl implements ElderlyProfileService {
     private final ElderlyFamilyMemberDao elderlyFamilyMemberDao;
     private final ElderlyFamilyMemberDTOMapper elderlyFamilyMemberMapper;
     private final DictionaryService dictionaryService;
+    
+    public ElderlyProfileServiceImpl(
+            ElderlyProfileDao elderlyProfileDao,
+            OrganizationDao organizationDao,
+            ElderlyProfileMapper elderlyProfileMapper,
+            ElderlyFamilyMemberDao elderlyFamilyMemberDao,
+            @Qualifier("elderlyFamilyMemberDTOMapperImpl") ElderlyFamilyMemberDTOMapper elderlyFamilyMemberMapper,
+            DictionaryService dictionaryService) {
+        this.elderlyProfileDao = elderlyProfileDao;
+        this.organizationDao = organizationDao;
+        this.elderlyProfileMapper = elderlyProfileMapper;
+        this.elderlyFamilyMemberDao = elderlyFamilyMemberDao;
+        this.elderlyFamilyMemberMapper = elderlyFamilyMemberMapper;
+        this.dictionaryService = dictionaryService;
+    }
 
     private ElderlyProfileDTO mapToDTOWithFamilyMembers(ElderlyProfile elderlyProfile) {
         if (elderlyProfile == null) {
@@ -263,4 +278,4 @@ public class ElderlyProfileServiceImpl implements ElderlyProfileService {
                 .map(this::mapToDTOWithFamilyMembers)
                 .collect(Collectors.toList());
     }
-} 
+}

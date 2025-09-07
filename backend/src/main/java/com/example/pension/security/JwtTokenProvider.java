@@ -11,6 +11,9 @@ import java.util.Date;
 @Slf4j
 @Component
 public class JwtTokenProvider {
+    
+    // 手动添加日志变量
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(JwtTokenProvider.class);
 
     @Value("${jwt.secret:your-very-secure-and-long-secret-key-replace-this}")
     private String jwtSecret;

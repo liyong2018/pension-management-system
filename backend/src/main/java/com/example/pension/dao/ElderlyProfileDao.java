@@ -41,7 +41,10 @@ public interface ElderlyProfileDao {
     // For validation
     ElderlyProfile findByIdCardNumber(@Param("idCardNumber") String idCardNumber);
     ElderlyProfile findByIdCardNumberAndIdNot(@Param("idCardNumber") String idCardNumber, @Param("id") Long id);
+    
+    // For face recognition
+    ElderlyProfile findByCustomId(@Param("customId") String customId);
 
     // For batch delete
     int deleteBatchByIds(@Param("ids") List<Long> ids);
-} 
+}

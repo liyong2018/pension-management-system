@@ -126,13 +126,13 @@ public class DashboardService {
                 (moderateDisabilityCount != null ? moderateDisabilityCount : 0L) -
                 (severeDisabilityCount != null ? severeDisabilityCount : 0L) : 0L;
             
-            stats.setAbilityStats(new DashboardStatsDTO.AbilityAssessmentStatsDTO(
-                fullAbilityCount != null ? fullAbilityCount : 0L,
-                mildDisabilityCount != null ? mildDisabilityCount : 0L,
-                moderateDisabilityCount != null ? moderateDisabilityCount : 0L,
-                severeDisabilityCount != null ? severeDisabilityCount : 0L,
-                notAssessedCount > 0 ? notAssessedCount : 0L
-            ));
+            DashboardStatsDTO.AbilityAssessmentStatsDTO abilityStats = new DashboardStatsDTO.AbilityAssessmentStatsDTO();
+            abilityStats.setFullAbilityCount(fullAbilityCount != null ? fullAbilityCount : 0L);
+            abilityStats.setMildDisabilityCount(mildDisabilityCount != null ? mildDisabilityCount : 0L);
+            abilityStats.setModerateDisabilityCount(moderateDisabilityCount != null ? moderateDisabilityCount : 0L);
+            abilityStats.setSevereDisabilityCount(severeDisabilityCount != null ? severeDisabilityCount : 0L);
+            abilityStats.setNotAssessedCount(notAssessedCount > 0 ? notAssessedCount : 0L);
+            stats.setAbilityStats(abilityStats);
             
             // 年龄分布统计
             Long age60to69Count = dashboardStatsDao.countElderlyByAgeRange(60, 69);
@@ -140,12 +140,12 @@ public class DashboardService {
             Long age80to89Count = dashboardStatsDao.countElderlyByAgeRange(80, 89);
             Long age90PlusCount = dashboardStatsDao.countElderlyByAgeRange(90, null);
             
-            stats.setAgeDistribution(new DashboardStatsDTO.AgeDistributionStatsDTO(
-                age60to69Count != null ? age60to69Count : 0L,
-                age70to79Count != null ? age70to79Count : 0L,
-                age80to89Count != null ? age80to89Count : 0L,
-                age90PlusCount != null ? age90PlusCount : 0L
-            ));
+            DashboardStatsDTO.AgeDistributionStatsDTO ageDistribution = new DashboardStatsDTO.AgeDistributionStatsDTO();
+            ageDistribution.setAge60to69Count(age60to69Count != null ? age60to69Count : 0L);
+            ageDistribution.setAge70to79Count(age70to79Count != null ? age70to79Count : 0L);
+            ageDistribution.setAge80to89Count(age80to89Count != null ? age80to89Count : 0L);
+            ageDistribution.setAge90PlusCount(age90PlusCount != null ? age90PlusCount : 0L);
+            stats.setAgeDistribution(ageDistribution);
             
             // 设备统计
             Long sosDeviceCount = dashboardStatsDao.countDevicesByType("SOS");
@@ -163,12 +163,14 @@ public class DashboardService {
             
             if (deviceStatusData != null) {
                 deviceStatusDetails = deviceStatusData.stream()
-                        .map(stat -> new DashboardStatsDTO.DeviceStatusDetailDTO(
-                                stat.getDeviceType(),
-                                stat.getTotalCount(),
-                                0L, // faultCount is not available in DeviceTypeDetailedStatDTO, default to 0
-                                stat.getOnlineCount()
-                        ))
+                        .map(stat -> {
+                            DashboardStatsDTO.DeviceStatusDetailDTO detail = new DashboardStatsDTO.DeviceStatusDetailDTO();
+                            detail.setDeviceName(stat.getDeviceType());
+                            detail.setTotalCount(stat.getTotalCount());
+                            detail.setFaultCount(0L); // faultCount is not available in DeviceTypeDetailedStatDTO, default to 0
+                            detail.setOnlineCount(stat.getOnlineCount());
+                            return detail;
+                        })
                         .collect(Collectors.toList());
             }
             
@@ -190,12 +192,12 @@ public class DashboardService {
             Long monthAlarmCount = dashboardStatsDao.countMonthAlarms();
             Long unhandledCount = dashboardStatsDao.countUnhandledAlarms();
             
-            stats.setAlarmStats(new DashboardStatsDTO.AlarmStatsDTO(
-                todayAlarmCount != null ? todayAlarmCount : 0L,
-                weekAlarmCount != null ? weekAlarmCount : 0L,
-                monthAlarmCount != null ? monthAlarmCount : 0L,
-                unhandledCount != null ? unhandledCount : 0L
-            ));
+            DashboardStatsDTO.AlarmStatsDTO alarmStats = new DashboardStatsDTO.AlarmStatsDTO();
+            alarmStats.setTodayAlarmCount(todayAlarmCount != null ? todayAlarmCount : 0L);
+            alarmStats.setWeekAlarmCount(weekAlarmCount != null ? weekAlarmCount : 0L);
+            alarmStats.setMonthAlarmCount(monthAlarmCount != null ? monthAlarmCount : 0L);
+            alarmStats.setUnhandledCount(unhandledCount != null ? unhandledCount : 0L);
+            stats.setAlarmStats(alarmStats);
             
             // 地图数据
             DashboardStatsDTO.MapDataDTO mapData = new DashboardStatsDTO.MapDataDTO();
@@ -214,9 +216,14 @@ public class DashboardService {
                         Long facilityCount = ((Number) data.get("facilityCount")).longValue();
                         String type = (String) data.get("type");
                         
-                        communities.add(new DashboardStatsDTO.MapDataDTO.CommunityDataDTO(
-                            name, longitude, latitude, elderlyCount, facilityCount, type
-                        ));
+                        DashboardStatsDTO.MapDataDTO.CommunityDataDTO community = new DashboardStatsDTO.MapDataDTO.CommunityDataDTO();
+                        community.setName(name);
+                        community.setLongitude(longitude);
+                        community.setLatitude(latitude);
+                        community.setElderlyCount(elderlyCount);
+                        community.setFacilityCount(facilityCount);
+                        community.setType(type);
+                        communities.add(community);
                     } catch (Exception e) {
                         // 记录错误但继续处理其他数据
                         e.printStackTrace();
@@ -238,9 +245,15 @@ public class DashboardService {
                     Long staffCount = data.get("staffCount") != null ? ((Number) data.get("staffCount")).longValue() : 0L;
                     Long serviceCount = data.get("serviceCount") != null ? ((Number) data.get("serviceCount")).longValue() : 0L;
                     
-                    organizations.add(new DashboardStatsDTO.MapDataDTO.OrganizationDataDTO(
-                        name, longitude, latitude, type, bedCount, staffCount, serviceCount
-                    ));
+                    DashboardStatsDTO.MapDataDTO.OrganizationDataDTO org = new DashboardStatsDTO.MapDataDTO.OrganizationDataDTO();
+                    org.setName(name);
+                    org.setLongitude(longitude);
+                    org.setLatitude(latitude);
+                    org.setType(type);
+                    org.setBedCount(bedCount);
+                    org.setStaffCount(staffCount);
+                    org.setServiceCount(serviceCount);
+                    organizations.add(org);
                 }
             }
             
@@ -281,9 +294,15 @@ public class DashboardService {
                     Double longitude = ((Number) data.get("longitude")).doubleValue();
                     Double latitude = ((Number) data.get("latitude")).doubleValue();
                     
-                    alarms.add(new DashboardStatsDTO.MapDataDTO.AlarmDataDTO(
-                        alarmType, alarmLevel, location, alarmTime, processStatus, longitude, latitude
-                    ));
+                    DashboardStatsDTO.MapDataDTO.AlarmDataDTO alarm = new DashboardStatsDTO.MapDataDTO.AlarmDataDTO();
+                    alarm.setAlarmType(alarmType);
+                    alarm.setAlarmLevel(alarmLevel);
+                    alarm.setLocation(location);
+                    alarm.setAlarmTime(alarmTime);
+                    alarm.setProcessStatus(processStatus);
+                    alarm.setLongitude(longitude);
+                    alarm.setLatitude(latitude);
+                    alarms.add(alarm);
                 }
             }
             
@@ -308,13 +327,58 @@ public class DashboardService {
     private DashboardStatsDTO getDefaultStats() {
         DashboardStatsDTO stats = new DashboardStatsDTO();
         
-        stats.setElderlyStats(new DashboardStatsDTO.ElderlyStatsDTO(0L, 0L, 0L, 0L, 0L));
-        stats.setFacilityStats(new DashboardStatsDTO.FacilityStatsDTO(0L, 0L, 0L, 0L));
-        stats.setStaffStats(new DashboardStatsDTO.StaffStatsDTO(0L, 0L, 0L, 0L));
-        stats.setSubsidyStats(new DashboardStatsDTO.SubsidyStatsDTO(0.0, 0L, 0.0));
-        stats.setElderlyTypeStats(new DashboardStatsDTO.ElderlyTypeStatsDTO(0L, 0L, 0L, 0L, 0L, 0L, 0L));
-        stats.setAbilityStats(new DashboardStatsDTO.AbilityAssessmentStatsDTO(0L, 0L, 0L, 0L, 0L));
-        stats.setAgeDistribution(new DashboardStatsDTO.AgeDistributionStatsDTO(0L, 0L, 0L, 0L));
+        DashboardStatsDTO.ElderlyStatsDTO elderlyStats = new DashboardStatsDTO.ElderlyStatsDTO();
+        elderlyStats.setTotalCount(0L);
+        elderlyStats.setOver80Count(0L);
+        elderlyStats.setLivingAloneCount(0L);
+        elderlyStats.setDisabledCount(0L);
+        elderlyStats.setLowIncomeCount(0L);
+        stats.setElderlyStats(elderlyStats);
+        
+        DashboardStatsDTO.FacilityStatsDTO facilityStats = new DashboardStatsDTO.FacilityStatsDTO();
+        facilityStats.setTotalCount(0L);
+        facilityStats.setHomeCareCount(0L);
+        facilityStats.setDayCareCount(0L);
+        facilityStats.setInstitutionCount(0L);
+        stats.setFacilityStats(facilityStats);
+        
+        DashboardStatsDTO.StaffStatsDTO staffStats = new DashboardStatsDTO.StaffStatsDTO();
+        staffStats.setTotalCount(0L);
+        staffStats.setNurseCount(0L);
+        staffStats.setDoctorCount(0L);
+        staffStats.setSocialWorkerCount(0L);
+        stats.setStaffStats(staffStats);
+        
+        DashboardStatsDTO.SubsidyStatsDTO subsidyStats = new DashboardStatsDTO.SubsidyStatsDTO();
+        subsidyStats.setTotalAmount(0.0);
+        subsidyStats.setBeneficiaryCount(0L);
+        subsidyStats.setMonthlyAmount(0.0);
+        stats.setSubsidyStats(subsidyStats);
+        
+        DashboardStatsDTO.ElderlyTypeStatsDTO elderlyTypeStats = new DashboardStatsDTO.ElderlyTypeStatsDTO();
+        elderlyTypeStats.setNormalCount(0L);
+        elderlyTypeStats.setEmptyNestCount(0L);
+        elderlyTypeStats.setLivingAloneCount(0L);
+        elderlyTypeStats.setDisabledCount(0L);
+        elderlyTypeStats.setElderlyCount(0L);
+        elderlyTypeStats.setLowIncomeCount(0L);
+        elderlyTypeStats.setSpecialCareCount(0L);
+        stats.setElderlyTypeStats(elderlyTypeStats);
+        
+        DashboardStatsDTO.AbilityAssessmentStatsDTO abilityStats = new DashboardStatsDTO.AbilityAssessmentStatsDTO();
+        abilityStats.setFullAbilityCount(0L);
+        abilityStats.setMildDisabilityCount(0L);
+        abilityStats.setModerateDisabilityCount(0L);
+        abilityStats.setSevereDisabilityCount(0L);
+        abilityStats.setNotAssessedCount(0L);
+        stats.setAbilityStats(abilityStats);
+        
+        DashboardStatsDTO.AgeDistributionStatsDTO ageDistribution = new DashboardStatsDTO.AgeDistributionStatsDTO();
+        ageDistribution.setAge60to69Count(0L);
+        ageDistribution.setAge70to79Count(0L);
+        ageDistribution.setAge80to89Count(0L);
+        ageDistribution.setAge90PlusCount(0L);
+        stats.setAgeDistribution(ageDistribution);
         DashboardStatsDTO.DeviceStatsDTO defaultDeviceStats = new DashboardStatsDTO.DeviceStatsDTO();
         defaultDeviceStats.setSosDeviceCount(0L);
         defaultDeviceStats.setSmokeDetectorCount(0L);
@@ -326,7 +390,12 @@ public class DashboardService {
         defaultDeviceStats.setFaultCount(0L);
         defaultDeviceStats.setDeviceStatusDetails(new ArrayList<>());
         stats.setDeviceStats(defaultDeviceStats);
-        stats.setAlarmStats(new DashboardStatsDTO.AlarmStatsDTO(0L, 0L, 0L, 0L));
+        DashboardStatsDTO.AlarmStatsDTO defaultAlarmStats = new DashboardStatsDTO.AlarmStatsDTO();
+        defaultAlarmStats.setTotalCount(0L);
+        defaultAlarmStats.setHighCount(0L);
+        defaultAlarmStats.setMediumCount(0L);
+        defaultAlarmStats.setLowCount(0L);
+        stats.setAlarmStats(defaultAlarmStats);
         
         DashboardStatsDTO.MapDataDTO mapData = new DashboardStatsDTO.MapDataDTO();
         mapData.setCommunities(new ArrayList<>());
@@ -399,4 +468,4 @@ public class DashboardService {
         public String getStatus() { return status; }
         public void setStatus(String status) { this.status = status; }
     }
-} 
+}

@@ -2,7 +2,7 @@
 <view class="container">
   <!-- 简约顶部区域 -->
   <view class="header-section">
-    <view class="greeting">
+    <view class="greeting" bindtap="hello">
       <text class="greeting-text">你好，{{userInfo.nickName || '用户'}}</text>
     </view>
   </view>

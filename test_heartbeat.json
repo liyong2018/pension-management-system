@@ -1,0 +1,10 @@
+{
+  "operator": "HeartBeat",
+  "info": {
+    "DeviceID": 2593985,
+    "Ip": "192.168.1.66",
+    "MacAddr": "28:36:13:23:be:a1",
+    "WifiIp": "",
+    "Time": "2025-09-07T22:40:00"
+  }
+}
