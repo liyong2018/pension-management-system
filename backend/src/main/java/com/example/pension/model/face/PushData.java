@@ -1,6 +1,7 @@
 package com.example.pension.model.face;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 /**
@@ -8,6 +9,7 @@ import lombok.Data;
  * 用于接收人脸识别一体机的推送数据
  */
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PushData<T> {
     
     /**
