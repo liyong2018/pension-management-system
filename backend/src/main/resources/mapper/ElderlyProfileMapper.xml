@@ -120,7 +120,6 @@
             </if>
         </where>
         ORDER BY ep.create_time DESC
-        LIMIT #{offset}, #{limit}
     </select>
 
     <!-- Count with Conditions -->
