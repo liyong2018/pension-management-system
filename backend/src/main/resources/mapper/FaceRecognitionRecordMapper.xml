@@ -4,64 +4,67 @@
     
     <resultMap id="BaseResultMap" type="com.example.pension.model.FaceRecognitionRecord">
         <id column="id" property="id" jdbcType="BIGINT"/>
-        <result column="custom_id" property="customId" jdbcType="VARCHAR"/>
         <result column="person_id" property="personId" jdbcType="VARCHAR"/>
-        <result column="record_id" property="recordId" jdbcType="INTEGER"/>
-        <result column="verify_status" property="verifyStatus" jdbcType="INTEGER"/>
-        <result column="person_type" property="personType" jdbcType="INTEGER"/>
-        <result column="similarity" property="similarity" jdbcType="DOUBLE"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="similarity1" property="similarity" jdbcType="DOUBLE"/>
         <result column="similarity2" property="similarity2" jdbcType="DOUBLE"/>
-        <result column="sendintime" property="sendintime" jdbcType="INTEGER"/>
-        <result column="direction" property="direction" jdbcType="VARCHAR"/>
-        <result column="otype" property="otype" jdbcType="VARCHAR"/>
-        <result column="persion_name" property="persionName" jdbcType="VARCHAR"/>
-        <result column="person_name" property="personName" jdbcType="VARCHAR"/>
-        <result column="facesluice_name" property="facesluiceName" jdbcType="VARCHAR"/>
+        <result column="verify_status" property="verifyStatus" jdbcType="INTEGER"/>
+        <result column="verify_type" property="verifyType" jdbcType="INTEGER"/>
+        <result column="person_type" property="personType" jdbcType="INTEGER"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="gender" property="gender" jdbcType="VARCHAR"/>
+        <result column="nation" property="nation" jdbcType="VARCHAR"/>
+        <result column="card_type" property="cardType" jdbcType="VARCHAR"/>
         <result column="id_card" property="idCard" jdbcType="VARCHAR"/>
+        <result column="birthday" property="birthday" jdbcType="VARCHAR"/>
         <result column="telnum" property="telnum" jdbcType="VARCHAR"/>
-        <result column="face_left" property="left" jdbcType="VARCHAR"/>
-        <result column="face_top" property="top" jdbcType="VARCHAR"/>
-        <result column="face_right" property="right" jdbcType="VARCHAR"/>
-        <result column="face_bottom" property="bottom" jdbcType="VARCHAR"/>
+        <result column="native_place" property="nativePlace" jdbcType="VARCHAR"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
+        <result column="notes" property="notes" jdbcType="VARCHAR"/>
+        <result column="mj_card_from" property="mjCardFrom" jdbcType="VARCHAR"/>
+        <result column="is_no_mask" property="isNoMask" jdbcType="VARCHAR"/>
+        <result column="device_id" property="deviceId" jdbcType="VARCHAR"/>
         <result column="push_type" property="pushType" jdbcType="VARCHAR"/>
         <result column="opendoor_way" property="opendoorWay" jdbcType="VARCHAR"/>
-        <result column="card_num2" property="cardNum2" jdbcType="VARCHAR"/>
-        <result column="rfid_card" property="rfidCard" jdbcType="VARCHAR"/>
         <result column="sz_qr_code_data" property="szQrCodeData" jdbcType="VARCHAR"/>
-        <result column="is_no_mask" property="isNoMask" jdbcType="VARCHAR"/>
-        <result column="dw_file_index" property="dwFileIndex" jdbcType="VARCHAR"/>
-        <result column="dw_file_pos" property="dwFilePos" jdbcType="VARCHAR"/>
-        <result column="image_path" property="imagePath" jdbcType="VARCHAR"/>
-        <result column="recognition_time" property="recognitionTime" jdbcType="TIMESTAMP"/>
-        <result column="temperature" property="temperature" jdbcType="DOUBLE"/>
-        <result column="device_id" property="deviceId" jdbcType="VARCHAR"/>
-        <result column="elderly_id" property="elderlyId" jdbcType="BIGINT"/>
-        <result column="organization_id" property="organizationId" jdbcType="BIGINT"/>
+        <result column="mj_card_no" property="mjCardNo" jdbcType="VARCHAR"/>
+        <result column="rfid_card" property="rfidCard" jdbcType="VARCHAR"/>
+        <result column="temp_valid" property="tempValid" jdbcType="INTEGER"/>
+        <result column="custom_id" property="customId" jdbcType="BIGINT"/>
+        <result column="person_uuid" property="personUuid" jdbcType="VARCHAR"/>
+        <result column="valid_begin" property="validBegin" jdbcType="VARCHAR"/>
+        <result column="valid_end" property="validEnd" jdbcType="VARCHAR"/>
+        <result column="sendtime" property="sendintime" jdbcType="INTEGER"/>
+        <result column="direction" property="direction" jdbcType="INTEGER"/>
+        <result column="record_id" property="recordId" jdbcType="BIGINT"/>
+        <result column="dw_file_index" property="dwFileIndex" jdbcType="INTEGER"/>
+        <result column="dw_file_pos" property="dwFilePos" jdbcType="BIGINT"/>
+        <result column="sanp_pic" property="sanpPic" jdbcType="VARCHAR"/>
         <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
         <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
     </resultMap>
     
     <sql id="Base_Column_List">
-        id, custom_id, person_id, record_id, verify_status, person_type, similarity, similarity2, 
-        sendintime, direction, otype, persion_name, person_name, facesluice_name, id_card, telnum,
-        face_left, face_top, face_right, face_bottom, push_type, opendoor_way, card_num2, rfid_card,
-        sz_qr_code_data, is_no_mask, dw_file_index, dw_file_pos, image_path, recognition_time,
-        temperature, device_id, elderly_id, organization_id, created_at, updated_at
+        id, person_id, create_time, similarity1, similarity2, verify_status, verify_type, person_type,
+        name, gender, nation, card_type, id_card, birthday, telnum, native_place, address, notes,
+        mj_card_from, is_no_mask, device_id, push_type, opendoor_way, sz_qr_code_data, mj_card_no,
+        rfid_card, temp_valid, custom_id, person_uuid, valid_begin, valid_end, sendtime, direction,
+        record_id, dw_file_index, dw_file_pos, sanp_pic, created_at, updated_at
     </sql>
     
     <insert id="insert" parameterType="com.example.pension.model.FaceRecognitionRecord" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO face_recognition_record (
-            custom_id, person_id, record_id, verify_status, person_type, similarity, similarity2,
-            sendintime, direction, otype, persion_name, person_name, facesluice_name, id_card, telnum,
-            face_left, face_top, face_right, face_bottom, push_type, opendoor_way, card_num2, rfid_card,
-            sz_qr_code_data, is_no_mask, dw_file_index, dw_file_pos, image_path, recognition_time,
-            temperature, device_id, elderly_id, organization_id, created_at, updated_at
+            person_id, similarity1, similarity2, verify_status, verify_type, person_type, name, gender,
+            nation, card_type, id_card, birthday, telnum, native_place, address, notes, mj_card_from,
+            is_no_mask, device_id, push_type, opendoor_way, sz_qr_code_data, mj_card_no, rfid_card,
+            temp_valid, custom_id, person_uuid, valid_begin, valid_end, sendtime, direction, record_id,
+            dw_file_index, dw_file_pos, sanp_pic
         ) VALUES (
-            #{customId}, #{personId}, #{recordId}, #{verifyStatus}, #{personType}, #{similarity}, #{similarity2},
-            #{sendintime}, #{direction}, #{otype}, #{persionName}, #{personName}, #{facesluiceName}, #{idCard}, #{telnum},
-            #{left}, #{top}, #{right}, #{bottom}, #{pushType}, #{opendoorWay}, #{cardNum2}, #{rfidCard},
-            #{szQrCodeData}, #{isNoMask}, #{dwFileIndex}, #{dwFilePos}, #{imagePath}, #{recognitionTime},
-            #{temperature}, #{deviceId}, #{elderlyId}, #{organizationId}, #{createdAt}, #{updatedAt}
+            #{personId}, #{similarity}, #{similarity2}, #{verifyStatus}, #{verifyType}, #{personType}, #{name}, #{gender},
+            #{nation}, #{cardType}, #{idCard}, #{birthday}, #{telnum}, #{nativePlace}, #{address}, #{notes}, #{mjCardFrom},
+            #{isNoMask}, #{deviceId}, #{pushType}, #{opendoorWay}, #{szQrCodeData}, #{mjCardNo}, #{rfidCard},
+            #{tempValid}, #{customId}, #{personUuid}, #{validBegin}, #{validEnd}, #{sendintime}, #{direction}, #{recordId},
+            #{dwFileIndex}, #{dwFilePos}, #{sanpPic}
         )
     </insert>
     

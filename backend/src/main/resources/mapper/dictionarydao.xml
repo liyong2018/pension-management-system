@@ -120,4 +120,4 @@
         WHERE dict_type = #{dictType} AND dict_code = #{dictCode}
     </select>
 
-</mapper> 
+</mapper>

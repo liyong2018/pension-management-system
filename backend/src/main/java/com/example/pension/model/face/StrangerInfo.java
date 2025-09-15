@@ -21,6 +21,7 @@ public class StrangerInfo {
     /**
      * 抓拍时间
      */
+    @JsonProperty("Time")
     private String time;
     
     /**
@@ -36,6 +37,7 @@ public class StrangerInfo {
     /**
      * 设备ID
      */
+    @JsonProperty("DeviceID")
     private String facesluiceId;
     
     /**

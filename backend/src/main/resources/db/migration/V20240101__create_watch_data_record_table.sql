@@ -1,0 +1,25 @@
+-- 创建手环数据记录表
+CREATE TABLE IF NOT EXISTS `watch_data_record` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '记录ID',
+  `device_id` varchar(64) NOT NULL COMMENT '设备ID',
+  `elderly_id` bigint(20) DEFAULT NULL COMMENT '老人ID',
+  `heart_rate` int(11) DEFAULT NULL COMMENT '心率',
+  `systolic_pressure` int(11) DEFAULT NULL COMMENT '收缩压',
+  `diastolic_pressure` int(11) DEFAULT NULL COMMENT '舒张压',
+  `blood_oxygen` int(11) DEFAULT NULL COMMENT '血氧饱和度',
+  `body_temperature` float DEFAULT NULL COMMENT '体温',
+  `steps` int(11) DEFAULT NULL COMMENT '步数',
+  `sleep_status` int(11) DEFAULT NULL COMMENT '睡眠状态',
+  `longitude` double DEFAULT NULL COMMENT '经度',
+  `latitude` double DEFAULT NULL COMMENT '纬度',
+  `battery_level` int(11) DEFAULT NULL COMMENT '电池电量',
+  `charging` tinyint(1) DEFAULT NULL COMMENT '充电状态',
+  `device_status` varchar(32) DEFAULT NULL COMMENT '设备状态',
+  `timestamp` bigint(20) NOT NULL COMMENT '数据时间戳',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
+  `update_time` datetime NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_device_id` (`device_id`),
+  KEY `idx_elderly_id` (`elderly_id`),
+  KEY `idx_timestamp` (`timestamp`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='手环数据记录表';

@@ -70,10 +70,15 @@ public class FaceRecognitionServiceImpl implements FaceRecognitionService {
             record.setSimilarity(recInfo.getSimilarity1());
             record.setSimilarity2(recInfo.getSimilarity2());
             record.setSendintime(recInfo.getSendintime());
-            record.setDirection(recInfo.getDirection());
-            record.setOtype(recInfo.getOtype());
+            record.setDirection(recInfo.getDirection() != null ? recInfo.getDirection().toString() : null);
+            record.setOtype(recInfo.getOtype() != null ? recInfo.getOtype().toString() : null);
             record.setPersionName(recInfo.getPersionName());
             record.setPersonName(recInfo.getPersonName());
+            record.setName(recInfo.getName());
+            
+            // 添加调试日志
+            logger.info("RecInfo字段值 - Name: {}, PersionName: {}, PersonName: {}", 
+                recInfo.getName(), recInfo.getPersionName(), recInfo.getPersonName());
             record.setFacesluiceName(recInfo.getFacesluiceName());
             record.setIdCard(recInfo.getIdCard());
             record.setTelnum(recInfo.getTelnum());
@@ -86,11 +91,32 @@ public class FaceRecognitionServiceImpl implements FaceRecognitionService {
             record.setCardNum2(recInfo.getCardNum2());
             record.setRfidCard(recInfo.getRfidCard());
             record.setSzQrCodeData(recInfo.getSzQrCodeData());
-            record.setIsNoMask(recInfo.getIsNoMask());
+            record.setIsNoMask(recInfo.getIsNoMask() != null ? recInfo.getIsNoMask().toString() : null);
             record.setDwFileIndex(recInfo.getDwFileIndex());
             record.setDwFilePos(recInfo.getDwFilePos());
             record.setTemperature(recInfo.getTemperature());
             record.setDeviceId(recInfo.getFacesluiceId());
+            
+            // 添加缺失的字段映射
+            if (recInfo.getGender() != null) {
+                record.setGender(recInfo.getGender().toString());
+            }
+            if (recInfo.getNation() != null) {
+                record.setNation(recInfo.getNation().toString());
+            }
+            if (recInfo.getCardType() != null) {
+                record.setCardType(recInfo.getCardType().toString());
+            }
+            record.setBirthday(recInfo.getBirthday());
+            record.setNativePlace(recInfo.getNativePlace());
+            record.setAddress(recInfo.getAddress());
+            record.setNotes(recInfo.getNotes());
+            record.setMjCardFrom(recInfo.getMjCardFrom());
+            record.setMjCardNo(recInfo.getMjCardNo());
+            record.setTempValid(recInfo.getTempvalid() != null ? recInfo.getTempvalid().toString() : null);
+            record.setValidBegin(recInfo.getValidBegin());
+            record.setValidEnd(recInfo.getValidEnd());
+            record.setPersonUuid(recInfo.getPersonUUID());
             
             // 解析识别时间
             if (StringUtils.hasText(recInfo.getTime())) {
@@ -105,20 +131,111 @@ public class FaceRecognitionServiceImpl implements FaceRecognitionService {
                 record.setRecognitionTime(LocalDateTime.now());
             }
             
-            // 处理Base64图片
-            if (StringUtils.hasText(recInfo.getPic())) {
-                String imagePath = imageUtils.saveBase64Image(
-                    recInfo.getPic(), 
-                    "face_recognition", 
-                    "verify_" + recInfo.getRecordID() + "_" + System.currentTimeMillis()
-                );
-                record.setImagePath(imagePath);
+            // 处理Base64图片 - 优先处理SanpPic字段
+            logger.info("检查图片字段 - SanpPic: {}, Pic: {}", 
+                StringUtils.hasText(recInfo.getSanpPic()) ? "有数据" : "无数据",
+                StringUtils.hasText(recInfo.getPic()) ? "有数据" : "无数据");
+            
+            String base64Image = null;
+            if (StringUtils.hasText(recInfo.getSanpPic())) {
+                base64Image = recInfo.getSanpPic();
+                logger.info("使用SanpPic字段，数据长度: {}", base64Image.length());
+            } else if (StringUtils.hasText(recInfo.getPic())) {
+                base64Image = recInfo.getPic();
+                logger.info("使用Pic字段，数据长度: {}", base64Image.length());
             }
             
-            // 根据customId查找对应的老人信息
+            if (StringUtils.hasText(base64Image)) {
+                String imagePath = imageUtils.saveBase64Image(
+                    base64Image, 
+                    "face_recognition", 
+                    "verify_" + (recInfo.getRecordID() != null ? recInfo.getRecordID() : System.currentTimeMillis()) + "_" + System.currentTimeMillis()
+                );
+                record.setImagePath(imagePath);
+                logger.info("人脸识别图片已保存: {}", imagePath);
+            } else {
+                logger.warn("未找到有效的图片数据");
+            }
+            
+            // 根据customId查找或创建对应的老人信息
             if (StringUtils.hasText(recInfo.getCustomId())) {
                 ElderlyProfile elderly = elderlyProfileDao.findByCustomId(recInfo.getCustomId());
                 if (elderly != null) {
+                    // 更新现有记录的个人信息（如果RecInfo中有新数据）
+                    boolean needUpdate = false;
+                    if (StringUtils.hasText(recInfo.getName()) && !recInfo.getName().equals(elderly.getName())) {
+                        elderly.setName(recInfo.getName());
+                        needUpdate = true;
+                    }
+                    if (recInfo.getGender() != null) {
+                        String genderStr = recInfo.getGender() == 0 ? "男" : "女";
+                        if (!genderStr.equals(elderly.getGender())) {
+                            elderly.setGender(genderStr);
+                            needUpdate = true;
+                        }
+                    }
+                    if (StringUtils.hasText(recInfo.getBirthday())) {
+                        try {
+                            // 解析生日字符串为日期
+                            java.time.LocalDate birthDate = java.time.LocalDate.parse(recInfo.getBirthday());
+                            if (!birthDate.equals(elderly.getBirthDate())) {
+                                elderly.setBirthDate(birthDate);
+                                needUpdate = true;
+                            }
+                        } catch (Exception e) {
+                            logger.warn("解析生日失败: {}", recInfo.getBirthday(), e);
+                        }
+                    }
+                    if (StringUtils.hasText(recInfo.getIdCard()) && !recInfo.getIdCard().equals(elderly.getIdCardNumber())) {
+                        elderly.setIdCardNumber(recInfo.getIdCard());
+                        needUpdate = true;
+                    }
+                    if (StringUtils.hasText(recInfo.getTelnum()) && !recInfo.getTelnum().equals(elderly.getPhone())) {
+                        elderly.setPhone(recInfo.getTelnum());
+                        needUpdate = true;
+                    }
+                    
+                    if (needUpdate) {
+                        elderly.setUpdateTime(LocalDateTime.now());
+                        elderlyProfileDao.update(elderly);
+                        logger.info("更新老人档案信息: customId={}, name={}", recInfo.getCustomId(), recInfo.getName());
+                    }
+                    
+                    record.setElderlyId(elderly.getId());
+                    record.setOrganizationId(elderly.getOrganizationId());
+                } else if (StringUtils.hasText(recInfo.getName())) {
+                    // 创建新的老人档案记录
+                    elderly = new ElderlyProfile();
+                    elderly.setCustomId(recInfo.getCustomId());
+                    elderly.setName(recInfo.getName());
+                    
+                    if (recInfo.getGender() != null) {
+                        elderly.setGender(recInfo.getGender() == 0 ? "男" : "女");
+                    }
+                    
+                    if (StringUtils.hasText(recInfo.getBirthday())) {
+                        try {
+                            elderly.setBirthDate(java.time.LocalDate.parse(recInfo.getBirthday()));
+                        } catch (Exception e) {
+                            logger.warn("解析生日失败: {}", recInfo.getBirthday(), e);
+                        }
+                    }
+                    
+                    if (StringUtils.hasText(recInfo.getIdCard())) {
+                        elderly.setIdCardNumber(recInfo.getIdCard());
+                    }
+                    
+                    if (StringUtils.hasText(recInfo.getTelnum())) {
+                        elderly.setPhone(recInfo.getTelnum());
+                    }
+                    
+                    elderly.setCreateTime(LocalDateTime.now());
+                    elderly.setUpdateTime(LocalDateTime.now());
+                    
+                    // 保存新的老人档案
+                    elderlyProfileDao.insert(elderly);
+                    logger.info("创建新的老人档案: customId={}, name={}", recInfo.getCustomId(), recInfo.getName());
+                    
                     record.setElderlyId(elderly.getId());
                     record.setOrganizationId(elderly.getOrganizationId());
                 }

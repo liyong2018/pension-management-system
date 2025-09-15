@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  onenet-push-demo:
+    build:
+      context: .
+      dockerfile: Dockerfile.onenet-demo
+    container_name: onenet-push-demo
+    ports:
+      - "8081:8081"
+    environment:
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    restart: unless-stopped
+    networks:
+      - onenet-demo-network
+
+networks:
+  onenet-demo-network:
+    driver: bridge

@@ -41,8 +41,9 @@ public class FacePushController {
         try {
             logger.info("接收到认证记录推送，操作类型: {}", pushData.getOperator());
             
-            // 1. 校验推送类型
-            if (!"RecPush".equals(pushData.getOperator())) {
+            // 1. 校验推送类型（兼容 RecPush 与 VerifyPush）
+            String op = pushData.getOperator();
+            if (!"RecPush".equals(op) && !"VerifyPush".equals(op)) {
                 logger.warn("无效的认证记录数据，操作类型: {}", pushData.getOperator());
                 return ResponseEntity.badRequest().body(new Response(400, "无效的认证记录数据"));
             }
@@ -136,6 +137,9 @@ class SubscribeController {
     
     @Autowired
     private SmartDeviceService smartDeviceService;
+    
+    @Autowired
+    private FaceRecognitionService faceRecognitionService;
     
     /**
      * 心跳接口 - 对应设备配置的心跳URL
@@ -275,12 +279,44 @@ class SubscribeController {
      * @return 响应结果
      */
     @PostMapping("/Verify")
-     public ResponseEntity<Response> recPush(@RequestBody PushData<RecInfo> pushData) {
+     public ResponseEntity<Response> recPush(@RequestBody String rawBody, HttpServletRequest request) {
          try {
-             logger.info("通过Subscribe/RecPush接收到认证记录推送，操作类型: {}", pushData.getOperator());
+             String clientIp = getClientIpAddress(request);
+             logger.info("\n========== /Subscribe/Verify 接口收到HTTP推送请求 ==========");
+             logger.info("请求时间: {}", java.time.LocalDateTime.now());
+             logger.info("客户端IP: {}", clientIp);
+             logger.info("请求方法: POST");
+             logger.info("请求路径: /Subscribe/Verify");
+
+             // 打印请求头信息
+             logger.info("\n--- 请求头信息 ---");
+             logger.info("Content-Type: {}", request.getHeader("Content-Type"));
+             logger.info("Content-Length: {}", request.getHeader("Content-Length"));
+             logger.info("User-Agent: {}", request.getHeader("User-Agent"));
+             logger.info("Accept: {}", request.getHeader("Accept"));
+
+             // 打印原始请求体
+             logger.info("\n--- 原始请求体内容 ---");
+             logger.info("原始请求体长度: {} 字符", rawBody != null ? rawBody.length() : 0);
+             logger.info("原始请求体内容: {}", rawBody);
+
+             // 手动解析JSON
+             ObjectMapper objectMapper = new ObjectMapper();
+             PushData<RecInfo> pushData;
+             try {
+                 TypeReference<PushData<RecInfo>> typeRef = new TypeReference<PushData<RecInfo>>() {};
+                 pushData = objectMapper.readValue(rawBody, typeRef);
+                 logger.info("✅ JSON解析成功");
+             } catch (Exception parseException) {
+                 logger.error("❌ JSON解析失败: {}", parseException.getMessage(), parseException);
+                 return ResponseEntity.badRequest().body(new Response(400, "JSON解析失败: " + parseException.getMessage()));
+             }
+
+             logger.info("通过Subscribe/Verify接收到认证记录推送，操作类型: {}", pushData.getOperator());
              
-             // 1. 校验推送类型
-             if (!"RecPush".equals(pushData.getOperator())) {
+             // 1. 校验推送类型（兼容 RecPush 与 VerifyPush）
+             String op = pushData.getOperator();
+             if (!"RecPush".equals(op) && !"VerifyPush".equals(op)) {
                  logger.warn("无效的认证记录数据，操作类型: {}", pushData.getOperator());
                  return ResponseEntity.badRequest().body(new Response(400, "无效的认证记录数据"));
              }
@@ -303,7 +339,10 @@ class SubscribeController {
              faceRecognitionService.processRecognitionRecord(info);
              
              // 4. 断点续传：返回确认响应（必须在10秒内）
-             return ResponseEntity.ok(new Response(200, "OK"));
+             Response response = new Response(200, "OK");
+             logger.info("✅ 处理成功 - 返回响应: {}", response.toString());
+             logger.info("========== /Subscribe/Verify 请求处理完成 ==========\n");
+             return ResponseEntity.ok(response);
              
          } catch (Exception e) {
              logger.error("处理认证记录推送失败", e);
@@ -343,82 +382,6 @@ class SubscribeController {
              faceRecognitionService.processStrangerRecord(info);
              
              // 4. 断点续传：返回确认响应
-             return ResponseEntity.ok(new Response(200, "OK"));
-             
-         } catch (Exception e) {
-             logger.error("处理陌生人抓拍推送失败", e);
-             return ResponseEntity.internalServerError().body(new Response(500, "处理失败: " + e.getMessage()));
-         }
-     }
-     
-     /**
-      * 陌生人抓拍接口 - 匹配设备配置的Snap URL
-      * @param pushData 推送数据
-      * @return 响应结果
-      */
-     @PostMapping("/Snap")
-     public ResponseEntity<Response> snap(@RequestBody PushData<StrangerInfo> pushData, HttpServletRequest request) {
-         String clientIp = getClientIpAddress(request);
-         
-         // 详细日志：接收到请求
-         logger.info("\n========== /Subscribe/Snap 接口收到HTTP推送请求 ==========");
-         logger.info("请求时间: {}", java.time.LocalDateTime.now());
-         logger.info("客户端IP: {}", clientIp);
-         logger.info("请求方法: POST");
-         logger.info("请求路径: /Subscribe/Snap");
-         
-         try {
-             // 详细日志：请求体内容
-             logger.info("\n--- 请求体内容分析 ---");
-             if (pushData != null) {
-                 logger.info("推送数据对象: 不为空");
-                 logger.info("操作类型: {}", pushData.getOperator());
-                 logger.info("推送数据完整内容: {}", pushData.toString());
-             } else {
-                 logger.warn("推送数据对象: 为空！");
-             }
-             
-             logger.info("\n--- 开始处理推送数据 ---");
-             logger.info("步骤1: 校验推送类型");
-             
-             // 1. 校验推送类型
-             if (!"StrSnapPush".equals(pushData.getOperator())) {
-                 logger.warn("❌ 校验失败 - 无效的陌生人抓拍数据，操作类型: {}", pushData.getOperator());
-                 logger.warn("期望的操作类型: StrSnapPush");
-                 return ResponseEntity.badRequest().body(new Response(400, "无效的陌生人抓拍数据"));
-             }
-             logger.info("✅ 校验通过 - 操作类型正确: {}", pushData.getOperator());
-             
-             logger.info("步骤2: 解析陌生人信息");
-             
-             // 2. 解析陌生人信息
-             StrangerInfo info = pushData.getInfo();
-             if (info == null) {
-                 logger.warn("❌ 解析失败 - 陌生人抓拍数据为空");
-                 return ResponseEntity.badRequest().body(new Response(400, "陌生人抓拍数据为空"));
-             }
-             logger.info("✅ 解析成功 - 陌生人信息不为空");
-             
-             // 详细日志：陌生人信息内容
-             logger.info("\n--- 陌生人抓拍详细信息 ---");
-             logger.info("抓拍时间: {}", info.getTime());
-             logger.info("抓拍ID: {}", info.getSnapID());
-             logger.info("设备ID: {}", info.getFacesluiceId());
-             logger.info("图片数据长度: {}", info.getPic() != null ? info.getPic().length() : 0);
-             logger.info("图片数据是否存在: {}", info.getPic() != null ? "是" : "否");
-             if (info.getPic() != null && info.getPic().length() > 0) {
-                 logger.info("图片数据前50字符: {}", info.getPic().substring(0, Math.min(50, info.getPic().length())));
-             }
-             
-             logger.info("\n步骤3: 调用业务服务处理数据");
-             
-             // 3. 处理陌生人抓拍数据
-             faceRecognitionService.processStrangerRecord(info);
-             logger.info("✅ 业务处理完成 - 陌生人抓拍数据已提交给业务服务");
-             
-             logger.info("\n步骤4: 返回成功响应");
-             
-             // 4. 断点续传：返回确认响应
              Response response = new Response(200, "OK");
              logger.info("✅ 处理成功 - 返回响应: {}", response.toString());
              logger.info("========== /Subscribe/Snap 请求处理完成 ==========\n");
@@ -435,7 +398,6 @@ class SubscribeController {
              return ResponseEntity.internalServerError().body(new Response(500, "处理失败: " + e.getMessage()));
          }
      }
-    
-    @Autowired
-    private FaceRecognitionService faceRecognitionService;
+
+
 }

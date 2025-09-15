@@ -38,6 +38,11 @@ public class FaceRecognitionRecord {
     private Integer verifyStatus;
     
     /**
+     * 认证类型
+     */
+    private String verifyType;
+    
+    /**
      * 人员类型：0=白名单，1=黑名单
      */
     private Integer personType;
@@ -78,6 +83,11 @@ public class FaceRecognitionRecord {
     private String personName;
     
     /**
+     * 人员姓名（来自RecInfo.Name字段）
+     */
+    private String name;
+    
+    /**
      * 闸机设备名称
      */
     private String facesluiceName;
@@ -91,6 +101,71 @@ public class FaceRecognitionRecord {
      * 电话号码
      */
     private String telnum;
+    
+    /**
+     * 性别
+     */
+    private String gender;
+    
+    /**
+     * 民族
+     */
+    private String nation;
+    
+    /**
+     * 证件类型
+     */
+    private String cardType;
+    
+    /**
+     * 出生日期
+     */
+    private String birthday;
+    
+    /**
+     * 籍贯
+     */
+    private String nativePlace;
+    
+    /**
+     * 地址
+     */
+    private String address;
+    
+    /**
+     * 备注
+     */
+    private String notes;
+    
+    /**
+     * 门禁卡来源
+     */
+    private String mjCardFrom;
+    
+    /**
+     * 门禁卡号
+     */
+    private String mjCardNo;
+    
+    /**
+     * 临时有效
+     */
+    private String tempValid;
+    
+    /**
+     * 有效开始时间
+     */
+    private String validBegin;
+    
+    /**
+     * 有效结束时间
+     */
+    private String validEnd;
+    
+    /**
+     * 人员UUID
+     */
+    private String personUuid;
     
     /**
      * 人脸框左边界
@@ -156,6 +231,11 @@ public class FaceRecognitionRecord {
      * 抓拍图片路径
      */
     private String imagePath;
+    
+    /**
+     * 抓拍图片数据
+     */
+    private String sanpPic;
     
     /**
      * 识别时间
@@ -365,5 +445,125 @@ public class FaceRecognitionRecord {
     
     public void setIsDeleted(Boolean isDeleted) {
         this.isDeleted = isDeleted;
+    }
+    
+    public String getGender() {
+        return gender;
+    }
+    
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+    
+    public String getNation() {
+        return nation;
+    }
+    
+    public void setNation(String nation) {
+        this.nation = nation;
+    }
+    
+    public String getCardType() {
+        return cardType;
+    }
+    
+    public void setCardType(String cardType) {
+        this.cardType = cardType;
+    }
+    
+    public String getBirthday() {
+        return birthday;
+    }
+    
+    public void setBirthday(String birthday) {
+        this.birthday = birthday;
+    }
+    
+    public String getNativePlace() {
+        return nativePlace;
+    }
+    
+    public void setNativePlace(String nativePlace) {
+        this.nativePlace = nativePlace;
+    }
+    
+    public String getAddress() {
+        return address;
+    }
+    
+    public void setAddress(String address) {
+        this.address = address;
+    }
+    
+    public String getNotes() {
+        return notes;
+    }
+    
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+    
+    public String getMjCardFrom() {
+        return mjCardFrom;
+    }
+    
+    public void setMjCardFrom(String mjCardFrom) {
+        this.mjCardFrom = mjCardFrom;
+    }
+    
+    public String getMjCardNo() {
+        return mjCardNo;
+    }
+    
+    public void setMjCardNo(String mjCardNo) {
+        this.mjCardNo = mjCardNo;
+    }
+    
+    public String getTempValid() {
+        return tempValid;
+    }
+    
+    public void setTempValid(String tempValid) {
+        this.tempValid = tempValid;
+    }
+    
+    public String getValidBegin() {
+        return validBegin;
+    }
+    
+    public void setValidBegin(String validBegin) {
+        this.validBegin = validBegin;
+    }
+    
+    public String getValidEnd() {
+        return validEnd;
+    }
+    
+    public void setValidEnd(String validEnd) {
+        this.validEnd = validEnd;
+    }
+    
+    public String getPersonUuid() {
+        return personUuid;
+    }
+    
+    public void setPersonUuid(String personUuid) {
+        this.personUuid = personUuid;
+    }
+    
+    public String getVerifyType() {
+        return verifyType;
+    }
+    
+    public void setVerifyType(String verifyType) {
+        this.verifyType = verifyType;
+    }
+    
+    public String getSanpPic() {
+        return sanpPic;
+    }
+    
+    public void setSanpPic(String sanpPic) {
+        this.sanpPic = sanpPic;
     }
 }

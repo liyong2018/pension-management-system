@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OneNET推送测试工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 150px;
+            resize: vertical;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f5f5f5;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #eee;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #f9f9f9;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>OneNET推送测试工具</h1>
+    
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('url-verify')">URL验证测试</div>
+        <div class="tab" onclick="switchTab('data-push')">数据推送测试</div>
+    </div>
+    
+    <div id="url-verify" class="tab-content active container">
+        <h2>URL验证测试</h2>
+        <p>模拟OneNET平台发送URL验证请求</p>
+        
+        <form id="verifyForm">
+            <label for="verifyToken">Token:</label>
+            <input type="text" id="verifyToken" value="a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6" required>
+            
+            <label for="verifyNonce">Nonce (随机字符串):</label>
+            <input type="text" id="verifyNonce" value="" required>
+            
+            <label for="verifyMsg">Msg (消息内容):</label>
+            <input type="text" id="verifyMsg" value="" required>
+            
+            <label for="verifyUrl">请求URL:</label>
+            <input type="text" id="verifyUrl" value="/api/demo/onenet/push" required>
+            
+            <button type="button" onclick="testVerify()">发送验证请求</button>
+        </form>
+        
+        <div class="result" id="verifyResult">结果将显示在这里...</div>
+    </div>
+    
+    <div id="data-push" class="tab-content container">
+        <h2>数据推送测试</h2>
+        <p>模拟OneNET平台推送设备数据</p>
+        
+        <form id="pushForm">
+            <label for="pushToken">Token:</label>
+            <input type="text" id="pushToken" value="a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6" required>
+            
+            <label for="pushNonce">Nonce (随机字符串):</label>
+            <input type="text" id="pushNonce" value="" required>
+            
+            <label for="pushMsg">Msg (JSON数据):</label>
+            <textarea id="pushMsg" required></textarea>
+            
+            <label for="pushUrl">请求URL:</label>
+            <input type="text" id="pushUrl" value="/api/demo/onenet/push" required>
+            
+            <button type="button" onclick="testPush()">发送数据推送</button>
+        </form>
+        
+        <div class="result" id="pushResult">结果将显示在这里...</div>
+    </div>
+    
+    <script>
+        // 生成随机字符串
+        function generateRandomString(length) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+        
+        // 初始化表单
+        function initForms() {
+            document.getElementById('verifyNonce').value = generateRandomString(16);
+            document.getElementById('verifyMsg').value = generateRandomString(32);
+            document.getElementById('pushNonce').value = generateRandomString(16);
+            
+            // 默认的JSON数据
+            const defaultData = {
+                msgId: generateRandomString(10),
+                deviceId: "device_" + generateRandomString(8),
+                timestamp: Date.now(),
+                msgType: "data",
+                data: {
+                    heartRate: Math.floor(Math.random() * 40) + 60,
+                    systolicPressure: Math.floor(Math.random() * 40) + 100,
+                    diastolicPressure: Math.floor(Math.random() * 20) + 60,
+                    bloodOxygen: Math.floor(Math.random() * 5) + 95,
+                    bodyTemperature: (Math.random() * 1.5 + 36).toFixed(1),
+                    steps: Math.floor(Math.random() * 10000),
+                    sleepStatus: Math.floor(Math.random() * 3),
+                    longitude: 116.3 + Math.random() * 0.1,
+                    latitude: 39.9 + Math.random() * 0.1,
+                    batteryLevel: Math.floor(Math.random() * 100),
+                    charging: Math.random() > 0.5,
+                    deviceStatus: "normal"
+                }
+            };
+            
+            document.getElementById('pushMsg').value = JSON.stringify(defaultData, null, 2);
+        }
+        
+        // 切换标签页
+        function switchTab(tabId) {
+            // 隐藏所有标签内容
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            // 取消所有标签的激活状态
+            const tabs = document.getElementsByClassName('tab');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            // 激活选中的标签和内容
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+        
+        // 计算签名
+        async function calculateSignature(token, nonce, msg) {
+            // 拼接字符串
+            const strToVerify = token + nonce + msg;
+            
+            // 转换为UTF-8编码的字节数组
+            const encoder = new TextEncoder();
+            const data = encoder.encode(strToVerify);
+            
+            // 计算MD5哈希
+            const hashBuffer = await crypto.subtle.digest('MD5', data);
+            
+            // 转换为Base64编码
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            // 将十六进制转换为Base64
+            const hexToBase64 = hex => {
+                const raw = atob(btoa(hex.match(/\w{2}/g).map(a => String.fromCharCode(parseInt(a, 16))).join('')));
+                return btoa(raw);
+            };
+            
+            return hexToBase64(hashHex);
+        }
+        
+        // URL验证测试
+        async function testVerify() {
+            const token = document.getElementById('verifyToken').value;
+            const nonce = document.getElementById('verifyNonce').value;
+            const msg = document.getElementById('verifyMsg').value;
+            const url = document.getElementById('verifyUrl').value;
+            const resultDiv = document.getElementById('verifyResult');
+            
+            resultDiv.textContent = '正在发送请求...';
+            
+            try {
+                // 计算签名
+                const signature = await calculateSignature(token, nonce, msg);
+                
+                // 构建请求URL
+                const requestUrl = `${url}?msg=${encodeURIComponent(msg)}&nonce=${encodeURIComponent(nonce)}&signature=${encodeURIComponent(signature)}`;
+                
+                // 发送GET请求
+                const response = await fetch(requestUrl);
+                const responseText = await response.text();
+                
+                resultDiv.textContent = `状态码: ${response.status}\n响应内容: ${responseText}`;
+            } catch (error) {
+                resultDiv.textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        // 数据推送测试
+        async function testPush() {
+            const token = document.getElementById('pushToken').value;
+            const nonce = document.getElementById('pushNonce').value;
+            const msg = document.getElementById('pushMsg').value;
+            const url = document.getElementById('pushUrl').value;
+            const resultDiv = document.getElementById('pushResult');
+            
+            resultDiv.textContent = '正在发送请求...';
+            
+            try {
+                // 计算签名
+                const signature = await calculateSignature(token, nonce, msg);
+                
+                // 构建请求URL和表单数据
+                const requestUrl = url;
+                const formData = new FormData();
+                formData.append('msg', msg);
+                formData.append('nonce', nonce);
+                formData.append('signature', signature);
+                
+                // 发送POST请求
+                const response = await fetch(requestUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+                const responseText = await response.text();
+                
+                resultDiv.textContent = `状态码: ${response.status}\n响应内容: ${responseText}`;
+            } catch (error) {
+                resultDiv.textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = initForms;
+    </script>
+</body>
+</html>
