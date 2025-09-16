@@ -39,8 +39,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**", "/error").permitAll()
                 .requestMatchers("/api/service-records/**").permitAll()  // 允许服务订单API公开访问
                 .requestMatchers("/api/face/**").permitAll()  // 允许人脸识别推送API公开访问
+                .requestMatchers("/api/face-recognition/**").permitAll()  // 允许人脸识别API公开访问
                 .requestMatchers("/api/onenet/**").permitAll()  // 允许OneNET推送API公开访问
+                .requestMatchers("/api/demo/onenet/**").permitAll()  // 允许OneNET演示推送API公开访问
                 .requestMatchers("/Subscribe/**").permitAll()  // 允许设备订阅和心跳API公开访问
+                .requestMatchers("/api/subscribe/**").permitAll()  // 允许设备订阅和心跳API公开访问
                 .requestMatchers("/api/files/**").permitAll()  // 允许文件访问API公开访问
                 .requestMatchers("/api/debug/**").permitAll()  // 临时允许调试API公开访问
                 .requestMatchers("/api/dashboard/**").hasAnyRole("ADMIN", "USER")

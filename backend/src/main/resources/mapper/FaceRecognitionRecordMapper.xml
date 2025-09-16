@@ -5,7 +5,7 @@
     <resultMap id="BaseResultMap" type="com.example.pension.model.FaceRecognitionRecord">
         <id column="id" property="id" jdbcType="BIGINT"/>
         <result column="person_id" property="personId" jdbcType="VARCHAR"/>
-        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="create_time" property="createTime" jdbcType="VARCHAR"/>
         <result column="similarity1" property="similarity" jdbcType="DOUBLE"/>
         <result column="similarity2" property="similarity2" jdbcType="DOUBLE"/>
         <result column="verify_status" property="verifyStatus" jdbcType="INTEGER"/>
@@ -30,7 +30,7 @@
         <result column="mj_card_no" property="mjCardNo" jdbcType="VARCHAR"/>
         <result column="rfid_card" property="rfidCard" jdbcType="VARCHAR"/>
         <result column="temp_valid" property="tempValid" jdbcType="INTEGER"/>
-        <result column="custom_id" property="customId" jdbcType="BIGINT"/>
+        <result column="custom_id" property="customId" jdbcType="VARCHAR"/>
         <result column="person_uuid" property="personUuid" jdbcType="VARCHAR"/>
         <result column="valid_begin" property="validBegin" jdbcType="VARCHAR"/>
         <result column="valid_end" property="validEnd" jdbcType="VARCHAR"/>
@@ -54,17 +54,17 @@
     
     <insert id="insert" parameterType="com.example.pension.model.FaceRecognitionRecord" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO face_recognition_record (
-            person_id, similarity1, similarity2, verify_status, verify_type, person_type, name, gender,
+            person_id, create_time, similarity1, similarity2, verify_status, verify_type, person_type, name, gender,
             nation, card_type, id_card, birthday, telnum, native_place, address, notes, mj_card_from,
             is_no_mask, device_id, push_type, opendoor_way, sz_qr_code_data, mj_card_no, rfid_card,
             temp_valid, custom_id, person_uuid, valid_begin, valid_end, sendtime, direction, record_id,
-            dw_file_index, dw_file_pos, sanp_pic
+            dw_file_index, dw_file_pos, sanp_pic, created_at, updated_at
         ) VALUES (
-            #{personId}, #{similarity}, #{similarity2}, #{verifyStatus}, #{verifyType}, #{personType}, #{name}, #{gender},
+            #{personId}, #{createTime,jdbcType=VARCHAR}, #{similarity}, #{similarity2}, #{verifyStatus}, #{verifyType}, #{personType}, #{name}, #{gender},
             #{nation}, #{cardType}, #{idCard}, #{birthday}, #{telnum}, #{nativePlace}, #{address}, #{notes}, #{mjCardFrom},
             #{isNoMask}, #{deviceId}, #{pushType}, #{opendoorWay}, #{szQrCodeData}, #{mjCardNo}, #{rfidCard},
             #{tempValid}, #{customId}, #{personUuid}, #{validBegin}, #{validEnd}, #{sendintime}, #{direction}, #{recordId},
-            #{dwFileIndex}, #{dwFilePos}, #{sanpPic}
+            #{dwFileIndex}, #{dwFilePos}, #{sanpPic}, #{createdAt}, #{updatedAt}
         )
     </insert>
     

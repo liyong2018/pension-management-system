@@ -15,11 +15,13 @@ public class PushData<T> {
     /**
      * 推送类型：RecPush（认证记录）/StrSnapPush（陌生人抓拍）
      */
+    @JsonProperty("operator")
     private String operator;
     
     /**
      * 具体数据（动态类型）
      */
+    @JsonProperty("info")
     private T info;
     
     // 手动添加getter方法以解决编译问题

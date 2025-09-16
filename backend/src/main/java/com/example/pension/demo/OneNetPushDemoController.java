@@ -82,17 +82,23 @@ public class OneNetPushDemoController {
      * @param msg 推送的消息内容，JSON格式的设备数据
      * @param nonce 平台生成的随机字符串
      * @param signature 加密签名
+     * @param time 消息推送时间戳（毫秒）
+     * @param id 消息ID
      * @return 处理结果
      */
     @PostMapping("/push")
     public ResponseEntity<String> receiveData(
             @RequestParam("msg") String msg,
             @RequestParam("nonce") String nonce,
-            @RequestParam("signature") String signature) {
+            @RequestParam("signature") String signature,
+            @RequestParam("time") Long time,
+            @RequestParam("id") String id) {
         
         logger.info("收到OneNET平台数据推送");
         logger.info("nonce: {}", nonce);
         logger.info("signature: {}", signature);
+        logger.info("time: {}", time);
+        logger.info("id: {}", id);
         
         try {
             // 1. 验证签名

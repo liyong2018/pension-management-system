@@ -38,9 +38,9 @@ public class FaceRecognitionRecord {
     private Integer verifyStatus;
     
     /**
-     * 认证类型
+     * 验证类型
      */
-    private String verifyType;
+    private Integer verifyType;
     
     /**
      * 人员类型：0=白名单，1=黑名单
@@ -281,14 +281,25 @@ public class FaceRecognitionRecord {
     /**
      * 创建时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createTime;
+    private String createTime;
     
     /**
      * 更新时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
+    
+    /**
+     * 数据库创建时间字段（对应created_at）
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createdAt;
+    
+    /**
+     * 数据库更新时间字段（对应updated_at）
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updatedAt;
     
     /**
      * 是否删除（软删除标记）
@@ -328,19 +339,19 @@ public class FaceRecognitionRecord {
     }
     
     public void setCreatedAt(LocalDateTime createdAt) {
-        this.createTime = createdAt;
+        this.createdAt = createdAt;
     }
     
     public LocalDateTime getCreatedAt() {
-        return createTime;
+        return createdAt;
     }
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updateTime = updatedAt;
+        this.updatedAt = updatedAt;
     }
     
     public LocalDateTime getUpdatedAt() {
-        return updateTime;
+        return updatedAt;
     }
     
     public void setElderlyId(Long elderlyId) {
@@ -423,11 +434,11 @@ public class FaceRecognitionRecord {
         this.remarks = remarks;
     }
     
-    public LocalDateTime getCreateTime() {
+    public String getCreateTime() {
         return createTime;
     }
     
-    public void setCreateTime(LocalDateTime createTime) {
+    public void setCreateTime(String createTime) {
         this.createTime = createTime;
     }
     
@@ -551,11 +562,11 @@ public class FaceRecognitionRecord {
         this.personUuid = personUuid;
     }
     
-    public String getVerifyType() {
+    public Integer getVerifyType() {
         return verifyType;
     }
     
-    public void setVerifyType(String verifyType) {
+    public void setVerifyType(Integer verifyType) {
         this.verifyType = verifyType;
     }
     

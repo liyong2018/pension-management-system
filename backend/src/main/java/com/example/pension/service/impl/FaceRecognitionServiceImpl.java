@@ -6,6 +6,8 @@ import com.example.pension.dao.ElderlyProfileDao;
 import com.example.pension.dao.SmartDeviceDao;
 import com.example.pension.dto.FaceRecognitionRecordDTO;
 import com.example.pension.dto.FaceStrangerRecordDTO;
+import com.example.pension.dto.VerifyPushRequest;
+import com.example.pension.dto.VerifyInfo;
 import com.example.pension.model.FaceRecognitionRecord;
 import com.example.pension.model.FaceStrangerRecord;
 import com.example.pension.model.ElderlyProfile;
@@ -59,6 +61,44 @@ public class FaceRecognitionServiceImpl implements FaceRecognitionService {
     public void processRecognitionRecord(RecInfo recInfo) {
         try {
             logger.info("开始处理认证记录: customId={}, recordId={}", recInfo.getCustomId(), recInfo.getRecordID());
+            
+            // 打印完整的RecInfo对象用于调试
+            logger.info("=== 完整RecInfo对象调试信息 ===");
+            logger.info("CustomID: {}", recInfo.getCustomId());
+            logger.info("PersonID: {}", recInfo.getPersonId());
+            logger.info("RecordID: {}", recInfo.getRecordID());
+            logger.info("CreateTime: {}", recInfo.getCreateTime());
+            logger.info("VerfyType: {}", recInfo.getVerfyType());
+            logger.info("Name: {}", recInfo.getName());
+            logger.info("SanpPic: {}", StringUtils.hasText(recInfo.getSanpPic()) ? "有数据(长度:" + recInfo.getSanpPic().length() + ")" : "无数据");
+            logger.info("Pic: {}", StringUtils.hasText(recInfo.getPic()) ? "有数据(长度:" + recInfo.getPic().length() + ")" : "无数据");
+            logger.info("VerifyStatus: {}", recInfo.getVerifyStatus());
+            logger.info("PersonType: {}", recInfo.getPersonType());
+            logger.info("DeviceID: {}", recInfo.getFacesluiceId());
+            logger.info("=== RecInfo对象调试信息结束 ===");
+            
+            // 添加关键字段的调试日志
+            logger.info("关键字段检查 - CreateTime: {}, VerfyType: {}, SanpPic: {}", 
+                recInfo.getCreateTime(), 
+                recInfo.getVerfyType(), 
+                StringUtils.hasText(recInfo.getSanpPic()) ? "有数据(长度:" + recInfo.getSanpPic().length() + ")" : "无数据");
+            
+            // 详细分析SanpPic字段内容
+            if (StringUtils.hasText(recInfo.getSanpPic())) {
+                String sanpPic = recInfo.getSanpPic();
+                logger.info("SanpPic详细分析:");
+                logger.info("- 数据长度: {} 字符", sanpPic.length());
+                logger.info("- 前50个字符: {}", sanpPic.length() > 50 ? sanpPic.substring(0, 50) : sanpPic);
+                logger.info("- 是否包含data:前缀: {}", sanpPic.startsWith("data:"));
+                
+                // 检查是否为1x1透明PNG
+                if (sanpPic.startsWith("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ")) {
+                    logger.warn("⚠️ 检测到1x1像素透明PNG图片！这不是真实的人脸识别照片");
+                    logger.warn("完整的1x1透明PNG Base64: {}", sanpPic);
+                } else {
+                    logger.info("✅ SanpPic包含真实图片数据");
+                }
+            }
             
             // 创建认证记录实体
             FaceRecognitionRecord record = new FaceRecognitionRecord();
@@ -118,11 +158,36 @@ public class FaceRecognitionServiceImpl implements FaceRecognitionService {
             record.setValidEnd(recInfo.getValidEnd());
             record.setPersonUuid(recInfo.getPersonUUID());
             
+            // 修复关键字段映射
+            // 1. 映射create_time字段
+            if (StringUtils.hasText(recInfo.getCreateTime())) {
+                // 直接使用原始字符串，确保格式正确
+                record.setCreateTime(recInfo.getCreateTime());
+                logger.info("设置create_time: {}", recInfo.getCreateTime());
+            } else {
+                // 使用当前时间的字符串格式
+                String currentTimeStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                record.setCreateTime(currentTimeStr);
+                logger.info("使用当前时间作为create_time: {}", currentTimeStr);
+            }
+            
+            // 2. 映射verify_type字段
+            if (recInfo.getVerfyType() != null) {
+                record.setVerifyType(recInfo.getVerfyType());
+                logger.info("设置verify_type: {}", recInfo.getVerfyType());
+            }
+            
+            // 3. 映射sanpPic字段到数据库
+            if (StringUtils.hasText(recInfo.getSanpPic())) {
+                record.setSanpPic(recInfo.getSanpPic());
+                logger.info("设置sanpPic字段，数据长度: {}", recInfo.getSanpPic().length());
+            }
+            
             // 解析识别时间
             if (StringUtils.hasText(recInfo.getTime())) {
                 try {
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                    record.setRecognitionTime(LocalDateTime.parse(recInfo.getTime(), formatter));
+                    LocalDateTime recognitionTime = parseDateTime(recInfo.getTime());
+                    record.setRecognitionTime(recognitionTime);
                 } catch (Exception e) {
                     logger.warn("解析识别时间失败: {}", recInfo.getTime(), e);
                     record.setRecognitionTime(LocalDateTime.now());
@@ -146,19 +211,27 @@ public class FaceRecognitionServiceImpl implements FaceRecognitionService {
             }
             
             if (StringUtils.hasText(base64Image)) {
+                // 保存图片到文件系统
                 String imagePath = imageUtils.saveBase64Image(
                     base64Image, 
                     "face_recognition", 
-                    "verify_" + (recInfo.getRecordID() != null ? recInfo.getRecordID() : System.currentTimeMillis()) + "_" + System.currentTimeMillis()
+                    "verify_" + (recInfo.getRecordID() != null ? recInfo.getRecordID().toString() : System.currentTimeMillis()) + "_" + System.currentTimeMillis()
                 );
                 record.setImagePath(imagePath);
-                logger.info("人脸识别图片已保存: {}", imagePath);
+                logger.info("人脸识别图片已保存到文件系统: {}", imagePath);
+                
+                // 同时将Base64数据存储到数据库的sanp_pic字段
+                record.setSanpPic(base64Image);
+                logger.info("Base64图片数据已存储到数据库sanp_pic字段，数据长度: {}", base64Image.length());
             } else {
                 logger.warn("未找到有效的图片数据");
             }
             
-            // 根据customId查找或创建对应的老人信息
+            // 设置customId字段
             if (StringUtils.hasText(recInfo.getCustomId())) {
+                record.setCustomId(recInfo.getCustomId());
+                logger.info("设置customId: {}", recInfo.getCustomId());
+                
                 ElderlyProfile elderly = elderlyProfileDao.findByCustomId(recInfo.getCustomId());
                 if (elderly != null) {
                     // 更新现有记录的个人信息（如果RecInfo中有新数据）
@@ -249,6 +322,12 @@ public class FaceRecognitionServiceImpl implements FaceRecognitionService {
             record.setCreatedAt(LocalDateTime.now());
             record.setUpdatedAt(LocalDateTime.now());
             
+            // 保存前的最终字段检查日志
+            logger.info("保存前字段检查 - CreateTime: {}, VerifyType: {}, SanpPic: {}", 
+                record.getCreateTime(), 
+                record.getVerifyType(), 
+                StringUtils.hasText(record.getSanpPic()) ? "有数据(长度:" + record.getSanpPic().length() + ")" : "无数据");
+            
             // 保存到数据库
             faceRecognitionRecordDao.insert(record);
             
@@ -258,6 +337,85 @@ public class FaceRecognitionServiceImpl implements FaceRecognitionService {
             logger.error("处理认证记录失败", e);
             throw new RuntimeException("处理认证记录失败: " + e.getMessage(), e);
         }
+    }
+    
+    @Override
+    public void processRecognitionRecord(VerifyPushRequest verifyRequest) {
+        try {
+            logger.info("开始处理门禁推送请求: operator={}", verifyRequest.getOperator());
+            logger.info("VerifyPushRequest中的SanpPic: {}", 
+                StringUtils.hasText(verifyRequest.getSanpPic()) ? "有数据(长度:" + verifyRequest.getSanpPic().length() + ")" : "无数据");
+            
+            if (verifyRequest.getInfo() != null) {
+                // 优先使用VerifyPushRequest外层的SanpPic，如果没有则使用Info中的SanpPic
+                String sanpPic = StringUtils.hasText(verifyRequest.getSanpPic()) ? 
+                    verifyRequest.getSanpPic() : verifyRequest.getInfo().getSanpPic();
+                
+                logger.info("最终使用的SanpPic: {}", 
+                    StringUtils.hasText(sanpPic) ? "有数据(长度:" + sanpPic.length() + ")" : "无数据");
+                
+                // 将VerifyInfo转换为RecInfo
+                RecInfo recInfo = convertVerifyInfoToRecInfo(verifyRequest.getInfo(), sanpPic);
+                // 调用现有的处理方法
+                processRecognitionRecord(recInfo);
+                logger.info("门禁推送请求处理完成");
+            } else {
+                logger.warn("门禁推送请求中未包含Info数据");
+            }
+            
+        } catch (Exception e) {
+            logger.error("处理门禁推送请求失败", e);
+            throw new RuntimeException("处理门禁推送请求失败: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 将VerifyInfo转换为RecInfo
+     */
+    private RecInfo convertVerifyInfoToRecInfo(VerifyInfo verifyInfo, String sanpPic) {
+        RecInfo recInfo = new RecInfo();
+        
+        // 类型转换：Integer -> Long
+        recInfo.setRecordID(verifyInfo.getPersonId() != null ? verifyInfo.getPersonId().longValue() : null);
+        recInfo.setCreateTime(verifyInfo.getCreateTime());
+        recInfo.setSimilarity1(verifyInfo.getSimilarity1());
+        recInfo.setSimilarity2(verifyInfo.getSimilarity2());
+        recInfo.setVerifyStatus(verifyInfo.getVerifyStatus());
+        recInfo.setVerfyType(verifyInfo.getVerfyType());
+        recInfo.setPersonType(verifyInfo.getPersonType());
+        recInfo.setName(verifyInfo.getName());
+        recInfo.setGender(verifyInfo.getGender());
+        recInfo.setNation(verifyInfo.getNation());
+        recInfo.setCardType(verifyInfo.getCardType());
+        recInfo.setIdCard(verifyInfo.getIdCard());
+        recInfo.setBirthday(verifyInfo.getBirthday());
+        recInfo.setTelnum(verifyInfo.getTelnum());
+        recInfo.setNativePlace(verifyInfo.getNativePlace());
+        recInfo.setAddress(verifyInfo.getAddress());
+        recInfo.setNotes(verifyInfo.getNotes());
+        recInfo.setMjCardFrom(verifyInfo.getMjCardFrom());
+        recInfo.setIsNoMask(verifyInfo.getIsNoMask());
+        recInfo.setFacesluiceId(verifyInfo.getDeviceId() != null ? verifyInfo.getDeviceId().toString() : null);
+        // 类型转换：Integer -> String
+        recInfo.setPushType(verifyInfo.getPushType() != null ? verifyInfo.getPushType().toString() : null);
+        recInfo.setOpendoorWay(verifyInfo.getOpendoorWay() != null ? verifyInfo.getOpendoorWay().toString() : null);
+        recInfo.setSzQrCodeData(verifyInfo.getSzQrCodeData());
+        recInfo.setMjCardNo(verifyInfo.getMjCardNo());
+        recInfo.setRfidCard(verifyInfo.getRfidCard());
+        recInfo.setTempvalid(verifyInfo.getTempvalid());
+        recInfo.setCustomId(verifyInfo.getCustomizeId() != null ? verifyInfo.getCustomizeId().toString() : null);
+        recInfo.setPersonUUID(verifyInfo.getPersonUuid());
+        recInfo.setValidBegin(verifyInfo.getValidBegin());
+        recInfo.setValidEnd(verifyInfo.getValidEnd());
+        recInfo.setSendintime(verifyInfo.getSendintime());
+        recInfo.setDirection(verifyInfo.getDirection());
+        
+        // 设置图片数据
+        if (StringUtils.hasText(sanpPic)) {
+            recInfo.setSanpPic(sanpPic);
+        }
+        
+        return recInfo;
     }
     
     @Override
@@ -272,13 +430,8 @@ public class FaceRecognitionServiceImpl implements FaceRecognitionService {
             
             // 解析抓拍时间
             if (StringUtils.hasText(strangerInfo.getTime())) {
-                try {
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                    record.setSnapTime(LocalDateTime.parse(strangerInfo.getTime(), formatter));
-                } catch (Exception e) {
-                    logger.warn("解析抓拍时间失败: {}", strangerInfo.getTime(), e);
-                    record.setSnapTime(LocalDateTime.now());
-                }
+                LocalDateTime snapTime = parseDateTime(strangerInfo.getTime());
+                record.setSnapTime(snapTime);
             } else {
                 record.setSnapTime(LocalDateTime.now());
             }
@@ -570,5 +723,58 @@ public class FaceRecognitionServiceImpl implements FaceRecognitionService {
         } catch (Exception e) {
             System.err.println("处理设备信息失败: " + e.getMessage());
         }
+    }
+    
+    /**
+     * 解析多种格式的时间字符串
+     * 支持格式：
+     * - ISO格式：2025-09-16T13:36:51 (不带秒)
+     * - ISO格式：2025-09-16T13:36:51.123 (带毫秒)
+     * - 标准格式：2025-09-16 13:36:51
+     * @param timeStr 时间字符串
+     * @return LocalDateTime对象
+     */
+    private LocalDateTime parseDateTime(String timeStr) {
+        if (!StringUtils.hasText(timeStr)) {
+            return LocalDateTime.now();
+        }
+        
+        // 尝试多种时间格式
+        DateTimeFormatter[] formatters = {
+            // ISO格式 - 带毫秒
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"),
+            // ISO格式 - 带秒
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"),
+            // ISO格式 - 不带秒（补充秒为00）
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"),
+            // 标准格式
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+        };
+        
+        for (DateTimeFormatter formatter : formatters) {
+            try {
+                return LocalDateTime.parse(timeStr, formatter);
+            } catch (Exception e) {
+                // 继续尝试下一个格式
+            }
+        }
+        
+        // 如果所有格式都失败，尝试处理特殊情况
+        try {
+            // 处理类似 "2025-09-16T13:36:51" 的格式（不带秒但格式正确）
+            if (timeStr.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}")) {
+                return LocalDateTime.parse(timeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
+            }
+            // 处理类似 "2025-09-16T13:36" 的格式（缺少秒）
+            if (timeStr.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}")) {
+                return LocalDateTime.parse(timeStr + ":00", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
+            }
+        } catch (Exception e) {
+            logger.warn("时间解析失败，使用当前时间: {}", timeStr, e);
+        }
+        
+        // 最后的兜底方案
+        return LocalDateTime.now();
     }
 }

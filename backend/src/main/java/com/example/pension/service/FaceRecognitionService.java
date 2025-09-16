@@ -2,6 +2,7 @@ package com.example.pension.service;
 
 import com.example.pension.dto.FaceRecognitionRecordDTO;
 import com.example.pension.dto.FaceStrangerRecordDTO;
+import com.example.pension.dto.VerifyPushRequest;
 import com.example.pension.model.face.RecInfo;
 import com.example.pension.model.face.StrangerInfo;
 import com.github.pagehelper.PageInfo;
@@ -20,6 +21,12 @@ public interface FaceRecognitionService {
      * @param recInfo 认证记录信息
      */
     void processRecognitionRecord(RecInfo recInfo);
+    
+    /**
+     * 处理验证推送请求数据
+     * @param verifyRequest 验证推送请求
+     */
+    void processRecognitionRecord(VerifyPushRequest verifyRequest);
     
     /**
      * 处理陌生人抓拍推送数据

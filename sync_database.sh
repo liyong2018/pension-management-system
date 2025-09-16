@@ -36,14 +36,14 @@ echo -e "${YELLOW}======================================${NC}"
 echo -e "${CYAN}1. 检查本地数据库连接...${NC}"
 
 # 检查Docker是否运行
-if ! docker ps --filter "name=mysql-ccrc" --format "table {{.Names}}\t{{.Status}}" | grep -q "mysql-ccrc"; then
+if ! docker ps --filter "name=pension-mysql" --format "table {{.Names}}\t{{.Status}}" | grep -q "pension-mysql"; then
     echo -e "${RED}❌ 错误: 本地MySQL容器未运行${NC}"
-    echo -e "${YELLOW}请先启动容器: docker-compose up -d mysql-ccrc${NC}"
+    echo -e "${YELLOW}请先启动容器: docker-compose up -d pension-mysql${NC}"
     exit 1
 fi
 
 # 测试数据库连接
-if ! docker exec mysql-ccrc mysql -h$LOCAL_DB_HOST -P$LOCAL_DB_PORT -u$LOCAL_DB_USER -p$LOCAL_DB_PASSWORD -e "SELECT 1" >/dev/null 2>&1; then
+if ! docker exec pension-mysql mysql -h$LOCAL_DB_HOST -P$LOCAL_DB_PORT -u$LOCAL_DB_USER -p$LOCAL_DB_PASSWORD -e "SELECT 1" >/dev/null 2>&1; then
     echo -e "${RED}❌ 错误: 无法连接到本地数据库${NC}"
     exit 1
 fi
@@ -52,7 +52,7 @@ echo -e "${GREEN}✅ 本地数据库连接成功${NC}"
 # 2. 导出本地数据库
 echo -e "${CYAN}2. 导出本地数据库...${NC}"
 
-docker exec mysql-ccrc mysqldump \
+docker exec pension-mysql mysqldump \
     -h$LOCAL_DB_HOST -P$LOCAL_DB_PORT -u$LOCAL_DB_USER -p$LOCAL_DB_PASSWORD \
     --single-transaction \
     --routines \

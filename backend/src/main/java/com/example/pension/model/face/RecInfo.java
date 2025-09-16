@@ -291,6 +291,7 @@ public class RecInfo {
     /**
      * 抓拍图片Base64编码（通用字段）
      */
+    @JsonProperty("Pic")
     private String pic;
     
     /**
